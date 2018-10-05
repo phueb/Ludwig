@@ -5,20 +5,18 @@
 This cluster consists of a file server and 8 compute nodes with GPU acceleration for deep learning tasks.
 Access to compute resources are provided by the UIUC Learning & language Lab in the form of credentials to a distributed task queue hosted on the file server.
 
-Compute Node hostnames:
-* hoff
-* norman
-* hebb
-* hinton
-* pitts
-* hawkins
-* lecun
-* bengio
-
 ## Specs
 
-Each node is an Alienware Aurora with the following specs:
-* 1 NVIDIA GTX 1080 GPU
+* hoff      1 Geforce GTX 1080      Alienware Aurora R6
+* norman    1 Geforce GTX 1080      Alienware Aurora R6
+* hebb      1 Geforce GTX 1080      Alienware Aurora R6
+* hinton    1 Geforce GTX 1080      Alienware Aurora R6
+* pitts     1 Geforce GTX 1080      Alienware Aurora R6
+* hawkins   1 Geforce GTX 1080 Ti   Alienware Aurora R7
+* lecun     1 Geforce GTX 1080 Ti   Alienware Aurora R7
+* bengio    1 Geforce GTX 1080 Ti   Alienware Aurora R7
+
+All machines are configured to use:
 * CUDA 8.0
 * cudnn 6
 * python3.5
