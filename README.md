@@ -56,7 +56,7 @@ Because worker processes can only compute tasks in the state they were at the ti
 it is recommended to configure automatic restarting of all worker processes whenever a change to the python code has been made.
 The lab member in charge of LudwigCluster will use ```watchdog``` to start a worker process with auto-restarting:
 ```bash
-watchmedo auto-restart -d src/ -p '*.py' -- celery worker -l info -A foo
+watchmedo auto-restart -R -p '*.py' -- celery worker -l info -A app --concurrency 1
 ```
 
 In case a worker process needs to be shut down:
