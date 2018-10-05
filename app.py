@@ -14,7 +14,7 @@ please ask the lab member in charge of the cluster to verify the workers have be
 from celery import Celery
 
 import celeryconfig
-from src.celery_task import deep_learning_task as _deep_learning_task
+from src.tasks import deep_learning_task as _deep_learning_task
 
 app = Celery('dlsrl')
 app.config_from_object(celeryconfig)

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
-APPNAME='<YOUR APP NAME>'
-FILESERVERNAME='<YOUR SSH ALIAS>'
+APPNAME='pytorchtest'
+FILESERVERNAME='s76'
 
 # rsync python source code to file-server
 rsync --verbose --stats ../src/*.py ${FILESERVERNAME}:/home/lab/cluster/celery/${APPNAME}/src
-rsync --verbose --stats ../client.py ../app.py ../src ${FILESERVERNAME}:/home/lab/cluster/celery/${APPNAME}
+rsync --verbose --stats ../client.py ../src ${FILESERVERNAME}:/home/lab/cluster/celery/${APPNAME}
+rsync --verbose --stats ../app.py ../src ${FILESERVERNAME}:/home/lab/cluster/celery/${APPNAME}
 
 # submit tasks to workers
 ssh ${FILESERVERNAME} <<- EOF

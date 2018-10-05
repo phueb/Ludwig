@@ -9,9 +9,10 @@ from app import deep_learning_task
 NUM_WORKERS = 8
 
 if __name__ == "__main__":
-
     # example: compute deep_learning_task with 128 hidden units on 4 nodes and 256 on another 4 nodes
     for n in range(NUM_WORKERS // 2):
+        print('Submitting task {}'.format(n))
         deep_learning_task.delay(num_hidden_units=128)
-    for n in range(NUM_WORKERS // 2):
+    for n in range(NUM_WORKERS // 2, NUM_WORKERS):
+        print('Submitting task {}'.format(n))
         deep_learning_task.delay(num_hidden_units=256)

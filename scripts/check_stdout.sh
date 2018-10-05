@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-APPNAME='<YOUR APP NAME>'
+APPNAME='pytorchtest'
 
 tail -f /media/lab/cluster/logs/${APPNAME}/*.txt

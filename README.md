@@ -23,6 +23,7 @@ Each node is an Alienware Aurora with the following specs:
 * cudnn 6
 * python3.5
 * tensorflow-gpu
+* pytorch
 
 
 ## Requirements
@@ -32,7 +33,13 @@ At the moment, only tasks implemented as python functions can be submitted to Lu
 
 ### Access to file-server
 Tasks submitted to LudwigCluster requires ssh access to the file-server. 
-The file-server exposes a shared drive (located at /home/lab/) to each node, and all code must be located on this drive to be accessible ot each node.
+You may develop your code locally, and copy the source code files to the file-server.
+To do so, create a project directory on the file-server ```/home/lab/cluster/celery/<APPNAME>)```.
+```/home/lab/)``` is a shared drive, and therefore accessible to each node.
+
+### Celery config file
+Have a lab member place a configuration file (containing access credentials to the distributed task queue) ```celeryconfig.py``` in the root directory of your project. 
+This lets the worker processes know how to access the distributed task queue.
 
 ### Worker Processes
 Before submitting tasks, each node must have celery worker process running in the background.
@@ -48,6 +55,9 @@ And to stop a worker process:
 ```bash
 ps auxww | grep "celery worker" | awk '{print $2}' | xargs kill -9
 ```
+
+## Logging
+Create a directory  ```/home/lab/cluster/logs/<APPNAME>```. Here you will be able to view the stdout of your task.
 
 ## Note
 
