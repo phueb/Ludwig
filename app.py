@@ -16,7 +16,7 @@ from celery import Celery
 import celeryconfig
 from src.tasks import deep_learning_task as _deep_learning_task
 
-app = Celery('dlsrl')
+app = Celery('pytorchtest')
 app.config_from_object(celeryconfig)
 
 
