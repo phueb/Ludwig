@@ -46,7 +46,7 @@ This lets the worker processes know how to access the distributed task queue.
 Before submitting tasks, each node must have celery worker process running in the background.
 Because access to each node is restricted, please ask a lab member to verify workers are online.
 
-For reference, to start a worker process (requires remote access to nodes):
+For reference, to start all worker processes (requires remote access to nodes):
 ```bash
 cd /media/lab/cluster/celery/${APPNAME}
 nohup celery worker -l info -A app --concurrency 1 > /media/lab/cluster/logs/${APPNAME}/$(hostname)_log.txt 2>&1 &
