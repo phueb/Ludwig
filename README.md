@@ -41,7 +41,15 @@ You must ask a lab member to provide you with sftp access to one or multiple nod
 it is recommended to use password-less access via keypair authentication. 
 To submit a task to LudwigCluster, transfer your source code to a node. 
 Make sure to include a file ```run.py```. 
-A file-watcher is constantly watching for changes to ```run.py``` and whenever a new version is uploaded, ```run.py``` will automatically be executed in a subprocess. 
+A file-watcher is constantly watching for changes to ```run.py``` and whenever a new version is uploaded, ```run.py``` will automatically be executed in a subprocess.
+
+### Project directory
+Each task must be associated with a project. 
+Ask a lab member to create a directory ```<PROJECTNAME>``` in ```/var/sftp``` on one or more nodes. 
+Because /var/sftp is owned by ```root```, make sure the lab member has given the user ```ludwig``` ownership of the directory:
+```bash
+chmod ludwig:ludwig <PROJECTNAME>
+``` 
 
 ## Submitting a Task
 
@@ -50,8 +58,8 @@ Let's take for example a user who would like to submit a task to ```bengio```.
 First, connect to ```bengio```'s sftp server:
 ```bash
 sftp ludwig@bengio
-
 ```
+
 Next, upload all files needed for the task (or only those with revisions, if previously uploaded).
 Make sure to upload ```run.py``` - even if no revisions have been made to it.
 ```bash
