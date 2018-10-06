@@ -32,12 +32,12 @@ All machines are configured to use:
 Tasks submitted to LudwigCluster must be programmed in python.
 
 ### Access to the shared drive
-See a lab member to provide access to the lab's shared drive. Mount the drive at ```/media/lab```.
+See the administrator to provide access to the lab's shared drive. Mount the drive at ```/media/lab```.
 The share is hosted by the lab's file server using ```samba```, and is shared with each node. 
 Because we do not allow direct shell access to nodes, all data and logs must be saved to the shared drive.
 
 ### Access to jailed SFTP on one or multiple nodes
-You must ask a lab member to provide you with sftp access to one or multiple nodes.
+You must ask the administrator to provide you with sftp access to one or multiple nodes.
 it is recommended to use password-less access via keypair authentication. 
 To submit a task to LudwigCluster, transfer your source code to a node. 
 Make sure to include a file ```run.py```. 
@@ -45,12 +45,16 @@ A file-watcher is constantly watching for changes to ```run.py``` and whenever a
 
 ### Project directory
 Each task must be associated with a project. 
-Ask a lab member to create a directory ```<PROJECTNAME>``` in ```/var/sftp``` on one or more nodes. 
-Because /var/sftp is owned by ```root```, make sure the lab member has given the user ```ludwig``` ownership of the directory:
+Ask the administrator to create a directory ```<PROJECTNAME>``` in ```/var/sftp``` on one or more nodes. 
+Because /var/sftp is owned by ```root```, the administrator must give the user ```ludwig``` ownership of the directory:
 ```bash
 chmod ludwig:ludwig <PROJECTNAME>
 ``` 
-
+The administrator must also start the file-watcher:
+```bash
+cd /var/sftp/<PROJECTNAME>
+sudo python3 watcher.py
+```
 ## Submitting a Task
 
 ### sftp
@@ -75,7 +79,7 @@ Retry when the node is no longer busy.
 
 ## Note
 
-Tasks cannot be stopped, once started. Please see a lab member to stop running tasks.
+Tasks cannot be stopped, once started. Please see a administrator to stop running tasks.
 
 Strictly speaking, LudwigCluster is not really a "cluster". 
 Each node is unaware of every other. Although, each has access to the same shared drive. 
