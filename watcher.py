@@ -3,21 +3,21 @@ import threading
 import time
 import subprocess
 from pathlib import Path
-
 from os.path import expanduser, normpath
-
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from queue import Queue
 
-import socket
-hostname = socket.gethostname()
+from src import hostname
+from src import config
+from src import PROJECT_NAME, RUN_FNAME
 
-PROJECT_NAME = 'LudwigCluster'
-LOGGING_DIR = '/media/lab/{}'.format(PROJECT_NAME)
-LOGGING_FNAME = '{}_stdout.txt'.format(hostname)
-CMD = 'python3 /var/sftp/{}/run.py > {}/{}'.format(PROJECT_NAME, LOGGING_DIR, LOGGING_FNAME)
-WATCH_FILE_NAME = 'run.py'
+
+CMD = 'python3 /var/sftp/{}/{}'.format(PROJECT_NAME, RUN_FNAME)
+
+
+# TODO it's probably best not to execute neural network task until completion
+# TODO it might be more flexible to allow restarting of task upon file change
 
 
 class Handler(FileSystemEventHandler):
@@ -34,13 +34,15 @@ class Handler(FileSystemEventHandler):
         global stopped
 
         norm = normpath(expanduser(event.src_path))
-        if not event.is_directory and norm == WATCH_FILE_NAME:
+        if not event.is_directory and norm == RUN_FNAME:
             ts = datetime.now()
             self.q.put((event, ts))
 
     def trigger(self):
+        fname = '{}_stdout_{}.txt'.format(hostname, datetime.now().strftime('%m-%d-%H-%M-%S'))
+        cmd = CMD + ' > {}/{}'.format(config.Dirs.stdout, fname)
         try:
-            subprocess.check_call([CMD], shell=True)
+            subprocess.check_call([cmd], shell=True)
         except OSError as exc:
             print(exc)
 
@@ -50,7 +52,7 @@ class Handler(FileSystemEventHandler):
         while True:
             event, time_stamp = self.q.get()
             time_delta = time_stamp - last_ts
-            if time_delta.total_seconds() < 1:  # sftp prdocues 2 events within 1 sec - ignore 2nd event
+            if time_delta.total_seconds() < 1:  # sftp produces 2 events within 1 sec - ignore 2nd event
                 continue
 
             print('Executing "{}"'.format(CMD))
@@ -78,11 +80,7 @@ def watcher():
 
 
 if __name__ == '__main__':
-    p = Path(LOGGING_DIR)
+    p = Path(config.Dirs.stdout)
     if not p.exists():
         p.mkdir(parents=True)
     watcher()
-
-
-# TODO it's probably best not to execute neural network task until completion
-# TODO it might be more flexible to allow restarting of task upon file change

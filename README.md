@@ -28,6 +28,9 @@ All machines are configured to use:
 
 ## Requirements
 
+### Linux
+It is recommend to use a machine with a Linux OS to submit tasks. 
+
 ### Python
 Tasks submitted to LudwigCluster must be programmed in python.
 
@@ -38,15 +41,18 @@ Because we do not allow direct shell access to nodes, all data and logs must be 
 
 ### Access to jailed SFTP on one or multiple nodes
 You must ask the administrator to provide you with sftp access to one or multiple nodes.
-it is recommended to use password-less access via keypair authentication. 
+It is recommended to use password-less access via keypair authentication. 
 To submit a task to LudwigCluster, transfer your source code to a node. 
 Make sure to include a file ```run.py```. 
 A file-watcher is constantly watching for changes to ```run.py``` and whenever a new version is uploaded, ```run.py``` will automatically be executed in a subprocess.
 
+### ssh config
+Create ```config``` in ```/home/.ssh```.
+Ask the administrator to populate this file with the names of the worker names and their IP addresses.
 ### Project directory
 Each task must be associated with a project. 
 Ask the administrator to create a directory ```<PROJECTNAME>``` in ```/var/sftp``` on one or more nodes. 
-Because /var/sftp is owned by ```root```, the administrator must give the user ```ludwig``` ownership of the directory:
+Because ```/var/sftp``` is owned by ```root```, the administrator must give the user ```ludwig``` ownership of the directory:
 ```bash
 chmod ludwig:ludwig <PROJECTNAME>
 ``` 

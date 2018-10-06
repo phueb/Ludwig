@@ -1,7 +1,7 @@
 import torch
 
 
-def deep_learning_task(**kwargs):
+def main(**kwargs):
 
     print('keyword-args:')
     for k, v in kwargs.items():

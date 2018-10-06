@@ -1,5 +1,5 @@
-from src.tasks import deep_learning_task
+from user.tasks import main
 
 
-deep_learning_task(num_hiddens=128)
-deep_learning_task(num_hiddens=256)
+main(num_hiddens=128)  # TODO configs?
+
