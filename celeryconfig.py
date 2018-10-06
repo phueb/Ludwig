@@ -1,1 +1,0 @@
-BROKER_URL = 'amqp://<USERNAME>:<PASSWORD>@<IP>/'
