@@ -2,6 +2,7 @@ from datetime import datetime
 import threading
 import time
 import subprocess
+from pathlib import Path
 
 from os.path import expanduser, normpath
 
@@ -9,7 +10,13 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from queue import Queue
 
-CMD = 'python3 /var/sftp/uploads/run.py > /media/lab/out.txt'
+import socket
+hostname = socket.gethostname()
+
+PROJECT_NAME = 'LudwigCluster'
+LOGGING_DIR = '/media/lab/{}'.format(PROJECT_NAME)
+LOGGING_FNAME = '{}_stdout.txt'.format(hostname)
+CMD = 'python3 /var/sftp/{}/run.py > {}/{}'.format(PROJECT_NAME, LOGGING_DIR, LOGGING_FNAME)
 WATCH_FILE_NAME = 'run.py'
 
 
@@ -71,6 +78,9 @@ def watcher():
 
 
 if __name__ == '__main__':
+    p = Path(LOGGING_DIR)
+    if not p.exists():
+        p.mkdir(parents=True)
     watcher()
 
 
