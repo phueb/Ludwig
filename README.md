@@ -2,8 +2,8 @@
 
 ## Info
 
-This cluster consists of a file server and 8 compute nodes with GPU acceleration for deep learning tasks.
-Access to compute resources are provided by the UIUC Learning & language Lab in the form of credentials to a distributed task queue hosted on the file server.
+The UIUC Learning & language Lab provides compute resources for lab members and collaborators wishing to train large neural network models. 
+The resource consists of a file server and 8 compute nodes with GPU acceleration for deep learning tasks.
 
 ## Specs
 
