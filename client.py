@@ -8,10 +8,10 @@ import pysftp
 import platform
 import psutil
 import datetime
-from src import config
-from src.starter import Starter
-from src.logger import Logger
-from src import RUN_FNAME, PROJECT_NAME, USERNAME
+from ludwigcluster import config
+from ludwigcluster.starter import Starter
+from ludwigcluster.logger import Logger
+from ludwigcluster import RUN_FNAME, PROJECT_NAME, USERNAME
 from user.options import check_configs_dict, default_configs_dict
 
 DISK_USAGE_MAX = 90

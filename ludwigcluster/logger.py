@@ -3,7 +3,7 @@ import csv
 import shutil
 from itertools import chain
 
-from src import config
+from ludwigcluster import config
 
 
 class Logger:

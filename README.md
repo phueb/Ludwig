@@ -82,7 +82,7 @@ Alternatively, use ```client.py``` to automate this task across multiple nodes.
 
 ### 3) pip install LudwigCluster (recommended)
 Make ```LudwigCluster available ``` in your project, by installing this repository in your project's virtualenv:
-```(venv) pip install -e git+https://github.com/languagelearninglab/LudwigCluster.git```
+```(venv) pip install git+https://github.com/languagelearninglab/LudwigCluster.git```
 
 TODO - what's next?
 

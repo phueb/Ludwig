@@ -4,7 +4,7 @@ import shutil
 from termcolor import cprint
 import socket
 
-from src import config
+from ludwigcluster import config
 
 
 class Starter:

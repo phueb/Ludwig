@@ -1,11 +1,11 @@
 from setuptools import setup
 
-from src import PROJECT_NAME
+from ludwigcluster import PROJECT_NAME
 
 setup(
     name=PROJECT_NAME.lower(),
     version='0.1',
-    packages=['src'],
+    packages=['ludwigcluster'],
     url='https://github.com/languagelearninglab/LudwigCluster',
     license='',
     author='Philip Huebner',

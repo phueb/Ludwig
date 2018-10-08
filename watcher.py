@@ -8,9 +8,9 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from queue import Queue
 
-from src import hostname
-from src import config
-from src import PROJECT_NAME, RUN_FNAME
+from ludwigcluster import hostname
+from ludwigcluster import config
+from ludwigcluster import PROJECT_NAME, RUN_FNAME
 
 
 CMD = 'python3 /var/sftp/{}/{}'.format(PROJECT_NAME, RUN_FNAME)

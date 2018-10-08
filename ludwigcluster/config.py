@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src import PROJECT_NAME
+from ludwigcluster import PROJECT_NAME
 
 
 class Dirs:
@@ -10,7 +10,7 @@ class Dirs:
     log = project / 'log'
     stdout = project / 'stdout'
     user = Path().cwd() / 'user'
-    src = Path().cwd() / 'src'
+    src = Path().cwd() / 'ludwigcluster'
 
 class Interface:
     common_timepoint = 1
