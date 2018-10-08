@@ -81,10 +81,10 @@ sftp> put run.py <PROJECTNAME>/
 Alternatively, use ```client.py``` to automate this task across multiple nodes. 
 
 ### 3) pip install LudwigCluster (recommended)
-Make ```LudwigCluster available ``` in your project, by cloning this repository, and installing in your virtualenv:
-```(venv) pip install -e <PATH_TO_GIT_REPOSITORY>```
+Make ```LudwigCluster available ``` in your project, by installing this repository in your project's virtualenv:
+```(venv) pip install -e git+https://github.com/languagelearninglab/LudwigCluster.git```
 
-TODO 
+TODO - what's next?
 
 ### Logging
 By default, the stdout of ```run.py``` will be redirected to a text file located on the shared drive.
