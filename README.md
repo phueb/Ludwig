@@ -63,7 +63,7 @@ sudo python3 watcher.py
 ```
 ## Submitting a Task
 
-### sftp
+### 1) sftp
 Let's take for example a user who would like to submit a task to ```bengio```. 
 First, connect to ```bengio```'s sftp server:
 ```bash
@@ -76,6 +76,15 @@ Make sure to upload ```run.py``` - even if no revisions have been made to it.
 sftp> put src/*.py <PROJECTNAME>/src/
 sftp> put run.py <PROJECTNAME>/
 ```
+
+### 2) client.py
+Alternatively, use ```client.py``` to automate this task across multiple nodes. 
+
+### 3) pip install LudwigCluster (recommended)
+Make ```LudwigCluster available ``` in your project, by cloning this repository, and installing in your virtualenv:
+```(venv) pip install -e <PATH_TO_GIT_REPOSITORY>```
+
+TODO 
 
 ### Logging
 By default, the stdout of ```run.py``` will be redirected to a text file located on the shared drive.
