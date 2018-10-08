@@ -115,22 +115,6 @@ class Logger:
         result = list(values)
         return result
 
-    @property
-    def manipulated_config_names(self):
-        """
-        Returns list of all config_names for which there is more than one unique value in all logs
-        """
-        result = []
-        for config_name in self.all_config_names:
-            config_values = self.get_config_values_from_log(config_name, req_completion=False)
-            is_manipulated = True if len(list(set(config_values))) > 1 else False
-            if is_manipulated and config_name in self.all_config_names:
-                result.append(config_name)
-        # if empty
-        if not result:
-            result = ['flavor']
-        return result
-
     def concat_info_files(self, verbose=False):
         # make info_file_paths
         info_file_paths = [config.Dirs.lab / self.project_name / model_name / 'Configs' / 'info.csv'
@@ -147,10 +131,4 @@ class Logger:
                                              for f in info_file_paths)))
         # save
         result.to_csv(self.log_path)
-        return result
-
-    def get_timepoints(self, model_name):
-        last_timepoint = [d['timepoint'] for d in self.load_log()
-                          if d['model_name'] == model_name][0]
-        result = list(range(last_timepoint + 1))
         return result

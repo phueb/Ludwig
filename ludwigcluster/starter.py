@@ -1,6 +1,5 @@
 import csv
 import datetime
-import shutil
 from termcolor import cprint
 import socket
 
@@ -32,10 +31,6 @@ class Starter:
         time_of_init = datetime.datetime.now().strftime('%m-%d-%H-%M-%S')
         hostname = socket.gethostname()
         model_name = '{}_{}_{}'.format(hostname, time_of_init, flavor)
-        # remove any existing dir with same name
-        path = config.Dirs.runs / model_name
-        if path.is_dir():
-            shutil.rmtree(str(config.Dirs.runs / model_name))
         return model_name
 
     @staticmethod
@@ -50,19 +45,6 @@ class Starter:
             value = str(value)
         return value
 
-    @staticmethod
-    def make_new_configs_dicts():
-        p = config.Dirs.user / 'configs.csv'
-        if not p.exists():
-            print('Did not find configs.csv in {}'.format(p))
-        new_configs_dicts = list(csv.DictReader(p.open('r')))
-        # printout
-        print('New configs:')
-        for config_id, d in enumerate(new_configs_dicts):
-            print('Config {}:'.format(config_id))
-            for k, v in sorted(d.items()):
-                print('{:>20} -> {:<20}'.format(k, v))
-        return new_configs_dicts
 
     def make_checked_configs_dicts(self, new_configs_dicts):
         configs_dicts = []
@@ -81,9 +63,8 @@ class Starter:
             configs_dicts.append(configs_dict)
         return configs_dicts
 
-    def gen_configs_dicts(self):
+    def gen_configs_dicts(self, new_configs_dicts):
         # parse + check
-        new_configs_dicts = self.make_new_configs_dicts()
         checked_config_dicts = self.make_checked_configs_dicts(new_configs_dicts)
         # generate
         for config_id, configs_dict in enumerate(checked_config_dicts):
