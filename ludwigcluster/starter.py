@@ -16,11 +16,11 @@ class Starter:
                  reps,
                  default_configs_dict,
                  check_fn,
-                 logger):
+                 log_entry_dicts):
         self.reps = reps
         self.default_configs_dict = default_configs_dict
         self.check_fn = check_fn
-        self.logger = logger
+        self.log_entry_dicts = log_entry_dicts
 
     @staticmethod
     def to_flavor(model_name):
@@ -106,14 +106,10 @@ class Starter:
 
     def count_num_times_logged(self, configs_dict):
         num_times_logged = 0
-        try:
-            log_entry_dicts = self.logger.load_log()
-        except IOError:
-            return 0
-        if not log_entry_dicts:
+        if not self.log_entry_dicts:
             return 0
         # make num_times_logged
-        for log_entry_d in log_entry_dicts:
+        for log_entry_d in self.log_entry_dicts:
             if log_entry_d['timepoint'] != log_entry_d['num_saves']:
                 continue
             else:
