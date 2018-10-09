@@ -78,7 +78,7 @@ class Client:
                 print('{:>20} -> {:<20}'.format(k, v))
         return res
 
-    def submit(self):
+    def submit(self, project_path, pattern='*.py'):
         self.check_disk_space_used_percent()
         # delete old
         try:
@@ -87,7 +87,7 @@ class Client:
             print('Could not delete incomplete models. Check log for inconsistencies.')
         new_configs_dicts = self.make_new_configs_dicts()
         # iterate over configs_dicts
-        private_key_pass = (Path.home() / '.rsapub_passwd').read_text().strip('\n')
+        private_key_pass = config.SFTP.private_key_pass_path.read_text().strip('\n')
         for worker_name, configs_dict in zip(WORKER_NAMES,
                                              self.starter.gen_configs_dicts(new_configs_dicts)):
             configs_dict['model_name'] = self.make_model_name(worker_name)
@@ -97,27 +97,23 @@ class Client:
             print('Connecting to {}'.format(worker_name))
             sftp = pysftp.Connection(username='ludwig',
                                      host=self.hostname2ip[worker_name],
-                                     private_key='/home/{}/.ssh/id_rsa'.format(username),  # TODO getr username using PAth
+                                     private_key='{}/.ssh/id_rsa'.format(Path.home()),
                                      private_key_pass=private_key_pass)
-
-            # TODO make dirs_to_upload
-
-            for p in dirs_to_upload:
-                for file in p.glob('*.py'):  # exclude __pycache__
-                    directory = file.parent.stem
-                    localpath = '{}/{}'.format(directory, file.name)
-                    remotepath = '{}/{}/{}'.format(self.project_name, directory, file.name)
-                    print('Uploading {} to {}'.format(localpath, remotepath))
-                    try:
-                        sftp.put(localpath=localpath, remotepath=remotepath)
-                    except FileNotFoundError:  # directory doesn't exist
-                        print('WARNING: Directory {} does not exist. It will be created'.format(directory))
-                        sftp.mkdir('{}/{}'.format(self.project_name, directory))
-                        sftp.put(localpath=localpath, remotepath=remotepath)
-
-            # TODO make sure to include run.py
-
-            sftp.put(localpath=RUN_FNAME,
-                     remotepath='{}/{}'.format(self.project_name, RUN_FNAME))
-            print('Uploaded {}.\n'.format(RUN_FNAME))
-
+            # upload
+            found_watched_fname = False
+            for file in Path(project_path).glob(pattern):  # use "*.py" to exclude __pycache__
+                if file.name == config.SFTP.watched_fname:
+                    found_watched_fname = True
+                directory = file.parent.stem
+                localpath = '{}/{}'.format(directory, file.name)
+                remotepath = '{}/{}/{}'.format(self.project_name, directory, file.name)
+                print('Uploading {} to {}'.format(localpath, remotepath))
+                try:
+                    sftp.put(localpath=localpath, remotepath=remotepath)
+                except FileNotFoundError:  # directory doesn't exist
+                    print('WARNING: Directory {} does not exist. It will be created'.format(directory))
+                    sftp.mkdir('{}/{}'.format(self.project_name, directory))
+                    sftp.put(localpath=localpath, remotepath=remotepath)
+            # make sure to include run.py
+            if not found_watched_fname:
+                raise RuntimeError('Did not find {} in project_path.'.format(config.SFTP.watched_fname))

@@ -7,3 +7,4 @@ class Dirs:
 
 class SFTP:
     watched_fname = 'run.py'
+    private_key_pass_path = Path.home() / '.rsapub_passwd'

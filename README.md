@@ -52,9 +52,10 @@ Ask the administrator to populate this file with the names of the worker names a
 ### Project directory
 Each task must be associated with a project. 
 Ask the administrator to create a directory ```<PROJECTNAME>``` in ```/var/sftp``` on one or more nodes. 
-Because ```/var/sftp``` is owned by ```root```, the administrator must give the user ```ludwig``` ownership of the directory:
+Because ```/var/sftp``` is owned by ```root```, the administrator must give the user ```ludwig``` ownership of the directory.
+To facilitate batch-administration of nodes, it is recommended to give group wonwership to the graoup ```adm```.
 ```bash
-chmod ludwig:ludwig <PROJECTNAME>
+chmod ludwig:adm <PROJECTNAME>
 ``` 
 The administrator must also start the file-watcher:
 ```bash

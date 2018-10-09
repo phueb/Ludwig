@@ -98,23 +98,6 @@ class Logger:
         all_config_names = sorted(self.default_configs_dict.keys())
         return all_config_names
 
-    def get_config_values_from_log(self, config_name, req_completion=True):
-        values = set()
-        log_entry_dicts = self.load_log()
-        for log_entry_d in log_entry_dicts:
-            if req_completion:
-                if log_entry_d['timepoint'] == log_entry_d['num_saves']:
-                    try:
-                        config_value = log_entry_d[config_name]
-                    except KeyError:  # sometimes new config names are added
-                        print('rnnlab WARNING: Did not find "{}" in main log.'.format(config_name))
-                        continue
-                    values.add(config_value)
-            else:
-                values.add(log_entry_d[config_name])
-        result = list(values)
-        return result
-
     def concat_info_files(self, verbose=False):
         # make info_file_paths
         info_file_paths = [config.Dirs.lab / self.project_name / model_name / 'Configs' / 'info.csv'
