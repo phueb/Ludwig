@@ -14,8 +14,12 @@ from ludwigcluster.starter import Starter
 from ludwigcluster.logger import Logger
 
 DISK_USAGE_MAX = 90
-# WORKER_NAMES = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'lecun', 'bengio']  # TODO
-WORKER_NAMES = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio']
+WORKER_NAMES = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'lecun', 'bengio'] 
+
+
+# TODO would it be simpler to use function to generate all combinations of params from 2-stage-nlp?
+# TODO one could save param2ids to yaml/pkl/json - and this triggers model training
+
 REPS = 4
 
 
