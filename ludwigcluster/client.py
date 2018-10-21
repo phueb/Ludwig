@@ -1,10 +1,9 @@
 """
-This file is used to submit tasks to one or more nodes.
-It uses an sftp client library to upload run.py, and all file sin the user directory.
-The idea is to upload to each node a separate configs.csv which specifies all the hyper-parameters of a neural network, for example.
+The client is used to submit jobs to one or more nodes in LudwigCluster.
+It uses an sftp client library to upload all files in a user's project to LudwigCluster.
 """
-import csv
 from pathlib import Path
+from itertools import cycle
 import pysftp
 import platform
 import psutil
@@ -14,22 +13,17 @@ from ludwigcluster.starter import Starter
 from ludwigcluster.logger import Logger
 
 DISK_USAGE_MAX = 90
-WORKER_NAMES = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'lecun', 'bengio'] 
 
 
-# TODO would it be simpler to use function to generate all combinations of params from 2-stage-nlp?
-# TODO one could save param2ids to yaml/pkl/json - and this triggers model training
-
-REPS = 4
-
+# TODO rename all configs_dict occurrences to params
 
 class Client:
-    def __init__(self, project_name, default_configs_dict, check_fn):
+    def __init__(self, project_name, default_params, check_fn):
         self.project_name = project_name
-        self.default_configs_dict = default_configs_dict
+        self.default_params = default_params
         self.hostname2ip = self.make_hostname2ip()
-        self.logger = Logger(project_name, default_configs_dict)
-        self.starter = Starter(REPS, default_configs_dict, check_fn, self.logger.load_log())
+        self.logger = Logger(project_name, default_params)
+        self.starter = Starter(project_name, default_params, check_fn, self.logger.load_log())
 
     @staticmethod
     def make_hostname2ip():
@@ -70,40 +64,33 @@ class Client:
             raise IsADirectoryError('Directory "{}" already exists.'.format(model_name))
         return model_name
 
-    def make_new_configs_dicts(self):
-        p = config.Dirs.lab / self.project_name / 'configs.csv'
-        if not p.exists():
-            print('Did not find configs.csv in {}'.format(p))
-        res = list(csv.DictReader(p.open('r')))
-        print('New configs:')
-        for config_id, d in enumerate(res):
-            print('Config {}:'.format(config_id))
-            for k, v in sorted(d.items()):
-                print('{:>20} -> {:<20}'.format(k, v))
-        return res
-
-    def submit(self, project_path, pattern='*.py'):
+    def submit(self, project_path, reps=1, pattern='*.py', test=True):
         self.check_disk_space_used_percent()
         # delete old
         try:
             self.logger.delete_incomplete_models()
         except FileNotFoundError:
             print('Could not delete incomplete models. Check log for inconsistencies.')
-        new_configs_dicts = self.make_new_configs_dicts()
-        # iterate over configs_dicts
+        # iterate over params - possibly upload to same worker multiple times (watcher remembers each trigger)
         private_key_pass = config.SFTP.private_key_pass_path.read_text().strip('\n')
-        for worker_name, configs_dict in zip(WORKER_NAMES,
-                                             self.starter.gen_configs_dicts(new_configs_dicts)):
-            configs_dict['model_name'] = self.make_model_name(worker_name)
-
-            # TODO upload configs_dict
-
+        for worker_name, params in zip(cycle(config.SFTP.worker_names), self.starter.gen_params(reps)):
+            # params
+            params.model_name = self.make_model_name(worker_name)
+            params.runs_dir = config.Dirs.lab / self.project_name / 'runs'
+            params.backup_dir = config.Dirs.lab / self.project_name / 'backup'
+            if not test:
+                self.logger.write_param_file(params)
+            # upload
             print('Connecting to {}'.format(worker_name))
             sftp = pysftp.Connection(username='ludwig',
                                      host=self.hostname2ip[worker_name],
                                      private_key='{}/.ssh/id_rsa'.format(Path.home()),
                                      private_key_pass=private_key_pass)
-            # upload
+            # upload params file (will be deleted after job is completed)
+            sftp.put(localpath='{}/{}/{}'.format(
+                config.Dirs.lab, self.project_name, params.model_name, 'params.csv'),
+                     remotepath='{}/{}'.format(self.project_name, '{}_params.csv'.format(params.model_name)))  # TODO test
+            # upload everything else
             found_watched_fname = False
             for file in Path(project_path).glob(pattern):  # use "*.py" to exclude __pycache__
                 if file.name == config.SFTP.watched_fname:
@@ -112,12 +99,14 @@ class Client:
                 localpath = '{}/{}'.format(directory, file.name)
                 remotepath = '{}/{}/{}'.format(self.project_name, directory, file.name)
                 print('Uploading {} to {}'.format(localpath, remotepath))
+                if test:
+                    continue  # TODO test
                 try:
                     sftp.put(localpath=localpath, remotepath=remotepath)
                 except FileNotFoundError:  # directory doesn't exist
                     print('WARNING: Directory {} does not exist. It will be created'.format(directory))
                     sftp.mkdir('{}/{}'.format(self.project_name, directory))
                     sftp.put(localpath=localpath, remotepath=remotepath)
-            # make sure to include run.py
             if not found_watched_fname:
-                raise RuntimeError('Did not find {} in project_path.'.format(config.SFTP.watched_fname))
+                raise RuntimeError('Watcher will not be triggered because {} was not uploaded.'.format(
+                    config.SFTP.watched_fname))

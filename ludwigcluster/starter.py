@@ -1,23 +1,23 @@
-import csv
 import datetime
 from termcolor import cprint
 import socket
+import csv
 
 from ludwigcluster import config
 
 
 class Starter:
     """
-    Contains methods for reading configs from disk, checking, and supplying configs for NN training.
+    Contains methods for reading params from disk, checking, and supplying params for NN training.
     """
 
     def __init__(self,
-                 reps,
-                 default_configs_dict,
+                 project_name,
+                 default_params,
                  check_fn,
                  log_entry_dicts):
-        self.reps = reps
-        self.default_configs_dict = default_configs_dict
+        self.project_name = project_name
+        self.default_params = default_params
         self.check_fn = check_fn
         self.log_entry_dicts = log_entry_dicts
 
@@ -45,60 +45,72 @@ class Starter:
             value = str(value)
         return value
 
-
-    def make_checked_configs_dicts(self, new_configs_dicts):
-        configs_dicts = []
-        new_config_names = set()
-        for new_configs_dict in new_configs_dicts:
-            configs_dict = self.default_configs_dict.copy()
+    def make_checked_params_list(self, new_params_list):
+        res = []
+        new_param_names = set()
+        for new_params in new_params_list:
+            params = self.default_params.copy()
             # overwrite
-            for config_name, config_value in new_configs_dict.items():
-                if config_name not in self.default_configs_dict.keys():
+            for config_name, config_value in new_params.items():
+                if config_name not in self.default_params.keys():
                     raise Exception('"{}" is not a valid config.'.format(config_name))
                 else:
-                    configs_dict[config_name] = self.to_correct_type(config_value)
-                    new_config_names.add(config_name)
-            # add configs_dict
-            self.check_fn(configs_dict, new_config_names)
-            configs_dicts.append(configs_dict)
-        return configs_dicts
+                    params[config_name] = self.to_correct_type(config_value)
+                    new_param_names.add(config_name)
+            # check + add
+            self.check_fn(params, new_param_names)
+            res.append(params)
+        return res
 
-    def gen_configs_dicts(self, new_configs_dicts):
-        # parse + check
-        checked_config_dicts = self.make_checked_configs_dicts(new_configs_dicts)
+    def load_new_params_list(self):
+        p = config.Dirs.lab / self.project_name / 'new_params.csv'
+        if not p.exists():
+            print('Did not find {}'.format(p))
+        res = list(csv.DictReader(p.open('r')))
+        print('New Params:')
+        for n, d in enumerate(res):
+            print('Params {}:'.format(n))
+            for k, v in sorted(d.items()):
+                print('{:>20} -> {:<20}'.format(k, v))
+        return res
+
+    def gen_params(self, reps):
+        # load + parse + check
+        new_params_list = self.load_new_params_list()
+        checked_params_list = self.make_checked_params_list(new_params_list)
         # generate
-        for config_id, configs_dict in enumerate(checked_config_dicts):
+        for n, params in enumerate(checked_params_list):
             cprint('==================================', 'blue')
             # make num_times_train
             num_times_logged = 0
-            num_times_logged += self.count_num_times_logged(configs_dict)
-            num_times_train = self.reps - num_times_logged
-            cprint('Config {} logged {} times'.format(config_id, num_times_logged), 'blue')
+            num_times_logged += self.count_num_times_logged(params)
+            num_times_train = reps - num_times_logged
+            cprint('Config {} logged {} times'.format(n, num_times_logged), 'blue')
             # generate
             num_times_train = max(0, num_times_train)
             color = 'green' if num_times_train > 0 else 'blue'
-            cprint('Will train Config {} {} times'.format(config_id, num_times_train), color)
+            cprint('Will train Config {} {} times'.format(n, num_times_train), color)
             cprint('==================================', 'blue')
             if num_times_train > 0:
                 for _ in range(num_times_train):
                     # timestamp
-                    configs_dict['model_name'] = self.make_model_name(configs_dict['flavor'])
-                    yield configs_dict
+                    params.model_name = self.make_model_name(params.flavor)
+                    yield params
 
-    def count_num_times_logged(self, configs_dict):
+    def count_num_times_logged(self, params):
         num_times_logged = 0
         if not self.log_entry_dicts:
             return 0
         # make num_times_logged
         for log_entry_d in self.log_entry_dicts:
             bool_list = []
-            for config_name, config_value in configs_dict.items():
-                if config_name == 'model_name':
+            for name, value in params.items():  # TODO test - need .dict.items()?
+                if name == 'model_name':
                     continue
                 try:
-                    bool_list.append(config_value == log_entry_d[config_name])
+                    bool_list.append(value == log_entry_d[name])
                 except KeyError:
-                    print('WARNING: config {} not found in main log'.format(config_name))
+                    print('WARNING: config {} not found in main log'.format(name))
                     pass
             if all(bool_list):
                 num_times_logged += 1

@@ -13,9 +13,9 @@ class Logger:
     Methods for interacting with log
     """
 
-    def __init__(self, project_name, default_configs_dict):
+    def __init__(self, project_name, default_params):
         self.project_name = project_name
-        self.default_configs_dict = default_configs_dict
+        self.default_params = default_params
         self.log_path = config.Dirs.lab / project_name / 'log.csv'
         #
         if not self.log_path.is_file():
@@ -45,13 +45,26 @@ class Logger:
                 self.delete_model(model_name)
 
     def load_log(self):
-        self.concat_info_files()  # TODO test
+        self.concat_params_files()  # TODO test
         with self.log_path.open('r') as f:
             reader = csv.DictReader(f)
             result = []
             for log_entry_d in reader:
                 result.append(self.to_correct_types(log_entry_d))
         return result
+
+    def write_param_file(self, params):  # TODO test
+        """
+        writes csv file to shared directory on LudwigCluster
+        this is required for logger - builds log from param files
+        """
+        p = config.Dirs.lab / self.project_name / params.model_name / 'params.csv'
+        if not p.parent.exits():
+            p.mkdir(parents=True)
+        with p.open('w') as f:
+            writer = csv.DictWriter(f, fieldnames=self.fieldnames)
+            writer.writeheader()
+            writer.writerow(self.to_strings(params))
 
     # //////////////////////////////////////////////////////////////// misc
 
@@ -77,29 +90,29 @@ class Logger:
 
     @property
     def fieldnames(self):
-        fieldnames = self.all_config_names
+        fieldnames = self.all_param_names
         fieldnames.insert(0, 'model_name')
         return fieldnames
 
     @property
-    def all_config_names(self):
-        all_config_names = sorted(self.default_configs_dict.keys())
-        return all_config_names
+    def all_param_names(self):
+        res = sorted(self.default_params.keys())
+        return res
 
-    def concat_info_files(self, verbose=False):
+    def concat_params_files(self, verbose=False):  # TODO test
         # make info_file_paths
-        info_file_paths = [config.Dirs.lab / self.project_name / model_name / 'Params' / 'info.csv'
-                           for model_name in (config.Dirs.lab / self.project_name).glob('*_*')
-                           if (config.Dirs.lab / self.project_name / model_name / 'Params' / 'info.csv').exists()]
+        info_file_paths = [config.Dirs.lab / self.project_name / model_name / 'params.csv'
+                           for model_name in (config.Dirs.lab / self.project_name / self.default_params.runs_dir).glob('*_*')
+                           if (config.Dirs.lab / self.project_name / model_name / 'params.csv').exists()]
         # concatenate
         if not info_file_paths:
             if verbose:
                 print('Did not find individual info files to concatenate into log file.\n'
                       'Creating empty log file.')
-            result = pd.DataFrame()
+            res = pd.DataFrame()
         else:
-            result = pd.DataFrame(pd.concat((pd.read_csv(f, index_col=0)
-                                             for f in info_file_paths)))
+            res = pd.DataFrame(pd.concat((pd.read_csv(f, index_col=0)
+                                          for f in info_file_paths)))
         # save
-        result.to_csv(self.log_path)
-        return result
+        res.to_csv(self.log_path)
+        return res

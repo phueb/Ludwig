@@ -10,10 +10,9 @@ from queue import Queue
 
 from ludwigcluster import hostname
 from ludwigcluster import config
-from ludwigcluster import PROJECT_NAME, RUN_FNAME
 
 
-CMD = 'python3 /var/sftp/{}/{}'.format(PROJECT_NAME, RUN_FNAME)
+CMD = 'python3 /var/sftp/{}/{}'.format(PROJECT_NAME, config.watched_fname)
 
 
 # TODO it's probably best not to execute neural network task until completion
