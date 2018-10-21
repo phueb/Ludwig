@@ -91,18 +91,15 @@ class Starter:
             return 0
         # make num_times_logged
         for log_entry_d in self.log_entry_dicts:
-            if log_entry_d['timepoint'] != log_entry_d['num_saves']:
-                continue
-            else:
-                bool_list = []
-                for config_name, config_value in configs_dict.items():
-                    if config_name == 'model_name':
-                        continue
-                    try:
-                        bool_list.append(config_value == log_entry_d[config_name])
-                    except KeyError:
-                        print('WARNING: config {} not found in main log'.format(config_name))
-                        pass
-                if all(bool_list):
-                    num_times_logged += 1
+            bool_list = []
+            for config_name, config_value in configs_dict.items():
+                if config_name == 'model_name':
+                    continue
+                try:
+                    bool_list.append(config_value == log_entry_d[config_name])
+                except KeyError:
+                    print('WARNING: config {} not found in main log'.format(config_name))
+                    pass
+            if all(bool_list):
+                num_times_logged += 1
         return num_times_logged

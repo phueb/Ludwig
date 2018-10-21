@@ -5,6 +5,9 @@ import shutil
 from ludwigcluster import config
 
 
+# TODO timepoint is depreciated - model is assumed complete if data has been backed-up
+
+
 class Logger:
     """
     Methods for interacting with log
@@ -36,15 +39,10 @@ class Logger:
             writer.writeheader()
         print('Created log file {}'.format(self.log_path))
 
-    def delete_incomplete_models(self):
+    def delete_incomplete_models(self):  # TODO test - delete models which don't have folder in backup dir
         for model_name in (config.Dirs.lab / self.project_name).glob('*_*'):
-            info_file_path = config.Dirs.lab / self.project_name / model_name / 'Configs' / 'info.csv'
-            with info_file_path.open('r') as f:
-                reader = csv.DictReader(f)
-                log_entry_d = next(reader)  # TODO test
-                if log_entry_d['num_saves'] != log_entry_d['timepoint']:
-                    model_name = log_entry_d['model_name']
-                    self.delete_model(model_name)
+            if not (config.Dirs.lab / self.project_name / model_name).exits():
+                self.delete_model(model_name)
 
     def load_log(self):
         self.concat_info_files()  # TODO test
@@ -54,15 +52,6 @@ class Logger:
             for log_entry_d in reader:
                 result.append(self.to_correct_types(log_entry_d))
         return result
-
-    def write_info_file(self, configs_dict, timepoint):
-        log_entry_d = configs_dict.copy()
-        log_entry_d['timepoint'] = timepoint
-        info_file_path = config.Dirs.lab / self.project_name / log_entry_d['model_name'] / 'Configs' / 'info.csv'
-        with info_file_path.open('w') as f:
-            writer = csv.DictWriter(f, fieldnames=self.fieldnames)
-            writer.writeheader()
-            writer.writerow(self.to_strings(log_entry_d))
 
     # //////////////////////////////////////////////////////////////// misc
 
@@ -90,7 +79,6 @@ class Logger:
     def fieldnames(self):
         fieldnames = self.all_config_names
         fieldnames.insert(0, 'model_name')
-        fieldnames.append('timepoint')
         return fieldnames
 
     @property
@@ -100,9 +88,9 @@ class Logger:
 
     def concat_info_files(self, verbose=False):
         # make info_file_paths
-        info_file_paths = [config.Dirs.lab / self.project_name / model_name / 'Configs' / 'info.csv'
+        info_file_paths = [config.Dirs.lab / self.project_name / model_name / 'Params' / 'info.csv'
                            for model_name in (config.Dirs.lab / self.project_name).glob('*_*')
-                           if (config.Dirs.lab / self.project_name / model_name / 'Configs' / 'info.csv').exists()]
+                           if (config.Dirs.lab / self.project_name / model_name / 'Params' / 'info.csv').exists()]
         # concatenate
         if not info_file_paths:
             if verbose:
