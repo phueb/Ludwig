@@ -3,7 +3,6 @@
 
 
 for hostname in bengio hawkins hebb hinton hoff lecun norman pitts;
-#for hostname in bengio;
 do
     echo Uploading watcher to ${hostname}
 
@@ -14,6 +13,5 @@ do
     pkill --full --echo "python3 watcher.py"
     echo Starting watcher
     ssh ${hostname} "cd /var/sftp/LudwigCluster; nohup python3 watcher.py > watcher.out 2>&1 &"
-#    ssh ${hostname} "cd /var/sftp/LudwigCluster; python3 watcher.py"
 echo
 done

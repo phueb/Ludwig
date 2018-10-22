@@ -34,7 +34,7 @@ class Handler(FileSystemEventHandler):
             self.q.put((event, ts))
 
     def trigger(self):
-        fname = '{}_stdout_{}.txt'.format(config.hostname, datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
+        fname = '{}_{}.txt'.format(config.hostname, datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
         cmd = CMD + ' > {}/{}'.format(config.Dirs.stdout, fname)
         try:
             subprocess.check_call([cmd], shell=True)
