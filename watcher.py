@@ -8,15 +8,16 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from queue import Queue
 
-from ludwigcluster import hostname
 from ludwigcluster import config
 
 
-CMD = 'python3 /var/sftp/{}/{}'.format(PROJECT_NAME, config.watched_fname)
+CMD = 'python3 /var/sftp/LudwigCluster/{}'.format(config.SFTP.watched_fname)
 
 
-# TODO it's probably best not to execute neural network task until completion
-# TODO it might be more flexible to allow restarting of task upon file change
+# TODO wher should user upload to ?
+# TODO user can remove luswigcluster repository files - make owner adm
+
+# TODO it might be better to allow restarting of task upon file change (if a long running task is no longer wanted)
 
 
 class Handler(FileSystemEventHandler):
@@ -33,12 +34,12 @@ class Handler(FileSystemEventHandler):
         global stopped
 
         norm = normpath(expanduser(event.src_path))
-        if not event.is_directory and norm == RUN_FNAME:
+        if not event.is_directory and norm == config.SFTP.watched_fname:
             ts = datetime.now()
             self.q.put((event, ts))
 
     def trigger(self):
-        fname = '{}_stdout_{}.txt'.format(hostname, datetime.now().strftime('%m-%d-%H-%M-%S'))
+        fname = '{}_stdout_{}.txt'.format(config.hostname, datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
         cmd = CMD + ' > {}/{}'.format(config.Dirs.stdout, fname)
         try:
             subprocess.check_call([cmd], shell=True)
@@ -61,7 +62,7 @@ class Handler(FileSystemEventHandler):
 
 
 def watcher():
-    print('Started file-watcher. Upon change, run.py will be executed.')
+    print('Started file-watcher. Upon change, {} will be executed.'.format(config.SFTP.watched_fname))
     observer = Observer()
     handler = Handler()
     handler.start()

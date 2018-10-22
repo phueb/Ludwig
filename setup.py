@@ -7,7 +7,7 @@ setup(
     packages=['ludwigcluster'],
     install_requires=['psutil',
                       'pysftp',
-                      'termcolor', 'pandas'],
+                      'termcolor', 'pandas', 'watchdog'],
     url='https://github.com/languagelearninglab/LudwigCluster',
     license='',
     author='Philip Huebner',
