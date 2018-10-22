@@ -5,6 +5,7 @@ import socket
 class Dirs:
     lab = Path('/') / 'media' / 'lab'
     stdout = lab / 'stdout'
+    watched = '/var/sftp/ludwig'
 
 
 class SFTP:

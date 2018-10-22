@@ -3,7 +3,6 @@ import threading
 import time
 import subprocess
 from pathlib import Path
-from os.path import expanduser, normpath
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from queue import Queue
@@ -11,11 +10,7 @@ from queue import Queue
 from ludwigcluster import config
 
 
-CMD = 'python3 /var/sftp/LudwigCluster/{}'.format(config.SFTP.watched_fname)
-
-
-# TODO wher should user upload to ?
-# TODO user can remove luswigcluster repository files - make owner adm
+CMD = 'python3 {}/{}'.format(config.Dirs.watched, config.SFTP.watched_fname)
 
 # TODO it might be better to allow restarting of task upon file change (if a long running task is no longer wanted)
 
@@ -31,10 +26,10 @@ class Handler(FileSystemEventHandler):
         self.thread.start()
 
     def on_any_event(self, event):
-        global stopped
-
-        norm = normpath(expanduser(event.src_path))
-        if not event.is_directory and norm == config.SFTP.watched_fname:
+        is_trigger_event = Path(config.Dirs.watched) / config.SFTP.watched_fname == Path(event.src_path)
+        print('Detected event {}'.format(event.src_path))
+        print('is trigger event: {}'.format(is_trigger_event))
+        if is_trigger_event:
             ts = datetime.now()
             self.q.put((event, ts))
 
@@ -67,7 +62,7 @@ def watcher():
     handler = Handler()
     handler.start()
 
-    observer.schedule(handler, '.', recursive=False)
+    observer.schedule(handler, config.Dirs.watched, recursive=False)
     observer.start()
 
     try:
