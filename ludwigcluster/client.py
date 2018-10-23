@@ -83,13 +83,17 @@ class Client:
             res = pd.concat(series_list, axis=1).T
             return res
 
-    def submit(self, project_path, params_df, reps=1, pattern='*.py', test=True):
+    def submit(self, project_path, params_path, reps=1, pattern='*.py', test=True):
         self.check_lab_disk_space()
         # delete old
         try:
             self.logger.delete_incomplete_models()
         except FileNotFoundError:
             print('Could not delete incomplete models. Check log for inconsistencies.')
+
+
+        # TODO make params_df by loading params.csv from params_path using class Params
+
         # add reps
         params_df = self.add_reps_to_params_df(params_df, reps)
         # chunk params into 8 (one chunk per node)
@@ -122,13 +126,8 @@ class Client:
             sftp.put(localpath='params_chunk.csv',
                      remotepath='{}/{}'.format(self.ludwig, 'params.csv'))
             # upload run.py
-
             sftp.put(localpath='run.py',
                      remotepath='{}/{}'.format(self.ludwig, 'run.py'))
-
-            # TODO RuntimeError('Watcher will not be triggered because {} was not uploaded.'.format(
-            #                     config.SFTP.watched_fname)
-
             # upload all files in project directory
             for file in Path(project_path).glob(pattern):  # use "*.py" to exclude __pycache__
                 directory = file.parent.stem

@@ -32,7 +32,7 @@ All machines are configured to use:
 It is recommend to use a machine with a Linux OS to submit tasks. 
 
 ### Python
-Tasks submitted to LudwigCluster must be programmed in python.
+Tasks submitted to LudwigCluster must be programmed in Python.
 
 ### Access to the shared drive
 See the administrator to provide access to the lab's shared drive. Mount the drive at ```/media/lab```.
@@ -42,38 +42,35 @@ Because we do not allow direct shell access to nodes, all data and logs must be 
 ### Access to jailed SFTP on one or multiple nodes
 You must ask the administrator to provide you with sftp access to one or multiple nodes.
 It is recommended to use password-less access via keypair authentication. 
-To submit a task to LudwigCluster, transfer your source code to a node. 
-Make sure to include a file ```run.py```. 
-A file-watcher is constantly watching for changes to ```run.py``` and whenever a new version is uploaded, ```run.py``` will automatically be executed in a subprocess.
-
-### ssh config
 Create ```config``` in ```/home/.ssh```.
 Ask the administrator to populate this file with the names of the worker names and their IP addresses.
-### Project directory
-Each task must be associated with a project. 
-Ask the administrator to create a directory ```<PROJECTNAME>``` in ```/var/sftp``` on one or more nodes. 
-Because ```/var/sftp``` is owned by ```root```, the administrator must give the user ```ludwig``` ownership of the directory.
-To facilitate batch-administration of nodes, it is recommended to give group wonwership to the graoup ```adm```.
-```bash
-chmod ludwig:adm <PROJECTNAME>
-``` 
-The administrator must also start the file-watcher:
-```bash
-cd /var/sftp/<PROJECTNAME>
-sudo python3 watcher.py
-```
+
 ## Submitting a Task
 
-### 1) pip install LudwigCluster (recommended)
-Make ```LudwigCluster available ``` in your project, by installing this repository in your project's virtualenv:
-```(venv) pip install git+https://github.com/languagelearninglab/LudwigCluster.git```
+### 1) LudwigCluster client
+Submit neural network jobs to ```LudwigCluster ``` directly from your project by importing the ```LudwigCluster``` client.
+First, install the client in your project's virtual environment,
 
-TODO - what's next?
+```bash
+(venv) pip3 install git+https://github.com/phueb/LudwigCluster.git
+```
+
+and import the client:
+
+```python
+from ludwigcluster import client, params
+```
+
+### 2) 
+Create a ```run.py``` file which calls a neural-network training function. 
+It should read ```params.csv``` and train a neural network for each row of parameters in ```params.csv```
+
+TODO: should this file be provided by ludwigcluster?
 
 ### Logging
-By default, the stdout of ```run.py``` will be redirected to a text file located on the shared drive.
+By default, the stdout of a submitted job will be redirected to a file located on the shared drive.
 After uploading your code, verify that your task is being processed by reading the log file.
-If you don't recognize the output in the logfile, it is likely that the node is currently processing another user's task.
+If you don't recognize the output in the file, it is likely that the node is currently processing another user's task.
 Retry when the node is no longer busy. 
 
 ## Note
