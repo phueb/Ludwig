@@ -8,6 +8,7 @@ import platform
 import psutil
 import datetime
 import pandas as pd
+import numpy as np
 
 from ludwigcluster import config
 from ludwigcluster.logger import Logger
@@ -22,6 +23,10 @@ class Client:
         self.project_name = project_name
         self.hostname2ip = self.make_hostname2ip()
         self.logger = Logger(project_name)
+        self.num_workers = len(config.SFTP.worker_names)
+        self.private_key_pass = config.SFTP.private_key_pass_path.read_text().strip('\n')
+        self.private_key = '{}/.ssh/id_rsa'.format(Path.home())
+        self.ludwig = 'ludwig'
 
     @staticmethod
     def make_hostname2ip():
@@ -43,18 +48,18 @@ class Client:
         return res
 
     @staticmethod
-    def check_disk_space_used_percent():
+    def check_lab_disk_space():
         if platform.system() == 'Linux':
             usage_stats = psutil.disk_usage(str(config.Dirs.lab))
             percent_used = usage_stats[3]
-            print('Percent Disk Space used: {}'.format(percent_used))
+            print('Percent Disk Space used at {}: {}'.format(config.Dirs.lab, percent_used))
             if percent_used > DISK_USAGE_MAX:
                 print('Disk space usage > {}.'.format(DISK_USAGE_MAX), 'red')
                 raise Exception
         else:
             print('WARNING: Cannot determine disk space on non-Linux platform.')
 
-    def make_model_name(self, worker_name):
+    def make_model_base_name(self, worker_name):
         time_of_init = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         model_name = '{}_{}'.format(worker_name, time_of_init)
         path = config.Dirs.lab / self.project_name / model_name
@@ -62,73 +67,73 @@ class Client:
             raise IsADirectoryError('Directory "{}" already exists.'.format(model_name))
         return model_name
 
-    def chunk_params(self, params_df, reps):
-
-
-        # TODO this should split new_params_list into 8 random chunks
-        raise SystemExit
-
+    def add_reps_to_params_df(self, params_df, reps):
+        series_list = []
         for n, params_df_row in params_df.iterrows():
-            print('==================================')
             num_times_logged = 0
-            num_times_logged += self.count_num_times_logged(params_df_row)
+            num_times_logged += self.logger.count_num_times_in_backup(params_df_row)
             num_times_train = reps - num_times_logged
             num_times_train = max(0, num_times_train)
-            print('Logged {} times'.format(num_times_logged))
-            print('Will train {} times'.format(num_times_train))
-            print('==================================')
-            if num_times_train > 0:
-                for _ in range(num_times_train):
-                    yield params_df_row
-
-    def count_num_times_logged(self, params_df_row):
-        num_times_logged = 0
-        for n, log_df_row in self.logger.load_log().iterrows():
-            if all([params_df_row[k] == log_df_row[k] for k in params_df_row.index]):
-                num_times_logged += 1
-        return num_times_logged
+            print('Config {} logged {} times. Will train {} times'.format(
+                n, num_times_logged, num_times_train))
+            series_list += [params_df_row] * num_times_train
+        if not series_list:
+            raise RuntimeError('{} replications of each model already exist.'.format(reps))
+        else:
+            res = pd.concat(series_list, axis=1).T
+            return res
 
     def submit(self, project_path, params_df, reps=1, pattern='*.py', test=True):
-        self.check_disk_space_used_percent()
+        self.check_lab_disk_space()
         # delete old
         try:
             self.logger.delete_incomplete_models()
         except FileNotFoundError:
             print('Could not delete incomplete models. Check log for inconsistencies.')
-        # chunk new params into 8 (one chunk per node)
-        private_key_pass = config.SFTP.private_key_pass_path.read_text().strip('\n')
-        for worker_name, params_chunk in zip(config.SFTP.worker_names,
-                                             self.chunk_params(params_df, reps)):
-
-
-            # TODO params_chunk
-
-            raise SystemExit('Stopped')
-
-            # params
-            params.model_name = self.make_model_name(worker_name)
-            params.runs_dir = config.Dirs.lab / self.project_name / 'runs'
-            params.backup_dir = config.Dirs.lab / self.project_name / 'backup'
-            if not test:
-                self.logger.write_param_file(params)  # TODO this takes a single param file - no longer works
+        # add reps
+        params_df = self.add_reps_to_params_df(params_df, reps)
+        # chunk params into 8 (one chunk per node)
+        for worker_name, params_df_chunk in zip(config.SFTP.worker_names,
+                                                np.array_split(params_df, self.num_workers)):
+            # params_df_chunk
+            num_models = len(params_df_chunk)
+            if num_models == 0:
+                print('Not submitting to {}'.format(worker_name))
+                continue
+            base_name = self.make_model_base_name(worker_name)
+            params_df_chunk['model_name'] = ['{}_{}'.format(base_name, n) for n in range(num_models)]
+            params_df_chunk['runs_dir'] = config.Dirs.lab / self.project_name / 'runs'
+            params_df_chunk['backup_dir'] = config.Dirs.lab / self.project_name / 'backup'
+            for params_df_row in np.split(params_df_chunk, num_models):
+                self.logger.save_params_df_row(params_df_row)
+            if test:
+                print(worker_name)
+                print(params_df_chunk.T)
+                print()
+                continue
             # upload
             print('Connecting to {}'.format(worker_name))
             sftp = pysftp.Connection(username='ludwig',
                                      host=self.hostname2ip[worker_name],
-                                     private_key='{}/.ssh/id_rsa'.format(Path.home()),
-                                     private_key_pass=private_key_pass)
-            # upload params file (will be deleted after job is completed)
-            sftp.put(localpath='{}/{}/{}'.format(
-                config.Dirs.lab, self.project_name, params.model_name, 'params.csv'),
-                     remotepath='{}/{}'.format(self.project_name, '{}_params.csv'.format(params.model_name)))  # TODO test
+                                     private_key=self.private_key,
+                                     private_key_pass=self.private_key_pass)
+            # upload params.csv
+            params_df_chunk.to_csv('params_chunk.csv', index=False)
+            sftp.put(localpath='params_chunk.csv',
+                     remotepath='{}/{}'.format(self.ludwig, 'params.csv'))
+            # upload run.py
+
+            sftp.put(localpath='run.py',
+                     remotepath='{}/{}'.format(self.ludwig, 'run.py'))
+
+            # TODO RuntimeError('Watcher will not be triggered because {} was not uploaded.'.format(
+            #                     config.SFTP.watched_fname)
+
             # upload all files in project directory
-            found_watched_fname = False
             for file in Path(project_path).glob(pattern):  # use "*.py" to exclude __pycache__
-                if file.name == config.SFTP.watched_fname:
-                    found_watched_fname = True
                 directory = file.parent.stem
                 localpath = '{}/{}'.format(directory, file.name)
-                remotepath = '{}/{}/{}'.format(self.project_name, directory, file.name)
+                remotepath = '{}/{}/{}'.format(self.ludwig, directory, file.name)
                 print('Uploading {} to {}'.format(localpath, remotepath))
                 if test:
                     continue  # TODO test
@@ -136,8 +141,5 @@ class Client:
                     sftp.put(localpath=localpath, remotepath=remotepath)
                 except FileNotFoundError:  # directory doesn't exist
                     print('WARNING: Directory {} does not exist. It will be created'.format(directory))
-                    sftp.mkdir('{}/{}'.format(self.project_name, directory))
+                    sftp.mkdir('{}/{}'.format(self.ludwig, directory))
                     sftp.put(localpath=localpath, remotepath=remotepath)
-            if not found_watched_fname:
-                raise RuntimeError('Watcher will not be triggered because {} was not uploaded.'.format(
-                    config.SFTP.watched_fname))

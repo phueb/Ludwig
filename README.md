@@ -64,24 +64,7 @@ sudo python3 watcher.py
 ```
 ## Submitting a Task
 
-### 1) sftp
-Let's take for example a user who would like to submit a task to ```bengio```. 
-First, connect to ```bengio```'s sftp server:
-```bash
-sftp ludwig@bengio
-```
-
-Next, upload all files needed for the task (or only those with revisions, if previously uploaded).
-Make sure to upload ```run.py``` - even if no revisions have been made to it.
-```bash
-sftp> put src/*.py <PROJECTNAME>/src/
-sftp> put run.py <PROJECTNAME>/
-```
-
-### 2) client.py
-Alternatively, use ```client.py``` to automate this task across multiple nodes. 
-
-### 3) pip install LudwigCluster (recommended)
+### 1) pip install LudwigCluster (recommended)
 Make ```LudwigCluster available ``` in your project, by installing this repository in your project's virtualenv:
 ```(venv) pip install git+https://github.com/languagelearninglab/LudwigCluster.git```
 

@@ -4,9 +4,6 @@ import shutil
 from ludwigcluster import config
 
 
-# TODO timepoint is depreciated - model is assumed complete if data has been backed-up
-
-
 class Logger:
     """
     Methods for interacting with log
@@ -15,59 +12,55 @@ class Logger:
     def __init__(self, project_name):
         self.project_name = project_name
         self.log_path = config.Dirs.lab / project_name / 'log.csv'
-
-    # //////////////////////////////////////////////////////////////// log file
+        if not (config.Dirs.lab / self.project_name).exists():
+            (config.Dirs.lab / self.project_name / 'runs').mkdir(parents=True)
+            (config.Dirs.lab / self.project_name / 'backup').mkdir()
 
     def delete_model(self, model_name):
         path = config.Dirs.lab / self.project_name / model_name
         try:
             shutil.rmtree(str(path))
         except OSError:  # sometimes only log entry is created, and no model files
-            print('rnnlab WARNING: Could not delete {}'.format(path))
+            print('WARNING: Error deleting {}'.format(path))
         else:
             print('Deleted {}'.format(model_name))
 
-    def delete_incomplete_models(self):  # TODO test - delete models which don't have folder in backup dir
-        for model_name in (config.Dirs.lab / self.project_name).glob('*_*'):
-            if not (config.Dirs.lab / self.project_name / model_name).exits():
-                self.delete_model(model_name)
+    def delete_incomplete_models(self):
+        for p in (config.Dirs.lab / self.project_name / 'runs').glob('*_*'):
+            print(p.name)
+            if not (config.Dirs.lab / self.project_name / 'backup' / p.name).exists():
+                self.delete_model(p)
 
-    def load_log(self):  # TODO test - log is not saved but stored in memory
-        print('Loading log')
-        ps = []
-        for model_name in (config.Dirs.lab / self.project_name / 'runs').glob('*_*'):
-
-            print(model_name)
-            raise SystemExit
-
-            if (config.Dirs.lab / self.project_name / model_name / 'params.csv').exists():
-                p = config.Dirs.lab / self.project_name / model_name / 'params.csv'
-                ps.append(p)
-
+    def load_log(self, which):
+        if which == 'runs':
+            print('Loading runs log')
+        elif which == 'backup':
+            print('Loading backup log')
+        else:
+            raise AttributeError('Invalid arg to "which" (log).')
+        params_file_paths = [p for p in (config.Dirs.lab / self.project_name / which).rglob('params.csv')]
         # concatenate
-        if not ps:
-            print('Did not find individual info files to concatenate into log file.\n'
-                  'Creating empty log file.')
+        if not params_file_paths:
+            print('Did not find any data in {} from which to build log.\n'
+                  'Creating empty log file.'.format(config.Dirs.lab / self.project_name / 'runs'))
             res = pd.DataFrame()
         else:
-            res = pd.DataFrame(pd.concat((pd.read_csv(f, index_col=0)
-                                          for f in ps)))
-
-
-        # TODO remove
-        res = pd.read_csv('/home/ph/mock_log.csv')
-
-
+            res = pd.DataFrame(pd.concat((pd.read_csv(f, index_col=False) for f in params_file_paths)))
         return res
 
-    def write_param_file(self, params):  # TODO replace with pandas
+    def count_num_times_in_backup(self, params_df_row):
+        num_times_logged = 0
+        for n, log_df_row in self.load_log('backup').iterrows():
+            if all([params_df_row[k] == log_df_row[k] for k in params_df_row.index]):
+                num_times_logged += 1
+        return num_times_logged
+
+    def save_params_df_row(self, params_df_row):
         """
         writes csv file to shared directory on LudwigCluster
         this is required for logger - builds log from param files
         """
-        p = config.Dirs.lab / self.project_name / params.model_name / 'params.csv'
-        if not p.parent.exits():
-            p.mkdir(parents=True)
-
-        raise NotImplementedError
-        # TODO insert model_name in first column
+        p = config.Dirs.lab / self.project_name / 'runs' / params_df_row['model_name'].values[0] / 'params.csv'
+        if not p.parent.exists():
+            p.parent.mkdir(parents=True)
+        params_df_row.to_csv(p, index=False)

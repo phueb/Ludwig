@@ -10,8 +10,9 @@ do
     scp ../ludwigcluster/config.py ${hostname}:/var/sftp/LudwigCluster/ludwigcluster/config.py
 
     echo Killing active watchers
-    pkill --full --echo "python3 watcher.py"
+    ssh ${hostname} 'pkill --full --echo "python3 watcher.py"'
+
     echo Starting watcher
-    ssh ${hostname} "cd /var/sftp/LudwigCluster; nohup python3 watcher.py > watcher.out 2>&1 &"
+    ssh ${hostname} "cd /var/sftp/LudwigCluster; nohup python3 watcher.py > /media/lab/stdout/${hostname}.out 2>&1 &"
 echo
 done
