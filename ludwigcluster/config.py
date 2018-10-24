@@ -13,5 +13,8 @@ class SFTP:
     watched_fname = 'run.py'  # this is required for watcher to know which file to run
     private_key_pass_path = Path.home() / '.rsapub_passwd'
 
+class Time:
+    format = '%Y-%m-%d-%H-%M-%S'
+    delete_delta = 24  # in hours
 
 hostname = socket.gethostname()

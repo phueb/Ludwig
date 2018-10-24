@@ -60,7 +60,7 @@ class Client:
             print('WARNING: Cannot determine disk space on non-Linux platform.')
 
     def make_model_base_name(self, worker_name):
-        time_of_init = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        time_of_init = datetime.datetime.now().strftime(config.Time.format)
         model_name = '{}_{}'.format(worker_name, time_of_init)
         path = config.Dirs.lab / self.project_name / model_name
         if path.is_dir():
@@ -70,11 +70,10 @@ class Client:
     def add_reps_to_params_df(self, params_df, reps):
         series_list = []
         for n, params_df_row in params_df.iterrows():
-            num_times_logged = 0
-            num_times_logged += self.logger.count_num_times_in_backup(params_df_row)
+            num_times_logged = self.logger.count_num_times_in_backup(params_df_row)
             num_times_train = reps - num_times_logged
             num_times_train = max(0, num_times_train)
-            print('Config {} logged {} times. Will train {} times'.format(
+            print('Parmas {} logged {} times. Will train {} times'.format(
                 n, num_times_logged, num_times_train))
             series_list += [params_df_row] * num_times_train
         if not series_list:
@@ -83,20 +82,11 @@ class Client:
             res = pd.concat(series_list, axis=1).T
             return res
 
-    def submit(self, project_path, params_path, reps=1, pattern='*.py', test=True):
+    def submit(self, project_path, params_df, reps=1, pattern='*.py', test=True):
         self.check_lab_disk_space()
-        # delete old
-        try:
-            self.logger.delete_incomplete_models()
-        except FileNotFoundError:
-            print('Could not delete incomplete models. Check log for inconsistencies.')
-
-
-        # TODO make params_df by loading params.csv from params_path using class Params
-
-        # add reps
+        self.logger.delete_incomplete_models()
         params_df = self.add_reps_to_params_df(params_df, reps)
-        # chunk params into 8 (one chunk per node)
+        # split params into 8 chunks (one per node)
         for worker_name, params_df_chunk in zip(config.SFTP.worker_names,
                                                 np.array_split(params_df, self.num_workers)):
             # params_df_chunk
@@ -111,7 +101,7 @@ class Client:
             for params_df_row in np.split(params_df_chunk, num_models):
                 self.logger.save_params_df_row(params_df_row)
             if test:
-                print(worker_name)
+                print('Submitting to {}:'.format(worker_name))
                 print(params_df_chunk.T)
                 print()
                 continue

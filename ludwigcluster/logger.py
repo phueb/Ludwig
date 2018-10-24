@@ -1,5 +1,7 @@
 import pandas as pd
 import shutil
+import datetime
+import re
 
 from ludwigcluster import config
 
@@ -26,9 +28,17 @@ class Logger:
             print('Deleted {}'.format(model_name))
 
     def delete_incomplete_models(self):
+        delta = datetime.timedelta(hours=config.Time.delete_delta)
+        time_of_init_cutoff = datetime.datetime.now() - delta
         for p in (config.Dirs.lab / self.project_name / 'runs').glob('*_*'):
-            print(p.name)
             if not (config.Dirs.lab / self.project_name / 'backup' / p.name).exists():
+                result = re.search('_(.*)_', p.name)
+                time_of_init = result.group(1)
+                dt = datetime.datetime.strptime(time_of_init, config.Time.format)
+                if dt < time_of_init_cutoff:
+                    print('Found dir more than {} hours old that is not backed-up.'.format(
+                        config.Time.delete_delta))
+                    print(p.name)
                 self.delete_model(p)
 
     def load_log(self, which):
