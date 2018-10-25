@@ -73,7 +73,7 @@ class Client:
             num_times_logged = self.logger.count_num_times_in_backup(params_df_row)
             num_times_train = reps - num_times_logged
             num_times_train = max(0, num_times_train)
-            print('Parmas {} logged {} times. Will train {} times'.format(
+            print('Params {} logged {} times. Will train {} times'.format(
                 n, num_times_logged, num_times_train))
             series_list += [params_df_row] * num_times_train
         if not series_list:
@@ -87,8 +87,9 @@ class Client:
         self.logger.delete_incomplete_models()
         params_df = self.add_reps_to_params_df(params_df, reps)
         # split params into 8 chunks (one per node)
-        for worker_name, params_df_chunk in zip(config.SFTP.worker_names,
-                                                np.array_split(params_df, self.num_workers)):
+        worker_names = iter(np.random.permutation(config.SFTP.worker_names))
+        for params_df_chunk in np.array_split(params_df, self.num_workers):
+            worker_name = next(worker_names)  # distribute jobs across workers randomly
             # params_df_chunk
             num_models = len(params_df_chunk)
             if num_models == 0:
@@ -101,7 +102,7 @@ class Client:
             for params_df_row in np.split(params_df_chunk, num_models):
                 self.logger.save_params_df_row(params_df_row)
             if test:
-                print('Submitting to {}:'.format(worker_name))
+                print('TEST: Would submit to {}:'.format(worker_name))
                 print(params_df_chunk.T)
                 print()
                 continue

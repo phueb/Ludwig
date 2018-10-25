@@ -34,11 +34,8 @@ class Handler(FileSystemEventHandler):
             self.q.put((event, ts))
 
     def trigger(self):
-        out_fname = '{}_{}.out'.format(config.hostname, datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
-        # TODO this presumably does't work because parent process is redirecting to watcher.out
-        cmd = CMD + ' &> {}/{}'.format(config.Dirs.stdout, out_fname)
         try:
-            subprocess.check_call([cmd], shell=True)
+            subprocess.check_call([CMD], shell=True)  # stdout is already redirected, cannot do it here
         except OSError as exc:
             print(exc)
 

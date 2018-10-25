@@ -38,8 +38,7 @@ class Logger:
                 if dt < time_of_init_cutoff:
                     print('Found dir more than {} hours old that is not backed-up.'.format(
                         config.Time.delete_delta))
-                    print(p.name)
-                self.delete_model(p)
+                    self.delete_model(p)
 
     def load_log(self, which):
         if which == 'runs':
