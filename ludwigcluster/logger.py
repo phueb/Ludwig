@@ -59,8 +59,10 @@ class Logger:
 
     def count_num_times_in_backup(self, params_df_row):
         num_times_logged = 0
+        # ignore model_name + paths because they are not of type str
+        keys_to_check = [k for k in params_df_row.index if k not in ['model_name', 'runs_dir', 'backup_dir']]
         for n, log_df_row in self.load_log('backup').iterrows():
-            if all([params_df_row[k] == log_df_row[k] for k in params_df_row.index]):
+            if all([params_df_row[k] == log_df_row[k] for k in keys_to_check]):
                 num_times_logged += 1
         return num_times_logged
 

@@ -85,6 +85,8 @@ class Client:
     def submit(self, project_path, params_df, reps=1, pattern='*.py', test=True):
         self.check_lab_disk_space()
         self.logger.delete_incomplete_models()
+        params_df['runs_dir'] = config.Dirs.lab / self.project_name / 'runs'  # do this before checking reps
+        params_df['backup_dir'] = config.Dirs.lab / self.project_name / 'backup'
         params_df = self.add_reps_to_params_df(params_df, reps)
         # split params into 8 chunks (one per node)
         worker_names = iter(np.random.permutation(config.SFTP.worker_names))
@@ -97,8 +99,6 @@ class Client:
                 continue
             base_name = self.make_model_base_name(worker_name)
             params_df_chunk['model_name'] = ['{}_{}'.format(base_name, n) for n in range(num_models)]
-            params_df_chunk['runs_dir'] = config.Dirs.lab / self.project_name / 'runs'
-            params_df_chunk['backup_dir'] = config.Dirs.lab / self.project_name / 'backup'
             for params_df_row in np.split(params_df_chunk, num_models):
                 self.logger.save_params_df_row(params_df_row)
             if test:
