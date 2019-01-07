@@ -6,13 +6,12 @@ from pathlib import Path
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from queue import Queue
+import sys
 
 from ludwigcluster import config
 
 
 CMD = 'python3 {}/{}'.format(config.Dirs.watched, config.SFTP.watched_fname)
-
-# TODO it might be better to allow restarting of task upon file change (if a long running task is no longer wanted)
 
 
 class Handler(FileSystemEventHandler):
@@ -27,8 +26,8 @@ class Handler(FileSystemEventHandler):
 
     def on_any_event(self, event):
         is_trigger_event = Path(config.Dirs.watched) / config.SFTP.watched_fname == Path(event.src_path)
-        print('Detected event {}'.format(event.src_path))
-        print('is trigger event: {}'.format(is_trigger_event))
+        print('Detected event {} at {} | is trigger={}'.format(event.src_path, datetime.now(), is_trigger_event))
+
         if is_trigger_event:
             ts = datetime.now()
             self.q.put((event, ts))
@@ -49,6 +48,7 @@ class Handler(FileSystemEventHandler):
                 continue
 
             print('Executing "{}"'.format(CMD))
+            sys.stdout.flush()
             self.trigger()
             last_ts = time_stamp
             print('Done\n')
