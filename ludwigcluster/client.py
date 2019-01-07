@@ -9,6 +9,7 @@ import psutil
 import datetime
 import pandas as pd
 import numpy as np
+from distutils.dir_util import copy_tree
 
 from ludwigcluster import config
 from ludwigcluster.logger import Logger
@@ -81,12 +82,12 @@ class Client:
             res = pd.concat(series_list, axis=1).T
             return res
 
-    def submit(self, upload_ps, params_df, reps=1, test=True, check_reps=True, worker=None):
+    def submit(self, src_ps, params_df, data_ps=None, reps=1, test=True, use_log=True, worker=None):
         self.check_lab_disk_space()
-        self.logger.delete_incomplete_models()
+        self.logger.delete_incomplete_models() if use_log else None
         params_df['runs_dir'] = config.Dirs.lab / self.project_name / 'runs'  # do this before checking reps
         params_df['backup_dir'] = config.Dirs.lab / self.project_name / 'backup'
-        params_df = self.add_reps_to_params_df(params_df, reps) if check_reps else params_df
+        params_df = self.add_reps_to_params_df(params_df, reps) if use_log else params_df
         # split params into 8 chunks (one per node)
         worker_names = iter(np.random.permutation(config.SFTP.worker_names)) if worker is None else iter([worker])
         for params_df_chunk in np.array_split(params_df, self.num_workers):
@@ -102,7 +103,7 @@ class Client:
             base_name = self.make_model_base_name(worker_name)
             params_df_chunk['model_name'] = ['{}_{}'.format(base_name, n) for n in range(num_models)]
             for params_df_row in np.split(params_df_chunk, num_models):
-                self.logger.save_params_df_row(params_df_row)
+                self.logger.save_params_df_row(params_df_row) if use_log else None
             if test:
                 print('TEST: Would submit to {}:'.format(worker_name))
                 print(params_df_chunk.T)
@@ -113,15 +114,21 @@ class Client:
                                      host=self.hostname2ip[worker_name],
                                      private_key=self.private_key,
                                      private_key_pass=self.private_key_pass)
-            # upload code + data
-            for p in upload_ps:
+            if test:
+                continue
+            # upload data
+            for data_p in data_ps:
+                src = str(data_p)
+                dst = str(config.Dirs.lab / self.project_name / data_p.name)
+                print('Copying data in {} to {}'.format(src, dst))
+                copy_tree(src, dst)
+            # upload src
+            for p in src_ps:
                 localpath = str(p)
                 remotepath = '{}/{}'.format(self.ludwig, p.name)
                 print('Uploading {} to {}'.format(localpath, remotepath))
-                if test:
-                    continue
                 sftp.makedirs(remotepath)
-                sftp.put_r(localpath=localpath, remotepath=remotepath)   # TODO test
+                sftp.put_r(localpath=localpath, remotepath=remotepath)
             # upload params.csv
             params_df_chunk.to_csv('params_chunk.csv', index=False)
             sftp.put(localpath='params_chunk.csv',

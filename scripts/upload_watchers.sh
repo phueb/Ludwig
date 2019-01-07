@@ -2,7 +2,7 @@
 
 
 
-for hostname in bengio hawkins hebb hinton hoff lecun norman pitts;
+for hostname in lecun bengio hawkins hebb hinton hoff  norman pitts;
 do
     echo Uploading watcher to ${hostname}
 
