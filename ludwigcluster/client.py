@@ -85,6 +85,12 @@ class Client:
     def submit(self, src_ps, params_df, data_ps=None, reps=1, test=True, use_log=True, worker=None):
         self.check_lab_disk_space()
         self.logger.delete_incomplete_models() if use_log else None
+        # upload data
+        for data_p in data_ps:
+            src = str(data_p)
+            dst = str(config.Dirs.lab / self.project_name / data_p.name)
+            print('Copying data in {} to {}'.format(src, dst))
+            copy_tree(src, dst)
         params_df['runs_dir'] = config.Dirs.lab / self.project_name / 'runs'  # do this before checking reps
         params_df['backup_dir'] = config.Dirs.lab / self.project_name / 'backup'
         params_df = self.add_reps_to_params_df(params_df, reps) if use_log else params_df
@@ -114,21 +120,15 @@ class Client:
                                      host=self.hostname2ip[worker_name],
                                      private_key=self.private_key,
                                      private_key_pass=self.private_key_pass)
-            if test:
-                continue
-            # upload data
-            for data_p in data_ps:
-                src = str(data_p)
-                dst = str(config.Dirs.lab / self.project_name / data_p.name)
-                print('Copying data in {} to {}'.format(src, dst))
-                copy_tree(src, dst)
-            # upload src
+            # upload src code to worker
             for p in src_ps:
                 localpath = str(p)
                 remotepath = '{}/{}'.format(self.ludwig, p.name)
                 print('Uploading {} to {}'.format(localpath, remotepath))
                 sftp.makedirs(remotepath)
                 sftp.put_r(localpath=localpath, remotepath=remotepath)
+            if test:
+                continue
             # upload params.csv
             params_df_chunk.to_csv('params_chunk.csv', index=False)
             sftp.put(localpath='params_chunk.csv',
