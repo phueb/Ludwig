@@ -10,6 +10,7 @@ import datetime
 import pandas as pd
 import numpy as np
 from distutils.dir_util import copy_tree
+import sys
 
 from ludwigcluster import config
 from ludwigcluster.logger import Logger
@@ -110,12 +111,10 @@ class Client:
             params_df_chunk['model_name'] = ['{}_{}'.format(base_name, n) for n in range(num_models)]
             for params_df_row in np.split(params_df_chunk, num_models):
                 self.logger.save_params_df_row(params_df_row) if use_log else None
-            if test:
-                print('TEST: Would submit to {}:'.format(worker_name))
-                print(params_df_chunk.T)
-                print()
-            # connect via sftp
+            # console
             print('Connecting to {}'.format(worker_name))
+            print(params_df_chunk.T)
+            # connect via sftp
             sftp = pysftp.Connection(username='ludwig',
                                      host=self.hostname2ip[worker_name],
                                      private_key=self.private_key,
@@ -127,12 +126,17 @@ class Client:
                 print('Uploading {} to {}'.format(localpath, remotepath))
                 sftp.makedirs(remotepath)
                 sftp.put_r(localpath=localpath, remotepath=remotepath)
+            sys.stdout.flush()
             if test:
+                print('Test successful. Not uploading run.py.')
                 continue
-            # upload params.csv
-            params_df_chunk.to_csv('params_chunk.csv', index=False)
-            sftp.put(localpath='params_chunk.csv',
-                     remotepath='{}/{}'.format(self.ludwig, 'params.csv'))
-            # upload run.py
-            sftp.put(localpath='run.py',
-                     remotepath='{}/{}'.format(self.ludwig, 'run.py'))
+            else:
+                # upload params.csv
+                params_df_chunk.to_csv('params_chunk.csv', index=False)
+                sftp.put(localpath='params_chunk.csv',
+                         remotepath='{}/{}'.format(self.ludwig, 'params.csv'))
+                # upload run.py
+                sftp.put(localpath='run.py',
+                         remotepath='{}/{}'.format(self.ludwig, 'run.py'))
+            print('--------------')
+            print()
