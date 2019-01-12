@@ -8,7 +8,5 @@ do
 
     ssh ${hostname} "echo ${pwd} | sudo -S pip3 -h"
 
-
-
 echo
 done

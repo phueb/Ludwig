@@ -1,6 +1,7 @@
 from datetime import datetime
 import threading
 import time
+from subprocess import CalledProcessError
 import subprocess
 from pathlib import Path
 from watchdog.events import FileSystemEventHandler
@@ -35,8 +36,8 @@ class Handler(FileSystemEventHandler):
     def trigger(self):
         try:
             subprocess.check_call([CMD], shell=True)  # stdout is already redirected, cannot do it here
-        except OSError as exc:
-            print(exc)
+        except CalledProcessError as e:  # this is required to continue to the next item in queue if current item fails
+            print(e)
 
     def _process_q(self):
         last_ts = datetime.now()
@@ -50,8 +51,11 @@ class Handler(FileSystemEventHandler):
             print('Executing "{}"'.format(CMD))
             sys.stdout.flush()
             self.trigger()
+
             last_ts = time_stamp
-            print('Done\n')
+            print('Execution completed. last_ts={} | qsize={}'.format(last_ts, self.q.qsize()))
+            print()
+            sys.stdout.flush()
 
 
 def watcher():
