@@ -53,7 +53,6 @@ class Handler(FileSystemEventHandler):
             self.trigger()
 
             last_ts = time_stamp
-            print('Execution completed. last_ts={} | qsize={}'.format(last_ts, self.q.qsize()))
             print()
             sys.stdout.flush()
 

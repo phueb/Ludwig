@@ -7,7 +7,7 @@ import pysftp
 import platform
 import psutil
 import datetime
-import pandas as pd
+import yaml
 import numpy as np
 from distutils.dir_util import copy_tree
 import sys
@@ -60,60 +60,56 @@ class Client:
         else:
             print('WARNING: Cannot determine disk space on non-Linux platform.')
 
-    def make_model_base_name(self, worker_name):
+    def make_job_base_name(self, worker_name):
         time_of_init = datetime.datetime.now().strftime(config.Time.format)
-        model_name = '{}_{}'.format(worker_name, time_of_init)
-        path = config.Dirs.lab / self.project_name / model_name
+        res = '{}_{}'.format(worker_name, time_of_init)
+        path = config.Dirs.lab / self.project_name / res
         if path.is_dir():
-            raise IsADirectoryError('Directory "{}" already exists.'.format(model_name))
-        return model_name
+            raise IsADirectoryError('Directory "{}" already exists.'.format(res))
+        return res
 
-    def add_reps_to_params_df(self, params_df, reps):
-        series_list = []
-        for n, params_df_row in params_df.iterrows():
-            num_times_logged = self.logger.count_num_times_in_backup(params_df_row)
+    def add_reps(self, param2val_list, reps):
+        res = []
+        for n, param2val in enumerate(param2val_list):
+            num_times_logged = self.logger.count_num_times_in_backup(param2val)
             num_times_train = reps - num_times_logged
             num_times_train = max(0, num_times_train)
             print('Params {} logged {} times. Will train {} times'.format(
                 n, num_times_logged, num_times_train))
-            series_list += [params_df_row] * num_times_train
-        if not series_list:
+            res += [param2val] * num_times_train
+        if not res:
             raise RuntimeError('{} replications of each model already exist.'.format(reps))
-        else:
-            res = pd.concat(series_list, axis=1).T
-            return res
+        return res
 
-    def submit(self, src_ps, params_df, data_ps=None, reps=1, test=True, use_log=True, worker=None):
+    def submit(self, src_ps, param2val_list, data_ps=None, reps=1, test=True, worker=None):
         self.check_lab_disk_space()
-        self.logger.delete_incomplete_models() if use_log else None
+        self.logger.delete_incomplete_models()
         # upload data
         for data_p in data_ps:
             src = str(data_p)
             dst = str(config.Dirs.lab / self.project_name / data_p.name)
             print('Copying data in {} to {}'.format(src, dst))
             copy_tree(src, dst)
-        params_df['runs_dir'] = config.Dirs.lab / self.project_name / 'runs'  # do this before checking reps
-        params_df['backup_dir'] = config.Dirs.lab / self.project_name / 'backup'
-        params_df = self.add_reps_to_params_df(params_df, reps) if use_log else params_df
-        # split params into 8 chunks (one per node)
+        # add reps
+        param2val_list = self.add_reps(param2val_list, reps)
+        # split into 8 chunks (one per node)
         worker_names = iter(np.random.permutation(config.SFTP.worker_names)) if worker is None else iter([worker])
-        for params_df_chunk in np.array_split(params_df, self.num_workers):
+        for param2val_chunk in np.array_split(param2val_list, self.num_workers):
             try:
                 worker_name = next(worker_names)  # distribute jobs across workers randomly
             except StopIteration:
                 raise SystemExit('Using only worker "{}" because "worker" arg is not None.'.format(worker))
-            # params_df_chunk
-            num_models = len(params_df_chunk)
-            if num_models == 0:
+            #
+            if len(param2val_chunk) == 0:
                 print('Not submitting to {}'.format(worker_name))
                 continue
-            base_name = self.make_model_base_name(worker_name)
-            params_df_chunk['model_name'] = ['{}_{}'.format(base_name, n) for n in range(num_models)]
-            for params_df_row in np.split(params_df_chunk, num_models):
-                self.logger.save_params_df_row(params_df_row) if use_log else None
+            # make job dirs
+            base_name = self.make_job_base_name(worker_name)
+
             # console
             print('Connecting to {}'.format(worker_name))
-            print(params_df_chunk.T)
+            for param2val in param2val_chunk:
+                print(param2val)
             # connect via sftp
             sftp = pysftp.Connection(username='ludwig',
                                      host=self.hostname2ip[worker_name],
@@ -130,13 +126,19 @@ class Client:
             if test:
                 print('Test successful. Not uploading run.py.')
                 continue
-            else:
-                # upload params.csv
-                params_df_chunk.to_csv('params_chunk.csv', index=False)
-                sftp.put(localpath='params_chunk.csv',
-                         remotepath='{}/{}'.format(self.ludwig, 'params.csv'))
-                # upload run.py
-                sftp.put(localpath='run.py',
-                         remotepath='{}/{}'.format(self.ludwig, 'run.py'))
+            # save + upload param2val files
+            remotepath = '{}/{}'.format(self.ludwig, 'param2vals')
+            sftp.makedirs(remotepath)
+            for n, param2val in enumerate(param2val_chunk):
+                job_name = '{}_{}'.format(base_name, n)
+                (config.Dirs.lab / self.project_name / 'runs' / job_name).mkdir(parents=True)
+                p = config.Dirs.lab / self.project_name / 'runs' / job_name / '{}.yaml'.format(job_name)
+                with p.open('w', encoding='utf8') as f:
+                    yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
+                sftp.put(localpath=str(p),
+                         remotepath='{}/{}/{}'.format(self.ludwig, 'param2vals', p.name))  # TODO test
+            # upload run.py
+            sftp.put(localpath='run.py',
+                     remotepath='{}/{}'.format(self.ludwig, 'run.py'))
             print('--------------')
             print()

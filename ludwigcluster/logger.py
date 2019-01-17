@@ -1,7 +1,8 @@
-import pandas as pd
 import shutil
 import datetime
 import re
+import yaml
+from shutil import copyfile
 
 from ludwigcluster import config
 
@@ -13,19 +14,18 @@ class Logger:
 
     def __init__(self, project_name):
         self.project_name = project_name
-        self.log_path = config.Dirs.lab / project_name / 'log.csv'
         if not (config.Dirs.lab / self.project_name).exists():
             (config.Dirs.lab / self.project_name / 'runs').mkdir(parents=True)
             (config.Dirs.lab / self.project_name / 'backup').mkdir()
 
-    def delete_model(self, model_name):
-        path = config.Dirs.lab / self.project_name / model_name
+    def delete_model(self, job_name):
+        path = config.Dirs.lab / self.project_name / 'runs' / job_name
         try:
             shutil.rmtree(str(path))
         except OSError:  # sometimes only log entry is created, and no model files
             print('WARNING: Error deleting {}'.format(path))
         else:
-            print('Deleted {}'.format(model_name))
+            print('Deleted {}'.format(job_name))
 
     def delete_incomplete_models(self):
         delta = datetime.timedelta(hours=config.Time.delete_delta)
@@ -40,38 +40,52 @@ class Logger:
                         config.Time.delete_delta))
                     self.delete_model(p)
 
-    def load_log(self, which):
+    def load_log(self, which):  # TODO implement
         if which == 'runs':
             print('Loading runs log')
         elif which == 'backup':
             print('Loading backup log')
         else:
             raise AttributeError('Invalid arg to "which" (log).')
-        params_file_paths = [p for p in (config.Dirs.lab / self.project_name / which).rglob('params.csv')]
-        # concatenate
-        if not params_file_paths:
-            print('Did not find any data in {} from which to build log.\n'
-                  'Creating empty log file.'.format(config.Dirs.lab / self.project_name / 'runs'))
-            res = pd.DataFrame()
-        else:
-            res = pd.DataFrame(pd.concat((pd.read_csv(f, index_col=False) for f in params_file_paths)))
-        return res
+        raise NotImplemented('what is best way to represent log?')
 
-    def count_num_times_in_backup(self, params_df_row):
+    def count_num_times_in_backup(self, param2val1):  # TODO test
         num_times_logged = 0
-        # ignore model_name + paths because they are not of type str
-        keys_to_check = [k for k in params_df_row.index if k not in ['model_name', 'runs_dir', 'backup_dir']]
-        for n, log_df_row in self.load_log('backup').iterrows():
-            if all([params_df_row[k] == log_df_row[k] for k in keys_to_check]):
+        for p in (config.Dirs.lab / self.project_name / 'backup').rglob('*.yaml'):
+            with p.open('r') as f:
+                param2val2 = yaml.load(f)
+            if param2val1 == param2val2:
                 num_times_logged += 1
         return num_times_logged
 
-    def save_params_df_row(self, params_df_row):
+
+    def backup(self, job_name):  # TODO test
         """
-        writes csv file to shared directory on LudwigCluster
-        this is required for logger - builds log from param files
+        this informs LudwigCluster that training has completed (backup is only called after training completion)
+        copies all data created during training to backup_dir.
+        Uses custom copytree fxn to avoid permission errors when updating permissions with shutil.copytree.
+        Copying permissions can be problematic on smb/cifs type backup drive.
         """
-        p = config.Dirs.lab / self.project_name / 'runs' / params_df_row['model_name'].values[0] / 'params.csv'
-        if not p.parent.exists():
-            p.parent.mkdir(parents=True)
-        params_df_row.to_csv(p, index=False)
+        src = config.Dirs.lab / self.project_name / 'runs' / job_name
+        dst = config.Dirs.lab / self.project_name / 'backup' / job_name
+
+        def copytree(s, d):
+            d.mkdir()
+            for i in s.iterdir():
+                s_i = s / i.name
+                d_i = d / i.name
+                if s_i.is_dir():
+                    copytree(s_i, d_i)
+
+                else:
+                    copyfile(str(s_i), str(d_i))  # copyfile works because it doesn't update any permissions
+        # copy
+        print('Backing up data...')
+        try:
+            copytree(src, dst)
+        except PermissionError:
+            print('LudwigCluster: Backup failed. Permission denied.')
+        except FileExistsError:
+            print('LudwigCluster: Already backed up')
+        else:
+            print('Backed up data to {}'.format(dst))
