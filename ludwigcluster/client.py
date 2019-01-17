@@ -128,6 +128,14 @@ class Client:
                 continue
             # save + upload param2val files
             remotepath = '{}/{}'.format(self.ludwig, 'param2vals')
+
+            # sftp.rmdir(remotepath)  # TODO need to remove old param2val files - but this fails with nonempty dir
+
+            result = sftp.execute('rm -rf /var/sftp/ludwig/param2vals')  # TODO not allowed
+            raise SystemExit(result)
+
+
+
             sftp.makedirs(remotepath)
             for n, param2val in enumerate(param2val_chunk):
                 job_name = '{}_{}'.format(base_name, n)
