@@ -51,7 +51,6 @@ class Handler(FileSystemEventHandler):
             print('Executing "{}"'.format(CMD))
             sys.stdout.flush()
             self.trigger()
-
             last_ts = time_stamp
             print()
             sys.stdout.flush()

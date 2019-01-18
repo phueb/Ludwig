@@ -7,8 +7,9 @@ import pysftp
 import platform
 import psutil
 import datetime
-import yaml
+import pickle
 import numpy as np
+import yaml
 from distutils.dir_util import copy_tree
 import sys
 
@@ -103,9 +104,18 @@ class Client:
             if len(param2val_chunk) == 0:
                 print('Not submitting to {}'.format(worker_name))
                 continue
-            # make job dirs
+            #
             base_name = self.make_job_base_name(worker_name)
-
+            for n, param2val in enumerate(param2val_chunk):
+                # add job_names to param2val_chunk
+                job_name = '{}_num{}'.format(base_name, n)
+                param2val['job_name'] = job_name
+                # make job dir in remote runs dir
+                p = config.Dirs.lab / self.project_name / 'runs' / job_name
+                p.mkdir(parents=True)
+                # save param2val in job dir
+                with (p / 'param2val.yaml').open('w', encoding='utf8') as f:
+                    yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
             # console
             print('Connecting to {}'.format(worker_name))
             for param2val in param2val_chunk:
@@ -126,25 +136,10 @@ class Client:
             if test:
                 print('Test successful. Not uploading run.py.')
                 continue
-            # save + upload param2val files
-            remotepath = '{}/{}'.format(self.ludwig, 'param2vals')
-
-            # sftp.rmdir(remotepath)  # TODO need to remove old param2val files - but this fails with nonempty dir
-
-            result = sftp.execute('rm -rf /var/sftp/ludwig/param2vals')  # TODO not allowed
-            raise SystemExit(result)
-
-
-
-            sftp.makedirs(remotepath)
-            for n, param2val in enumerate(param2val_chunk):
-                job_name = '{}_{}'.format(base_name, n)
-                (config.Dirs.lab / self.project_name / 'runs' / job_name).mkdir(parents=True)
-                p = config.Dirs.lab / self.project_name / 'runs' / job_name / '{}.yaml'.format(job_name)
-                with p.open('w', encoding='utf8') as f:
-                    yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
-                sftp.put(localpath=str(p),
-                         remotepath='{}/{}/{}'.format(self.ludwig, 'param2vals', p.name))  # TODO test
+            # save chunk to shared drive
+            p = config.Dirs.lab / self.project_name / '{}_param2val_chunk.pkl'.format(worker_name)
+            with p.open('wb') as f:
+                pickle.dump(param2val_chunk, f)
             # upload run.py
             sftp.put(localpath='run.py',
                      remotepath='{}/{}'.format(self.ludwig, 'run.py'))
