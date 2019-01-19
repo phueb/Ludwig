@@ -93,12 +93,12 @@ class Client:
             print('Copying data in {} to {}'.format(src, dst))
             copy_tree(src, dst)
         # add param_name to param2val
+        np.random.shuffle(param2val_list)  # distribute expensive jobs approximately evenly across workers
         print('Assigning param_names...')
-        pbar = pyprind.ProgBar(len(param2val_list), stream=sys.stdout)
-        for param2val in param2val_list:
+        for n, param2val in enumerate(param2val_list):
             param_name = self.logger.get_param_name(param2val)
-            pbar.update()
             param2val['param_name'] = param_name
+            print('param2val {}/{} assigned to "{}"'.format(n, len(param2val_list), param_name))
         # add reps
         param2val_list = self.add_reps(param2val_list, reps)
         sys.stdout.flush()
@@ -119,12 +119,14 @@ class Client:
                 # add job_names to param2val_chunk
                 job_name = '{}_num{}'.format(base_name, n)
                 param2val['job_name'] = job_name
-                # make job dir in remote runs dir
-                p = config.Dirs.lab / self.project_name / 'runs' / param2val['param_name'] / job_name
-                p.mkdir(parents=True)
-                # save param2val in job dir
-                with (p.parent / 'param2val.yaml').open('w', encoding='utf8') as f:
-                    yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
+                # make job dir and save param2val
+                if not test:
+                    p = config.Dirs.lab / self.project_name / 'runs' / param2val['param_name'] / job_name
+                    p.mkdir(parents=True)
+                    param2val_p = p.parent / 'param2val.yaml'
+                    if not param2val_p.exits():
+                        with param2val_p.open('w', encoding='utf8') as f:
+                            yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
             # console
             print('Connecting to {}'.format(worker_name))
             for param2val in param2val_chunk:

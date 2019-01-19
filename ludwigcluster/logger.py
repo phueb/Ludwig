@@ -62,7 +62,7 @@ class Logger:
         return d1 == d2
 
     def get_param_name(self, param2val1):
-        for param_p in (config.Dirs.lab / self.project_name / 'backup').iterdir():
+        for param_p in (config.Dirs.lab / self.project_name / 'backup').glob('param_*'):
             with (param_p / 'param2val.yaml').open('r') as f:
                 param2val2 = yaml.load(f)
             if self.is_same(param2val1, param2val2):
@@ -76,34 +76,3 @@ class Logger:
     def count_num_times_in_backup(self, param_name):  # TODO count until param folder is ofund that has matchign param2val
         res = len(list((config.Dirs.lab / self.project_name / 'backup' / param_name).glob('*num*')))
         return res
-
-    def backup(self, param_name, job_name):
-        """
-        this informs LudwigCluster that training has completed (backup is only called after training completion)
-        copies all data created during training to backup_dir.
-        Uses custom copytree fxn to avoid permission errors when updating permissions with shutil.copytree.
-        Copying permissions can be problematic on smb/cifs type backup drive.
-        """
-        src = config.Dirs.lab / self.project_name / 'runs' / param_name / job_name
-        dst = config.Dirs.lab / self.project_name / 'backup' / param_name / job_name
-
-        def copytree(s, d):
-            d.mkdir()
-            for i in s.iterdir():
-                s_i = s / i.name
-                d_i = d / i.name
-                if s_i.is_dir():
-                    copytree(s_i, d_i)
-
-                else:
-                    copyfile(str(s_i), str(d_i))  # copyfile works because it doesn't update any permissions
-        # copy
-        print('Backing up data...  DO NOT INTERRUPT!')
-        try:
-            copytree(src, dst)
-        except PermissionError:
-            print('LudwigCluster: Backup failed. Permission denied.')
-        except FileExistsError:
-            print('LudwigCluster: Already backed up')
-        else:
-            print('Backed up data to {}'.format(dst))
