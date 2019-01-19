@@ -4,6 +4,7 @@ It uses an sftp client library to upload all files in a user's project to Ludwig
 """
 from pathlib import Path
 import pysftp
+import pyprind
 import platform
 import psutil
 import datetime
@@ -22,10 +23,10 @@ DISK_USAGE_MAX = 90
 # TODO rename all configs_dict occurrences to params
 
 class Client:
-    def __init__(self, project_name):
+    def __init__(self, project_name, delete_delta=24):
         self.project_name = project_name
         self.hostname2ip = self.make_hostname2ip()
-        self.logger = Logger(project_name)
+        self.logger = Logger(project_name, delete_delta)
         self.num_workers = len(config.SFTP.worker_names)
         self.private_key_pass = config.SFTP.private_key_pass_path.read_text().strip('\n')
         self.private_key = '{}/.ssh/id_rsa'.format(Path.home())
@@ -72,11 +73,11 @@ class Client:
     def add_reps(self, param2val_list, reps):
         res = []
         for n, param2val in enumerate(param2val_list):
-            num_times_logged = self.logger.count_num_times_in_backup(param2val)
+            param_name = param2val['param_name']
+            num_times_logged = self.logger.count_num_times_in_backup(param_name)
             num_times_train = reps - num_times_logged
             num_times_train = max(0, num_times_train)
-            print('Params {} logged {} times. Will train {} times'.format(
-                n, num_times_logged, num_times_train))
+            print('{:<10} logged {:>3} times. Will train {:>3} times'.format(param_name, num_times_logged, num_times_train))
             res += [param2val] * num_times_train
         if not res:
             raise RuntimeError('{} replications of each model already exist.'.format(reps))
@@ -91,8 +92,16 @@ class Client:
             dst = str(config.Dirs.lab / self.project_name / data_p.name)
             print('Copying data in {} to {}'.format(src, dst))
             copy_tree(src, dst)
+        # add param_name to param2val
+        print('Assigning param_names...')
+        pbar = pyprind.ProgBar(len(param2val_list), stream=sys.stdout)
+        for param2val in param2val_list:
+            param_name = self.logger.get_param_name(param2val)
+            pbar.update()
+            param2val['param_name'] = param_name
         # add reps
         param2val_list = self.add_reps(param2val_list, reps)
+        sys.stdout.flush()
         # split into 8 chunks (one per node)
         worker_names = iter(np.random.permutation(config.SFTP.worker_names)) if worker is None else iter([worker])
         for param2val_chunk in np.array_split(param2val_list, self.num_workers):
@@ -111,10 +120,10 @@ class Client:
                 job_name = '{}_num{}'.format(base_name, n)
                 param2val['job_name'] = job_name
                 # make job dir in remote runs dir
-                p = config.Dirs.lab / self.project_name / 'runs' / job_name
+                p = config.Dirs.lab / self.project_name / 'runs' / param2val['param_name'] / job_name
                 p.mkdir(parents=True)
                 # save param2val in job dir
-                with (p / 'param2val.yaml').open('w', encoding='utf8') as f:
+                with (p.parent / 'param2val.yaml').open('w', encoding='utf8') as f:
                     yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
             # console
             print('Connecting to {}'.format(worker_name))

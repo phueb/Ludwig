@@ -2,6 +2,7 @@ import shutil
 import datetime
 import re
 import yaml
+import sys
 from shutil import copyfile
 
 from ludwigcluster import config
@@ -9,14 +10,20 @@ from ludwigcluster import config
 
 class Logger:
     """
-    Methods for interacting with log
+    in-memory log for keeping track of which jobs have completed (and which have the same param2vals)
     """
 
-    def __init__(self, project_name):
+    def __init__(self, project_name, delete_delta):
         self.project_name = project_name
-        if not (config.Dirs.lab / self.project_name).exists():
+        self.delete_delta = delete_delta
+        self.param_nums = [int(p.name.split('_')[-1]) for p in (config.Dirs.lab / project_name / 'backup').iterdir()]
+        print('Initialized logger with project_name={}'.format(project_name))
+        if not (config.Dirs.lab / self.project_name / 'runs').exists():
+            print('Making runs dir')
             (config.Dirs.lab / self.project_name / 'runs').mkdir(parents=True)
-            (config.Dirs.lab / self.project_name / 'backup').mkdir()
+        if not (config.Dirs.lab / self.project_name / 'backup').exists():
+            print('Making backup dir')
+            (config.Dirs.lab / self.project_name / 'backup').mkdir(parents=True)
 
     def delete_model(self, job_name):
         path = config.Dirs.lab / self.project_name / 'runs' / job_name
@@ -28,16 +35,15 @@ class Logger:
             print('Deleted {}'.format(job_name))
 
     def delete_incomplete_models(self):
-        delta = datetime.timedelta(hours=config.Time.delete_delta)
+        delta = datetime.timedelta(hours=self.delete_delta)
         time_of_init_cutoff = datetime.datetime.now() - delta
-        for p in (config.Dirs.lab / self.project_name / 'runs').glob('*_*'):
-            if not (config.Dirs.lab / self.project_name / 'backup' / p.name).exists():
+        for p in (config.Dirs.lab / self.project_name / 'runs').glob('**/*num*'):
+            if not (config.Dirs.lab / self.project_name / 'backup' / p.parent.name / p.name).exists():
                 result = re.search('_(.*)_', p.name)
                 time_of_init = result.group(1)
                 dt = datetime.datetime.strptime(time_of_init, config.Time.format)
                 if dt < time_of_init_cutoff:
-                    print('Found dir more than {} hours old that is not backed-up.'.format(
-                        config.Time.delete_delta))
+                    print('Found dir more than {} hours old that is not backed-up.'.format(self.delete_delta))
                     self.delete_model(p)
 
     def load_log(self, which):  # TODO implement
@@ -49,25 +55,37 @@ class Logger:
             raise AttributeError('Invalid arg to "which" (log).')
         raise NotImplemented('what is best way to represent log?')
 
-    def count_num_times_in_backup(self, param2val1):  # TODO test
-        num_times_logged = 0
-        for p in (config.Dirs.lab / self.project_name / 'backup').rglob('*.yaml'):
-            with p.open('r') as f:
+    @staticmethod
+    def is_same(param2val1, param2val2):
+        d1 = {k: v for k, v in param2val1.items() if k not in ['job_name', 'param_name']}
+        d2 = {k: v for k, v in param2val2.items() if k not in ['job_name', 'param_name']}
+        return d1 == d2
+
+    def get_param_name(self, param2val1):
+        for param_p in (config.Dirs.lab / self.project_name / 'backup').iterdir():
+            with (param_p / 'param2val.yaml').open('r') as f:
                 param2val2 = yaml.load(f)
-            if param2val1 == param2val2:
-                num_times_logged += 1
-        return num_times_logged
+            if self.is_same(param2val1, param2val2):
+                return param_p.name
+        else:
+            new_param_num = max(self.param_nums) + 1
+            self.param_nums.append(new_param_num)
+            param_name = 'param_{}'.format(new_param_num)
+            return param_name
 
+    def count_num_times_in_backup(self, param_name):  # TODO count until param folder is ofund that has matchign param2val
+        res = len(list((config.Dirs.lab / self.project_name / 'backup' / param_name).glob('*num*')))
+        return res
 
-    def backup(self, job_name):  # TODO test
+    def backup(self, param_name, job_name):
         """
         this informs LudwigCluster that training has completed (backup is only called after training completion)
         copies all data created during training to backup_dir.
         Uses custom copytree fxn to avoid permission errors when updating permissions with shutil.copytree.
         Copying permissions can be problematic on smb/cifs type backup drive.
         """
-        src = config.Dirs.lab / self.project_name / 'runs' / job_name
-        dst = config.Dirs.lab / self.project_name / 'backup' / job_name
+        src = config.Dirs.lab / self.project_name / 'runs' / param_name / job_name
+        dst = config.Dirs.lab / self.project_name / 'backup' / param_name / job_name
 
         def copytree(s, d):
             d.mkdir()
@@ -80,7 +98,7 @@ class Logger:
                 else:
                     copyfile(str(s_i), str(d_i))  # copyfile works because it doesn't update any permissions
         # copy
-        print('Backing up data...')
+        print('Backing up data...  DO NOT INTERRUPT!')
         try:
             copytree(src, dst)
         except PermissionError:

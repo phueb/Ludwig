@@ -15,6 +15,5 @@ class SFTP:
 
 class Time:
     format = '%Y-%m-%d-%H-%M-%S'
-    delete_delta = 24  # in hours
 
 hostname = socket.gethostname()
