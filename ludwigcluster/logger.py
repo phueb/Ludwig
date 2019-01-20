@@ -1,9 +1,5 @@
 import shutil
-import datetime
-import re
 import yaml
-import sys
-from shutil import copyfile
 
 from ludwigcluster import config
 
@@ -13,9 +9,8 @@ class Logger:
     in-memory log for keeping track of which jobs have completed (and which have the same param2vals)
     """
 
-    def __init__(self, project_name, delete_delta):
+    def __init__(self, project_name):
         self.project_name = project_name
-        self.delete_delta = delete_delta
         self.param_nums = [int(p.name.split('_')[-1]) for p in (config.Dirs.lab / project_name / 'backup').iterdir()]
         print('Initialized logger with project_name={}'.format(project_name))
         if not (config.Dirs.lab / self.project_name / 'runs').exists():
@@ -25,26 +20,20 @@ class Logger:
             print('Making backup dir')
             (config.Dirs.lab / self.project_name / 'backup').mkdir(parents=True)
 
-    def delete_model(self, job_name):
-        path = config.Dirs.lab / self.project_name / 'runs' / job_name
-        try:
-            shutil.rmtree(str(path))
-        except OSError:  # sometimes only log entry is created, and no model files
-            print('WARNING: Error deleting {}'.format(path))
-        else:
-            print('Deleted {}'.format(job_name))
+    @staticmethod
+    def delete_param_dir(params_p):
+        shutil.rmtree(str(params_p))
+        print('Deleted {}'.format(params_p))
 
-    def delete_incomplete_models(self):
-        delta = datetime.timedelta(hours=self.delete_delta)
-        time_of_init_cutoff = datetime.datetime.now() - delta
-        for p in (config.Dirs.lab / self.project_name / 'runs').glob('**/*num*'):
-            if not (config.Dirs.lab / self.project_name / 'backup' / p.parent.name / p.name).exists():
-                result = re.search('_(.*)_', p.name)
-                time_of_init = result.group(1)
-                dt = datetime.datetime.strptime(time_of_init, config.Time.format)
-                if dt < time_of_init_cutoff:
-                    print('Found dir more than {} hours old that is not backed-up.'.format(self.delete_delta))
-                    self.delete_model(p)
+    def delete_param_dirs_not_in_backup(self):
+        """
+        this is necessary to do before submission, because param2val_list is shuffled,
+        and this could result in a param2val that has not yet been assigned a param_name (in backup_dir) to be
+        assigned a different param_num across submissions
+        """
+        for params_p in (config.Dirs.lab / self.project_name / 'runs').glob('param_*'):
+            if not (config.Dirs.lab / self.project_name / 'backup' / params_p.name).exists():
+                    self.delete_param_dir(params_p)
 
     def load_log(self, which):  # TODO implement
         if which == 'runs':

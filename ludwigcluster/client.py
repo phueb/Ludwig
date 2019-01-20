@@ -23,7 +23,7 @@ DISK_USAGE_MAX = 90
 # TODO rename all configs_dict occurrences to params
 
 class Client:
-    def __init__(self, project_name, delete_delta=24):
+    def __init__(self, project_name, delete_delta=0):
         self.project_name = project_name
         self.hostname2ip = self.make_hostname2ip()
         self.logger = Logger(project_name, delete_delta)
@@ -85,7 +85,7 @@ class Client:
 
     def submit(self, src_ps, param2val_list, data_ps=None, reps=1, test=True, worker=None):
         self.check_lab_disk_space()
-        self.logger.delete_incomplete_models()
+        self.logger.delete_param_dirs_not_in_backup()
         # upload data
         for data_p in data_ps:
             src = str(data_p)
@@ -99,6 +99,7 @@ class Client:
             param_name = self.logger.get_param_name(param2val)
             param2val['param_name'] = param_name
             print('param2val {}/{} assigned to "{}"'.format(n, len(param2val_list), param_name))
+            sys.stdout.flush()
         # add reps
         param2val_list = self.add_reps(param2val_list, reps)
         sys.stdout.flush()
@@ -124,7 +125,7 @@ class Client:
                     p = config.Dirs.lab / self.project_name / 'runs' / param2val['param_name'] / job_name
                     p.mkdir(parents=True)
                     param2val_p = p.parent / 'param2val.yaml'
-                    if not param2val_p.exits():
+                    if not param2val_p.exists():
                         with param2val_p.open('w', encoding='utf8') as f:
                             yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
             # console
