@@ -23,10 +23,10 @@ DISK_USAGE_MAX = 90
 # TODO rename all configs_dict occurrences to params
 
 class Client:
-    def __init__(self, project_name, delete_delta=0):
+    def __init__(self, project_name):
         self.project_name = project_name
         self.hostname2ip = self.make_hostname2ip()
-        self.logger = Logger(project_name, delete_delta)
+        self.logger = Logger(project_name)
         self.num_workers = len(config.SFTP.worker_names)
         self.private_key_pass = config.SFTP.private_key_pass_path.read_text().strip('\n')
         self.private_key = '{}/.ssh/id_rsa'.format(Path.home())
@@ -114,20 +114,25 @@ class Client:
             if len(param2val_chunk) == 0:
                 print('Not submitting to {}'.format(worker_name))
                 continue
-            #
+            # add job_name to each param2val
             base_name = self.make_job_base_name(worker_name)
             for n, param2val in enumerate(param2val_chunk):
-                # add job_names to param2val_chunk
                 job_name = '{}_num{}'.format(base_name, n)
-                param2val['job_name'] = job_name
-                # make job dir and save param2val
                 if not test:
+                    # make job_dir
                     p = config.Dirs.lab / self.project_name / 'runs' / param2val['param_name'] / job_name
                     p.mkdir(parents=True)
+                    # save param2val
                     param2val_p = p.parent / 'param2val.yaml'
-                    if not param2val_p.exists():
+                    if not param2val_p.exists() or True:  # TODO remove True - use this once only
                         with param2val_p.open('w', encoding='utf8') as f:
                             yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
+                # add job_name (after parm2val has been saved)
+                param2val['job_name'] = job_name
+            # save chunk to shared drive (after addition of job_name)
+            p = config.Dirs.lab / self.project_name / '{}_param2val_chunk.pkl'.format(worker_name)
+            with p.open('wb') as f:
+                pickle.dump(param2val_chunk, f)
             # console
             print('Connecting to {}'.format(worker_name))
             for param2val in param2val_chunk:
@@ -148,10 +153,6 @@ class Client:
             if test:
                 print('Test successful. Not uploading run.py.')
                 continue
-            # save chunk to shared drive
-            p = config.Dirs.lab / self.project_name / '{}_param2val_chunk.pkl'.format(worker_name)
-            with p.open('wb') as f:
-                pickle.dump(param2val_chunk, f)
             # upload run.py
             sftp.put(localpath='run.py',
                      remotepath='{}/{}'.format(self.ludwig, 'run.py'))

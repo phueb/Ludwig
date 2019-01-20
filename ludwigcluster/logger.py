@@ -62,6 +62,6 @@ class Logger:
             param_name = 'param_{}'.format(new_param_num)
             return param_name
 
-    def count_num_times_in_backup(self, param_name):  # TODO count until param folder is ofund that has matchign param2val
+    def count_num_times_in_backup(self, param_name):
         res = len(list((config.Dirs.lab / self.project_name / 'backup' / param_name).glob('*num*')))
         return res

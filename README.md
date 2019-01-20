@@ -55,17 +55,40 @@ First, install the client in your project's virtual environment,
 (venv) pip3 install git+https://github.com/phueb/LudwigCluster.git
 ```
 
-and import the client:
+Here is an example file:
 
 ```python
-from ludwigcluster import client, params
+from pathlib import Path
+from ludwigcluster.client import Client
+
+# create list of neural network parameter configurations to trian on cluster
+param2val_list = [param2val1, param2val2] # each is a dict mapping a parameter name to a value
+# submit
+client = Client('your_project_name')  # creates a directory on server 
+client.submit(src_ps=[Path('src')],  # specify path to source code (is uploaded to worker)
+              data_ps=[Path('corpora'), Path('tasks')],  # specify paths to any data (is uploaded to file server)
+              param2val_list=param2val_list,
+              reps=2)  # number of replications per job
 ```
 
 ### 2) 
 Create a ```run.py``` file which calls a neural-network training function. 
-It should read ```params.csv``` and train a neural network for each row of parameters in ```params.csv```
+Here is an example of the content of ```run.py```:
 
-TODO: should this file be provided by ludwigcluster?
+```python
+from pathlib import Path
+import pickle
+from your_module import neural_net_job
+
+hostname = 'your_hostname'
+# load list of neural network configurations provided by ludwigcluster (saved to file server)
+p = Path('/server/project') / '{}_param2val_chunk.pkl'.format(hostname)  
+with p.open('rb') as f:
+    param2val_chunk = pickle.load(f)
+# iterate over neural network configurations, and for each, do some neural_net_job
+for param2val in param2val_chunk:
+    neural_net_job(param2val)
+```
 
 ### Logging
 By default, the stdout of a submitted job will be redirected to a file located on the shared drive.
