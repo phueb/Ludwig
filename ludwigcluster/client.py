@@ -124,7 +124,7 @@ class Client:
                     p.mkdir(parents=True)
                     # save param2val
                     param2val_p = p.parent / 'param2val.yaml'
-                    if not param2val_p.exists() or True:  # TODO remove True - use this once only
+                    if not param2val_p.exists():
                         with param2val_p.open('w', encoding='utf8') as f:
                             yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
                 # add job_name (after parm2val has been saved)
