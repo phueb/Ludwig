@@ -4,7 +4,6 @@ It uses an sftp client library to upload all files in a user's project to Ludwig
 """
 from pathlib import Path
 import pysftp
-import pyprind
 import platform
 import psutil
 import datetime
