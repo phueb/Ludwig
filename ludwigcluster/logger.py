@@ -11,6 +11,8 @@ class Logger:
 
     def __init__(self, project_name):
         self.project_name = project_name
+        if not (config.Dirs.lab / project_name).exists():
+            (config.Dirs.lab / project_name).mkdir()
         self.param_nums = [int(p.name.split('_')[-1]) for p in (config.Dirs.lab / project_name / 'backup').iterdir()]
         print('Initialized logger with project_name={}'.format(project_name))
         if not (config.Dirs.lab / self.project_name / 'runs').exists():

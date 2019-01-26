@@ -84,7 +84,7 @@ class Client:
 
     def submit(self, src_ps, param2val_list, data_ps=None, reps=1, test=True, worker=None):
         self.check_lab_disk_space()
-        self.logger.delete_param_dirs_not_in_backup()
+        self.logger.delete_param_dirs_not_in_backup()  # TODO this might delete folders which might be used by currently running jobs
         # upload data
         for data_p in data_ps:
             src = str(data_p)
