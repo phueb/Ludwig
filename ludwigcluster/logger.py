@@ -20,7 +20,8 @@ class Logger:
         if not (config.Dirs.lab / self.project_name / 'backup').exists():
             print('Making backup dir')
             (config.Dirs.lab / self.project_name / 'backup').mkdir(parents=True)
-        self.param_nums = [int(p.name.split('_')[-1]) for p in (config.Dirs.lab / project_name / 'backup').iterdir()]
+        self.param_nums = [int(p.name.split('_')[-1])
+                           for p in (config.Dirs.lab / project_name / 'backup').iterdir()] or [0]
 
     @staticmethod
     def delete_param_dir(params_p):
