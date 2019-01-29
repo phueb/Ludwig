@@ -13,7 +13,6 @@ class Logger:
         self.project_name = project_name
         if not (config.Dirs.lab / project_name).exists():
             (config.Dirs.lab / project_name).mkdir()
-        self.param_nums = [int(p.name.split('_')[-1]) for p in (config.Dirs.lab / project_name / 'backup').iterdir()]
         print('Initialized logger with project_name={}'.format(project_name))
         if not (config.Dirs.lab / self.project_name / 'runs').exists():
             print('Making runs dir')
@@ -21,6 +20,7 @@ class Logger:
         if not (config.Dirs.lab / self.project_name / 'backup').exists():
             print('Making backup dir')
             (config.Dirs.lab / self.project_name / 'backup').mkdir(parents=True)
+        self.param_nums = [int(p.name.split('_')[-1]) for p in (config.Dirs.lab / project_name / 'backup').iterdir()]
 
     @staticmethod
     def delete_param_dir(params_p):

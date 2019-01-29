@@ -43,8 +43,8 @@ def list_all_param2vals(params_class, update_d=None):
     res = []
     for ids in param_ids:
         param2val = {k: v[i] for (k, v), i in zip(param2opts, ids)}
+        param2val.update({'param_name': None, 'job_name': None})
         if isinstance(update_d, dict):
             param2val.update(update_d)
-        param2val.update({'param_name': None, 'job_name': None})
         res.append(param2val)
     return res
