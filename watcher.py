@@ -27,9 +27,9 @@ class Handler(FileSystemEventHandler):
 
     def on_any_event(self, event):
         is_trigger_event = Path(config.Dirs.watched) / config.SFTP.watched_fname == Path(event.src_path)
-        print('Detected event {} at {} | is trigger={}'.format(event.src_path, datetime.now(), is_trigger_event))
 
         if is_trigger_event:
+            print('Detected event {} at {}'.format(event.src_path, datetime.now()))
             ts = datetime.now()
             self.q.put((event, ts))
 
