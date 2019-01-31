@@ -33,18 +33,13 @@ class Logger:
         check if param2val exists in backup, and if not, check if it exists in runs.
         only if it doesn't exist, create a new one (otherwise problems with queued runs might occur)
         """
-        # check backup
-        for param_p in (config.Dirs.lab / self.project_name / 'backup').glob('param_*'):
-            with (param_p / 'param2val.yaml').open('r') as f:
-                param2val2 = yaml.load(f)
-            if self.is_same(param2val1, param2val2):
-                return param_p.name
-        # check runs
-        for param_p in (config.Dirs.lab / self.project_name / 'runs').glob('param_*'):
-            with (param_p / 'param2val.yaml').open('r') as f:
-                param2val2 = yaml.load(f)
-            if self.is_same(param2val1, param2val2):
-                return param_p.name
+        # check backup + runs
+        for dir_name in ['backup', 'runs']:
+            for param_p in (config.Dirs.lab / self.project_name / dir_name).glob('param_*'):
+                with (param_p / 'param2val.yaml').open('r') as f:
+                    param2val2 = yaml.load(f)
+                if self.is_same(param2val1, param2val2):
+                    return param_p.name
         else:
             new_param_num = max(self.param_nums) + 1
             self.param_nums.append(new_param_num)
