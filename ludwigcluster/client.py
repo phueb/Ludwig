@@ -94,9 +94,9 @@ class Client:
         np.random.shuffle(param2val_list)  # distribute expensive jobs approximately evenly across workers
         print('Assigning param_names...')
         for n, param2val in enumerate(param2val_list):
-            param_name = self.logger.get_param_name(param2val)
+            old_or_new, param_name = self.logger.get_param_name(param2val)
             param2val['param_name'] = param_name
-            print('param2val {}/{} assigned to "{}"'.format(n, len(param2val_list), param_name))
+            print('param2val {}/{} assigned to {} "{}"'.format(n, len(param2val_list), old_or_new, param_name))
             sys.stdout.flush()
         # add reps
         param2val_list = self.add_reps(param2val_list, reps)

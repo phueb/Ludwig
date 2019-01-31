@@ -19,8 +19,14 @@ class Logger:
         if not (config.Dirs.lab / self.project_name / 'backup').exists():
             print('Making backup dir')
             (config.Dirs.lab / self.project_name / 'backup').mkdir(parents=True)
-        self.param_nums = [int(p.name.split('_')[-1])
-                           for p in (config.Dirs.lab / project_name / 'backup').iterdir()] or [0]
+        self.param_nums = self.load_param_nums()
+
+    def load_param_nums(self):
+        res = [int(p.name.split('_')[-1])
+               for p in (config.Dirs.lab / self.project_name / 'backup').iterdir()] or [0]
+        res += [int(p.name.split('_')[-1])
+                for p in (config.Dirs.lab / self.project_name / 'runs').iterdir()] or [0]
+        return res
 
     @staticmethod
     def is_same(param2val1, param2val2):
@@ -39,12 +45,12 @@ class Logger:
                 with (param_p / 'param2val.yaml').open('r') as f:
                     param2val2 = yaml.load(f)
                 if self.is_same(param2val1, param2val2):
-                    return param_p.name
+                    return 'old', param_p.name
         else:
             new_param_num = max(self.param_nums) + 1
             self.param_nums.append(new_param_num)
             param_name = 'param_{}'.format(new_param_num)
-            return param_name
+            return 'new', param_name
 
     def count_num_times_in_backup(self, param_name):
         res = len(list((config.Dirs.lab / self.project_name / 'backup' / param_name).glob('*num*')))
