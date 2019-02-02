@@ -12,6 +12,7 @@ import numpy as np
 import yaml
 from distutils.dir_util import copy_tree
 import sys
+import time
 
 from ludwigcluster import config
 from ludwigcluster.logger import Logger
@@ -73,13 +74,14 @@ class Client:
         res = []
         for n, param2val in enumerate(param2val_list):
             param_name = param2val['param_name']
-            num_times_logged = self.logger.count_num_times_in_backup(param_name)
+            num_times_logged = self.logger.count_num_times_run(param_name)
             num_times_train = reps - num_times_logged
             num_times_train = max(0, num_times_train)
             print('{:<10} logged {:>3} times. Will train {:>3} times'.format(param_name, num_times_logged, num_times_train))
             res += [param2val] * num_times_train
         if not res:
-            raise RuntimeError('{} replications of each model already exist.'.format(reps))
+            time.sleep(1)
+            raise SystemExit('{} replications of each model already exist.'.format(reps))
         return res
 
     def submit(self, src_ps, param2val_list, data_ps=None, reps=1, test=True, worker=None):

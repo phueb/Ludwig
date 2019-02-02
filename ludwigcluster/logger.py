@@ -16,16 +16,11 @@ class Logger:
         if not (config.Dirs.lab / self.project_name / 'runs').exists():
             print('Making runs dir')
             (config.Dirs.lab / self.project_name / 'runs').mkdir(parents=True)
-        if not (config.Dirs.lab / self.project_name / 'backup').exists():
-            print('Making backup dir')
-            (config.Dirs.lab / self.project_name / 'backup').mkdir(parents=True)
         self.param_nums = self.load_param_nums()
 
     def load_param_nums(self):
         res = [int(p.name.split('_')[-1])
-               for p in (config.Dirs.lab / self.project_name / 'backup').iterdir()] or [0]
-        res += [int(p.name.split('_')[-1])
-                for p in (config.Dirs.lab / self.project_name / 'runs').iterdir()] or [0]
+               for p in (config.Dirs.lab / self.project_name / 'runs').glob('param*')] or [0]
         return res
 
     @staticmethod
@@ -36,22 +31,21 @@ class Logger:
 
     def get_param_name(self, param2val1):
         """
-        check if param2val exists in backup, and if not, check if it exists in runs.
+        check if param2val exists in runs.
         only if it doesn't exist, create a new one (otherwise problems with queued runs might occur)
         """
-        # check backup + runs
-        for dir_name in ['backup', 'runs']:
-            for param_p in (config.Dirs.lab / self.project_name / dir_name).glob('param_*'):
-                with (param_p / 'param2val.yaml').open('r') as f:
-                    param2val2 = yaml.load(f)
-                if self.is_same(param2val1, param2val2):
-                    return 'old', param_p.name
+        # check runs
+        for param_p in (config.Dirs.lab / self.project_name / 'runs').glob('param_*'):
+            with (param_p / 'param2val.yaml').open('r') as f:
+                param2val2 = yaml.load(f)
+            if self.is_same(param2val1, param2val2):
+                return 'old', param_p.name
         else:
             new_param_num = max(self.param_nums) + 1
             self.param_nums.append(new_param_num)
             param_name = 'param_{}'.format(new_param_num)
             return 'new', param_name
 
-    def count_num_times_in_backup(self, param_name):
-        res = len(list((config.Dirs.lab / self.project_name / 'backup' / param_name).glob('*num*')))
+    def count_num_times_run(self, param_name):
+        res = len(list((config.Dirs.lab / self.project_name / 'runs' / param_name).glob('*num*')))
         return res

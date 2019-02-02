@@ -9,4 +9,3 @@ class Dirs:
     #
     remote_root = Path('/') / 'media' / 'lab' / 'your_project_name'
     runs = remote_root / 'runs'
-    backup = remote_root / 'backup'

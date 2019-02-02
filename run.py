@@ -3,7 +3,7 @@ import pickle
 import socket
 
 from yourmodule import config
-from yourmodule.jobs import your_job, backup_job
+from yourmodule.jobs import your_job
 
 hostname = socket.gethostname()
 
@@ -20,7 +20,6 @@ def run_on_cluster():
         param2val_chunk = pickle.load(f)
     for param2val in param2val_chunk:
         your_job(param2val)
-        backup_job(param2val['param_name'], param2val['job_name'], allow_rewrite=False)
     #
     print('Finished all jobs.')
     print()

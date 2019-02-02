@@ -31,7 +31,7 @@ def iter_over_cycles(d):
     return param2opts, param_ids
 
 
-def list_all_param2vals(params_class, update_d=None):
+def list_all_param2vals(params_class, update_d=None, add_names=True):
     """
     return list of mappings from param name to integer which is index to possible param values
     all possible combinations are returned
@@ -43,7 +43,8 @@ def list_all_param2vals(params_class, update_d=None):
     res = []
     for ids in param_ids:
         param2val = {k: v[i] for (k, v), i in zip(param2opts, ids)}
-        param2val.update({'param_name': None, 'job_name': None})
+        if add_names:
+            param2val.update({'param_name': None, 'job_name': None})
         if isinstance(update_d, dict):
             param2val.update(update_d)
         res.append(param2val)
