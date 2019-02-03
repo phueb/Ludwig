@@ -82,12 +82,34 @@ from your_module import neural_net_job
 
 hostname = 'your_hostname'
 # load list of neural network configurations provided by ludwigcluster (saved to file server)
-p = Path('/server/project') / '{}_param2val_chunk.pkl'.format(hostname)  
+p = Path('/media/lab/<your_project_name>') / '{}_param2val_chunk.pkl'.format(hostname)  
 with p.open('rb') as f:
     param2val_chunk = pickle.load(f)
 # iterate over neural network configurations, and for each, do some neural_net_job
 for param2val in param2val_chunk:
     neural_net_job(param2val)
+```
+
+### Saving Data
+Any data (e.g. accuracy per epoch) that needs to persist, should be written to the worker. 
+Write any data to a directory (with a name unique to your project) on the worker.
+It is recommended you move all files to the file-server only after a neural network has completed training.
+This prevents accumulation on the file-server of data from jobs that have not completed. 
+For example:
+
+```python
+from pathlib import Path
+import shutil
+
+for epoch in range(10):
+    data = train_epoch()
+    save_to_worker(data)  # save intermediate data to worker
+
+# at end of training copy all data files to file server
+for data_path in Path('/var/sftp/ludwig/<unique_data_folder_name>').glob('data*.csv'):
+    src = str(data_path)
+    dst = '/media/lab/<your_project_name>/{}'.format(data_path.name)
+    shutil.move(src, dst)
 ```
 
 ### Logging
