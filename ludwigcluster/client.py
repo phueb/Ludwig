@@ -77,8 +77,9 @@ class Client:
             num_times_logged = self.logger.count_num_times_run(param_name)
             num_times_train = reps - num_times_logged
             num_times_train = max(0, num_times_train)
-            print('{:<10} logged {:>3} times. Will train {:>3} times'.format(param_name, num_times_logged, num_times_train))
-            res += [param2val] * num_times_train
+            print('{:<10} logged {:>3} times. Will train {:>3} times'.format(
+                param_name, num_times_logged, num_times_train))
+            res += [param2val.copy() for _ in range(num_times_train)]  # make sure that each is unique (copied)
         if not res:
             time.sleep(1)
             raise SystemExit('{} replications of each model already exist.'.format(reps))
@@ -118,17 +119,11 @@ class Client:
             base_name = self.make_job_base_name(worker_name)
             for n, param2val in enumerate(param2val_chunk):
                 job_name = '{}_num{}'.format(base_name, n)
-                if not test:
-                    # make job_dir
-                    p = config.Dirs.lab / self.project_name / 'runs' / param2val['param_name'] / job_name
-                    p.mkdir(parents=True)
-                    # save param2val
-                    param2val_p = p.parent / 'param2val.yaml'
-                    if not param2val_p.exists():
-                        with param2val_p.open('w', encoding='utf8') as f:
-                            yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
-                # add job_name (after parm2val has been saved)
+
+                print(job_name)  # TODO why does below enumeration print duplicate job_names?
+
                 param2val['job_name'] = job_name
+
             # save chunk to shared drive (after addition of job_name)
             p = config.Dirs.lab / self.project_name / '{}_param2val_chunk.pkl'.format(worker_name)
             with p.open('wb') as f:
