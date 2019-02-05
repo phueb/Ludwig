@@ -85,9 +85,9 @@ class Client:
             raise SystemExit('{} replications of each model already exist.'.format(reps))
         return res
 
-    def submit(self, src_ps, param2val_list, data_ps=None, reps=1, test=True, worker=None):
+    def submit(self, src_ps, param2val_list, data_ps=None, reps=1, test=True, worker=None, run_f_name='run.py'):
         self.check_lab_disk_space()
-        # upload data
+        # copy data to file server
         for data_p in data_ps:
             src = str(data_p)
             dst = str(config.Dirs.lab / self.project_name / data_p.name)
@@ -119,11 +119,7 @@ class Client:
             base_name = self.make_job_base_name(worker_name)
             for n, param2val in enumerate(param2val_chunk):
                 job_name = '{}_num{}'.format(base_name, n)
-
-                print(job_name)  # TODO why does below enumeration print duplicate job_names?
-
                 param2val['job_name'] = job_name
-
             # save chunk to shared drive (after addition of job_name)
             p = config.Dirs.lab / self.project_name / '{}_param2val_chunk.pkl'.format(worker_name)
             with p.open('wb') as f:
@@ -149,7 +145,7 @@ class Client:
                 print('Test successful. Not uploading run.py.')
                 continue
             # upload run.py
-            sftp.put(localpath='run.py',
-                     remotepath='{}/{}'.format(self.ludwig, 'run.py'))
+            sftp.put(localpath=run_f_name,
+                     remotepath='{}/{}'.format(self.ludwig, 'run_{}.py'.format(self.project_name)))
             print('--------------')
             print()

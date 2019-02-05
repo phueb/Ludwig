@@ -5,16 +5,17 @@ import socket
 class Dirs:
     lab = Path('/') / 'media' / 'lab'
     stdout = lab / 'stdout'
-    watched = '/var/sftp/ludwig'
+    watched = Path('/var/sftp/ludwig')
 
 
 class SFTP:
     worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'lecun', 'bengio']
-    watched_fname = 'run.py'  # this is required for watcher to know which file to run
+    watched_pattern = 'run*.py'  # this is required for watcher to know which file to run
     private_key_pass_path = Path.home() / '.rsapub_passwd'
 
 
 class Time:
+    delete_delta = 24  # hours
     format = '%Y-%m-%d-%H-%M-%S'
 
 
