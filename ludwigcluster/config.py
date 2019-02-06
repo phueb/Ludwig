@@ -9,7 +9,8 @@ class Dirs:
 
 
 class SFTP:
-    worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'lecun', 'bengio']
+    # TODO yash is using lecun
+    worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio']
     watched_pattern = 'run*.py'  # this is required for watcher to know which file to run
     private_key_pass_path = Path.home() / '.rsapub_passwd'
 
