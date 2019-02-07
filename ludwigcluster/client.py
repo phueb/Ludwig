@@ -106,7 +106,8 @@ class Client:
         sys.stdout.flush()
         # split into 8 chunks (one per node)
         worker_names = iter(np.random.permutation(config.SFTP.worker_names)) if worker is None else iter([worker])
-        for param2val_chunk in np.array_split(param2val_list, self.num_workers):
+        num_workers = 1 if worker is not None else self.num_workers
+        for param2val_chunk in np.array_split(param2val_list, num_workers):
             try:
                 worker_name = next(worker_names)  # distribute jobs across workers randomly
             except StopIteration:
