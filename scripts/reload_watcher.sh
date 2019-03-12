@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-for hostname in lecun bengio hawkins hebb hinton hoff  norman pitts;
+for hostname in bengio hawkins hebb hinton hoff norman pitts;  # TODO yash is using lecun
 do
     echo Uploading watcher to ${hostname}
 

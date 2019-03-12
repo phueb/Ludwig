@@ -94,7 +94,6 @@ class Client:
             print('Copying data in {} to {}'.format(src, dst))
             copy_tree(src, dst)
         # add param_name to param2val
-        np.random.shuffle(param2val_list)  # distribute expensive jobs approximately evenly across workers
         print('Assigning param_names...')
         for n, param2val in enumerate(param2val_list):
             old_or_new, param_name = self.logger.get_param_name(param2val)
@@ -103,8 +102,10 @@ class Client:
             sys.stdout.flush()
         # add reps
         param2val_list = self.add_reps(param2val_list, reps)
+        # distribute expensive jobs approximately evenly across workers
+        param2val_list = np.random.permutation(param2val_list)
         sys.stdout.flush()
-        # split into 8 chunks (one per node)
+        # split into chunks (one per node)
         worker_names = iter(np.random.permutation(config.SFTP.worker_names)) if worker is None else iter([worker])
         num_workers = 1 if worker is not None else self.num_workers
         for param2val_chunk in np.array_split(param2val_list, num_workers):
