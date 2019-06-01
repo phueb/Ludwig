@@ -5,7 +5,7 @@ from ludwigcluster.config import SFTP
 from ludwigcluster.utils import list_all_param2vals
 
 from yourmodule import config as yourmoduleconfig
-from yourmodule.jobs import preprocessing_job
+from yourmodule.jobs import pre_processing_job
 from yourmodule.params import Params
 
 
@@ -28,16 +28,18 @@ if __name__ == '__main__':
 
     # preprocess any data and save pickle to file server
     if namespace.preprocess:
-        preprocessing_job()
+        pre_processing_job()
 
     # make list of hyperparameter configurations to submit
     param2val_list = list_all_param2vals(Params)
 
+    SFTP.worker_names = SFTP.worker_names  # use this to specify workers (in case one is offline)
+
     # submit to cluster
-    data_dirs = ['your_data_dir_name'] if not namespace.skip_data else []
-    client = Client(yourmoduleconfig.Dirs.remote_root.name)
-    client.submit(src_ps=[yourmoduleconfig.Dirs.src],
-                  data_ps=[yourmoduleconfig.Dirs.root / d for d in data_dirs],
+    data_dirs = [] if not namespace.skip_data else []  # this data is copied to file server not workers
+    client = Client(yourmoduleconfig.RemoteDirs.root.name)
+    client.submit(src_ps=[yourmoduleconfig.LocalDirs.src],
+                  data_ps=[yourmoduleconfig.LocalDirs.root / d for d in data_dirs],
                   param2val_list=param2val_list,
                   reps=namespace.reps,
                   test=namespace.test,

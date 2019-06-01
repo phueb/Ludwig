@@ -6,7 +6,8 @@ if [[ "$#" -ne 1 ]]
 	  exit
 fi
 
-for hostname in bengio hawkins hebb hinton hoff  norman pitts;  # TODO yash is using lecun
+
+for hostname in bengio hebb hinton hoff norman pitts hawkins;  # TODO yash is using lecun
 do
     echo Killing run_${1}.py on ${hostname}
     ssh ${hostname} "pkill -9 -f -c run_${1}.py"
