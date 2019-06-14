@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+pwd=$(cat ../../.sudo_pwd)
 for hostname in bengio hebb hinton hoff norman pitts hawkins;  # TODO yash is using lecun
 do
     echo Uploading watcher to ${hostname}
@@ -13,8 +14,11 @@ do
     echo Removing stdout file
     rm /media/lab/stdout/${hostname}.out
 
-    echo Starting new watcher
     # make sure that /media/lab is mounted (not mounted after reboot)
+    echo Mounting /media/lab
+    ssh ${hostname} "echo ${pwd} | sudo -S mount /media/lab"
+
+    echo Starting new watcher
     ssh ${hostname} "cd /var/sftp/LudwigCluster; nohup python3 watcher.py > /media/lab/stdout/${hostname}.out 2>&1 &"
 echo
 done
