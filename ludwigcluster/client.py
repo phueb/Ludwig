@@ -54,9 +54,9 @@ class Client:
     @staticmethod
     def check_lab_disk_space():
         if platform.system() == 'Linux':
-            usage_stats = psutil.disk_usage(str(config.Dirs.lab))
+            usage_stats = psutil.disk_usage(str(config.Dirs.research_data))
             percent_used = usage_stats[3]
-            print('Percent Disk Space used at {}: {}'.format(config.Dirs.lab, percent_used))
+            print('Percent Disk Space used at {}: {}'.format(config.Dirs.research_data, percent_used))
             if percent_used > DISK_USAGE_MAX:
                 raise RuntimeError('Disk space usage > {}.'.format(DISK_USAGE_MAX))
         else:
@@ -65,7 +65,7 @@ class Client:
     def make_job_base_name(self, worker_name):
         time_of_init = datetime.datetime.now().strftime(config.Time.format)
         res = '{}_{}'.format(worker_name, time_of_init)
-        path = config.Dirs.lab / self.project_name / res
+        path = config.Dirs.research_data / self.project_name / res
         if path.is_dir():
             raise IsADirectoryError('Directory "{}" already exists.'.format(res))
         return res
@@ -90,7 +90,7 @@ class Client:
         # copy data to file server
         for data_p in data_ps:
             src = str(data_p)
-            dst = str(config.Dirs.lab / self.project_name / data_p.name)
+            dst = str(config.Dirs.research_data / self.project_name / data_p.name)
             print('Copying data in {} to {}'.format(src, dst))
             copy_tree(src, dst)
         # add param_name to param2val
@@ -123,7 +123,7 @@ class Client:
                 job_name = '{}_num{}'.format(base_name, n)
                 param2val['job_name'] = job_name
             # save chunk to shared drive (after addition of job_name)
-            p = config.Dirs.lab / self.project_name / '{}_param2val_chunk.pkl'.format(worker_name)
+            p = config.Dirs.research_data / self.project_name / '{}_param2val_chunk.pkl'.format(worker_name)
             with p.open('wb') as f:
                 pickle.dump(param2val_chunk, f)
             # console

@@ -35,7 +35,7 @@ It is recommend to use a machine with a Linux OS to submit tasks.
 Tasks submitted to LudwigCluster must be programmed in Python.
 
 ### Access to the shared drive
-See the administrator to provide access to the lab's shared drive. Mount the drive at ```/media/lab```.
+See the administrator to provide access to the lab's shared drive. Mount the drive at ```/media/research_data```.
 The share is hosted by the lab's file server using ```samba```, and is shared with each node. 
 Because we do not allow direct shell access to nodes, all data and logs must be saved to the shared drive.
 
@@ -82,7 +82,7 @@ from your_module import neural_net_job
 
 hostname = 'your_hostname'
 # load list of neural network configurations provided by ludwigcluster (saved to file server)
-p = Path('/media/lab/<your_project_name>') / '{}_param2val_chunk.pkl'.format(hostname)  
+p = Path('/media/research_data/<your_project_name>') / '{}_param2val_chunk.pkl'.format(hostname)  
 with p.open('rb') as f:
     param2val_chunk = pickle.load(f)
 # iterate over neural network configurations, and for each, do some neural_net_job
@@ -108,7 +108,7 @@ for epoch in range(10):
 # at end of training copy all data files to file server
 for data_path in Path('/var/sftp/ludwig/<unique_data_folder_name>').glob('data*.csv'):
     src = str(data_path)
-    dst = '/media/lab/<your_project_name>/{}'.format(data_path.name)
+    dst = '/media/research_data/<your_project_name>/{}'.format(data_path.name)
     shutil.move(src, dst)
 ```
 

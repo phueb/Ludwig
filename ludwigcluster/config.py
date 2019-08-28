@@ -3,8 +3,8 @@ import socket
 
 
 class Dirs:
-    lab = Path('/') / 'media' / 'lab'
-    stdout = lab / 'stdout'
+    research_data = Path('/') / 'media' / 'research_data'
+    stdout = research_data / 'stdout'
     watched = Path('/var/sftp/ludwig')
 
 
