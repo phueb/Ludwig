@@ -1,11 +1,13 @@
 import numpy as np
 from itertools import cycle
+import yaml
 
 
-def iter_over_cycles(d):
-    # lengths
-    param2opts = sorted([(k, v) for k, v in d.items()
-                         if not k.startswith('_')])
+def _iter_over_cycles(param2opts):
+    """
+    return list of mappings from param name to integer which is index to possible param values
+    all possible combinations are returned
+    """
     lengths = []
     for k, v in param2opts:
         lengths.append(len(v))
@@ -28,17 +30,20 @@ def iter_over_cycles(d):
         param_ids.append(i)
     assert sorted(list(set(param_ids))) == sorted(param_ids)
     assert len(param_ids) == total
-    return param2opts, param_ids
+    return param_ids
 
 
-def list_all_param2vals(params, update_d=None, add_names=True):
-    """
-    return list of mappings from param name to integer which is index to possible param values
-    all possible combinations are returned
-    """
-    d = params_class.__dict__
+def _to_full_request(partial_request, default_params):  # turn partial into full request - returns dictionary with lists as values
+    return {k: [v] if k not in partial_request else partial_request[k]
+            for k, v in default_params.__dict__.copy().items()}
+
+
+def list_all_param2vals(partial_request, default_params, update_d=None, add_names=True):
+    # complete partial request made by user
+    full_request = _to_full_request(partial_request, default_params)
     #
-    param2opts, param_ids = iter_over_cycles(d)
+    param2opts = tuple(full_request.items())
+    param_ids = _iter_over_cycles(param2opts)
     # map param names to integers corresponding to which param value to use
     res = []
     for ids in param_ids:
@@ -49,3 +54,36 @@ def list_all_param2vals(params, update_d=None, add_names=True):
             param2val.update(update_d)
         res.append(param2val)
     return res
+
+
+def gen_param_ps(partial_request, default_params, runs_p, label_params=None):
+    """
+    Return path objects that point to folders with job results.
+     Folders located in those paths are each generated with the same parameter configuration.
+     Use this for retrieving data after a job has been completed
+    """
+    print('Requested:')
+    print(partial_request)
+    print()
+    #
+    label_params = [param for param, val in partial_request.items()
+                    if val != default_params.__dict__[param]] + (label_params or [])
+    #
+    requested_param2vals = list_all_param2vals(partial_request, default_params, add_names=False)
+    for param_p_ in runs_p:
+        print('Checking {}...'.format(param_p_))
+        # load param2val
+        with (param_p_ / 'param2val.yaml').open('r') as f:
+            param2val = yaml.load(f, Loader=yaml.FullLoader)
+        param2val = param2val.copy()
+        param2val['param_name'] = 'default'
+        param2val['job_name'] = 'default'
+        # is match?
+        if param2val in requested_param2vals:
+            label_ = '\n'.join(['{}={}'.format(param, param2val[param]) for param in label_params])
+            label_ += '\nn={}'.format(len(list(param_p_.glob('*num*'))))
+            print('Param2val matches')
+            print(label_)
+            yield param_p_, label_
+        else:
+            print('Params do not match')
