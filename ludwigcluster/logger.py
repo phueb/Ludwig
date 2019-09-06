@@ -1,4 +1,5 @@
 import yaml
+import shutil
 
 from ludwigcluster import config
 
@@ -16,7 +17,14 @@ class Logger:
         if not (config.Dirs.research_data / self.project_name / 'runs').exists():
             print('Making runs dir')
             (config.Dirs.research_data / self.project_name / 'runs').mkdir(parents=True)
+        self.remove_test_runs()
         self.param_nums = self.load_param_nums()
+
+    def remove_test_runs(self):  # otherwise 'param_test' will be included in param_names
+        for p in (config.Dirs.research_data / self.project_name / 'runs').iterdir():
+            if p.name.endswith('test'):
+                print('Removing {}'.format(p))
+                shutil.rmtree(str(p))
 
     def load_param_nums(self):
         res = [int(p.name.split('_')[-1])
@@ -37,7 +45,7 @@ class Logger:
         # check runs
         for param_p in (config.Dirs.research_data / self.project_name / 'runs').glob('param_*'):
             with (param_p / 'param2val.yaml').open('r') as f:
-                param2val2 = yaml.load(f)
+                param2val2 = yaml.load(f, Loader=yaml.FullLoader)
             if self.is_same(param2val1, param2val2):
                 return 'old', param_p.name
         else:

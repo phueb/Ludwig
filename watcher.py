@@ -60,6 +60,7 @@ class Handler(FileSystemEventHandler):
         last_ts = datetime.datetime.now()
 
         while True:
+            print('Checking queue')
             event, time_stamp = self.q.get()
             time_delta = time_stamp - last_ts
             if time_delta.total_seconds() < 1:  # sftp produces 2 events within 1 sec - ignore 2nd event

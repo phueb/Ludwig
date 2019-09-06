@@ -31,7 +31,7 @@ def iter_over_cycles(d):
     return param2opts, param_ids
 
 
-def list_all_param2vals(params_class, update_d=None, add_names=True):
+def list_all_param2vals(params, update_d=None, add_names=True):
     """
     return list of mappings from param name to integer which is index to possible param values
     all possible combinations are returned
