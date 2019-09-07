@@ -228,8 +228,8 @@ class Client:
         print(param2requests)
         print()
 
-        label_params = set([param for param, val in param2requests.items()
-                            if val != self.param2default[param]] + (label_params or []))
+        label_params = sorted(set([param for param, val in param2requests.items()
+                                   if val != self.param2default[param]] + (label_params or [])))
 
         requested_param2vals = self.list_all_param2vals(param2requests, add_names=False)
 
