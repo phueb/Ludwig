@@ -5,8 +5,7 @@ from ludwigcluster.config import SFTP
 from ludwigcluster.utils import list_all_param2vals
 
 from yourmodule import config as yourmoduleconfig
-from yourmodule.jobs import pre_processing_job
-from yourmodule.params import Params
+from yourmodule.job import pre_processing_job
 
 
 if __name__ == '__main__':

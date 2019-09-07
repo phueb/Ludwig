@@ -33,14 +33,10 @@ def _iter_over_cycles(param2opts):
     return param_ids
 
 
-def _to_full_request(partial_request, default_params):  # turn partial into full request - returns dictionary with lists as values
-    return {k: [v] if k not in partial_request else partial_request[k]
-            for k, v in default_params.__dict__.copy().items()}
-
-
-def list_all_param2vals(partial_request, default_params, update_d=None, add_names=True):
+def list_all_param2vals(param2requests, param2default, update_d=None, add_names=True):
     # complete partial request made by user
-    full_request = _to_full_request(partial_request, default_params)
+    full_request = {k: [v] if k not in param2requests else param2requests[k]
+                    for k, v in param2default.copy().items()}
     #
     param2opts = tuple(full_request.items())
     param_ids = _iter_over_cycles(param2opts)
@@ -66,8 +62,8 @@ def gen_param_ps(partial_request, default_params, runs_p, label_params=None):
     print(partial_request)
     print()
     #
-    label_params = [param for param, val in partial_request.items()
-                    if val != default_params.__dict__[param]] + (label_params or [])
+    label_params = set([param for param, val in partial_request.items()
+                        if val != default_params.__dict__[param]] + (label_params or []))
     #
     requested_param2vals = list_all_param2vals(partial_request, default_params, add_names=False)
     for param_p_ in runs_p:
