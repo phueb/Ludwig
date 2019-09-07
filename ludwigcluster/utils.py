@@ -52,20 +52,20 @@ def list_all_param2vals(param2requests, param2default, update_d=None, add_names=
     return res
 
 
-def gen_param_ps(partial_request, default_params, runs_p, label_params=None):
+def gen_param_ps(param2requests, param2default, runs_p, label_params=None):
     """
     Return path objects that point to folders with job results.
      Folders located in those paths are each generated with the same parameter configuration.
      Use this for retrieving data after a job has been completed
     """
     print('Requested:')
-    print(partial_request)
+    print(param2requests)
     print()
     #
-    label_params = set([param for param, val in partial_request.items()
-                        if val != default_params.__dict__[param]] + (label_params or []))
+    label_params = set([param for param, val in param2requests.items()
+                        if val != param2default[param]] + (label_params or []))
     #
-    requested_param2vals = list_all_param2vals(partial_request, default_params, add_names=False)
+    requested_param2vals = list_all_param2vals(param2requests, param2default, add_names=False)
     for param_p_ in runs_p:
         print('Checking {}...'.format(param_p_))
         # load param2val
