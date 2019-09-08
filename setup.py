@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='ludwigcluster',
-    version='0.1dev',
+    version='0.2',
     packages=['ludwigcluster'],
     install_requires=['psutil',
                       'pysftp',
@@ -12,5 +12,10 @@ setup(
     license='',
     author='Philip Huebner',
     author_email='info@philhuebner.com',
-    description='Train GPU accelerated neural networks on multiple LudwigCluster nodes'
+    description='Run Python jobs on multiple LudwigCluster nodes',
+    entry_points={
+        'console_scripts': [
+            'ludwig=submit:main'
+        ]
+    }
 )

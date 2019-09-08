@@ -1,5 +1,5 @@
 
-from yourmodule import config
+from your_module import config
 
 
 def pre_processing_job():

@@ -3,12 +3,12 @@ import argparse
 from ludwigcluster.client import Client
 from ludwigcluster.config import SFTP
 
-from yourmodule.params import param2requests, param2default
-from yourmodule import config
-from yourmodule.job import pre_processing_job
+from your_module.params import param2requests, param2default
+from your_module import config
+from your_module.job import pre_processing_job
 
 
-if __name__ == '__main__':
+def main():
     # parse cmd-line args
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--reps', default=2, action='store', dest='reps', type=int,
@@ -44,3 +44,7 @@ if __name__ == '__main__':
                   reps=namespace.reps,
                   test=namespace.test,
                   worker=namespace.worker)
+
+
+if __name__ == '__main__':
+    main()

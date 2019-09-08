@@ -4,9 +4,9 @@ import socket
 from datetime import datetime
 import yaml
 
-from yourmodule import config
-from yourmodule.params import param2requests, param2default
-from yourmodule.job import main
+from your_module import config
+from your_module.params import param2requests, param2default
+from your_module.job import main
 
 hostname = socket.gethostname()
 
