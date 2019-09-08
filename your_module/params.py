@@ -6,7 +6,7 @@ any custom classes for parameters should be implemented by user in main job func
 keep interface between user and ludwigcluster as simple as possible
 """
 
-param2requests = {'learning_rate': [0.1, 0.2, 0.3]}
+param2requests = {'learning_rate': [0.1, 0.2, 0.3]}  # will submit 3 jobs, each using a different learning rate
 
 
 param2default = {'learning_rate': 0.1,

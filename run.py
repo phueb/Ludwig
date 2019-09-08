@@ -3,6 +3,10 @@ import pickle
 import socket
 from datetime import datetime
 import yaml
+import pandas as pd
+import sys
+
+# TODO import these programmatically
 
 from your_module import config
 from your_module.params import param2requests, param2default
@@ -38,6 +42,9 @@ def run_on_cluster():
         if not dst.exists():
             dst.mkdir(parents=True)
         for df in dfs:
+            if not isinstance(df, pd.DataFrame):
+                print('WARNING: Object returned by job is not a pandas.DataFrame object.')
+                continue
             with (dst / '{}.csv'.format(df.name)).open('w') as f:
                 df.to_csv(f, index=True)
 
@@ -51,6 +58,7 @@ def run_on_cluster():
 
     print('Finished all {} jobs at {}.'.format(config.LocalDirs.src.name, datetime.now()))
     print()
+    sys.stdout.flush()
 
 
 def run_on_host():

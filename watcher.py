@@ -78,7 +78,7 @@ class Handler(FileSystemEventHandler):
 
 
 def watcher():
-    print('Started ludwigcluster queue and file watching.')
+    print('Started LudwigCluster/watcher.py')
     observer = Observer()
     handler = Handler()
     handler.start()

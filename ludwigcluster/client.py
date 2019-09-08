@@ -213,7 +213,7 @@ class Client:
                 continue
 
             # upload run.py
-            sftp.put(localpath=run_f_name,
+            sftp.put(localpath=run_f_name,  # TODO this always uses run.py in cwd (where "ludwig" is called)
                      remotepath='{}/{}'.format(self.ludwig, 'run_{}.py'.format(self.project_name)))
             print('--------------')
             print()

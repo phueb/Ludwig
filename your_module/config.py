@@ -10,3 +10,7 @@ class LocalDirs:
     root = Path(__file__).parent.parent
     src = root / 'your_module'
     runs = root / '{}_runs'.format(src.name)
+
+
+class Eval:
+    debug = False
