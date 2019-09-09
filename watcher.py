@@ -34,7 +34,7 @@ class Handler(FileSystemEventHandler):
 
     @staticmethod
     def delete_params_dirs():
-        print('Deleting job_dirs more than {} hours old...'.format(config.Time.delete_delta))
+        print('LudwigCluster: Deleting job_dirs more than {} hours old...'.format(config.Time.delete_delta))
         delta = datetime.timedelta(hours=config.Time.delete_delta)
         time_of_init_cutoff = datetime.datetime.now() - delta
         for job_p in config.Dirs.watched.rglob('*num*'):
@@ -42,7 +42,7 @@ class Handler(FileSystemEventHandler):
             time_of_init = result.group(1)
             dt = datetime.datetime.strptime(time_of_init, config.Time.format)
             if dt < time_of_init_cutoff:
-                print('{} is more than {} hours old. Removing'.format(job_p.name, config.Time.delete_delta))
+                print('LudwigCluster: {} is more than {} hours old. Removing'.format(job_p.name, config.Time.delete_delta))
                 shutil.rmtree(str(job_p))
 
     def start_run(self, event_src_path):
@@ -55,30 +55,34 @@ class Handler(FileSystemEventHandler):
             subprocess.check_call([command], shell=True)  # stdout is already redirected, cannot do it here
         except CalledProcessError as e:  # this is required to continue to the next item in queue if current item fails
             print(e)
+        else:
+            print('LudwigCluster: Successfully executed: {}'.format(command))
+            print()
+            sys.stdout.flush()
 
     def _process_q(self):
         last_ts = datetime.datetime.now()
 
         while True:
-            print('Checking queue')
+            print('LudwigCluster: Checking queue')
             event, time_stamp = self.q.get()
             time_delta = time_stamp - last_ts
             if time_delta.total_seconds() < 1:  # sftp produces 2 events within 1 sec - ignore 2nd event
-                print('Ignoring 2nd event.')
+                print('LudwigCluster: Ignoring 2nd event.')
                 continue
             else:
-                print('Detected event {} at {}'.format(event.src_path, datetime.datetime.now()))
-                print('Executing "{}"'.format(event.src_path))
+                sys.stdout.flush()
+                print('LudwigCluster: Detected event {} at {}'.format(event.src_path, datetime.datetime.now()))
+                print('LudwigCluster: Executing "{}"'.format(event.src_path))
                 sys.stdout.flush()
 
             self.start_run(event.src_path)
             last_ts = time_stamp
-            print()
-            sys.stdout.flush()
 
 
 def watcher():
-    print('Started LudwigCluster/watcher.py')
+    print('LudwigCluster: Started LudwigCluster/watcher.py')
+    sys.stdout.flush()
     observer = Observer()
     handler = Handler()
     handler.start()

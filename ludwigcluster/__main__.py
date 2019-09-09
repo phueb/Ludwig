@@ -12,13 +12,24 @@ from ludwigcluster.config import SFTP
 
 def status():  # TODO test
 
-    command = 'tail {}/*.out'.format(config.Dirs.stdout)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-w', '--worker', default='*', action='store', dest='worker',
+                        choices=SFTP.worker_names, required=False,
+                        help='The name of the worker the status of which is requested.')
+    namespace = parser.parse_args()
+
+    command = 'cat {}/{}.out'.format(config.Dirs.stdout, namespace.worker)
 
     try:
-        status_str = subprocess.check_call([command], shell=True)  # stdout is already redirected, cannot do it here
-        print(status_str)
+        output = subprocess.getoutput(command)  # stdout is already redirected, cannot do it here
+
     except CalledProcessError as e:  # this is required to continue to the next item in queue if current item fails
-        print(e)
+        return e
+    else:
+        lines = str(output).split('\n')
+        res = '\n'.join([line for line in lines
+                         if 'LudwigCluster' in line])
+        return res
 
 
 def submit():
