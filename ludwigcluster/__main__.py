@@ -2,17 +2,31 @@ import argparse
 import importlib
 from pathlib import Path
 import sys
+import subprocess
+from subprocess import CalledProcessError
 
 from ludwigcluster.client import Client
+from ludwigcluster import config
 from ludwigcluster.config import SFTP
 
 
-def main():
+def status():  # TODO test
+
+    command = 'tail {}/*.out'.format(config.Dirs.stdout)
+
+    try:
+        status_str = subprocess.check_call([command], shell=True)  # stdout is already redirected, cannot do it here
+        print(status_str)
+    except CalledProcessError as e:  # this is required to continue to the next item in queue if current item fails
+        print(e)
+
+
+def submit():
     """
     This script should be called in root directory of the Python project.
-    If not specified via CL arguments, it will try to import example.config and example.params.
-    module.config is where this script will try to find the name of your project
-    module.params is where this script will try to find the parameters with which to execute your jobs.
+    If not specified via CL arguments, it will try to import src.config and src.params.
+    src.config is where this script will try to find the name of your project
+    src.params is where this script will try to find the parameters with which to execute your jobs.
     """
 
     cwd = Path.cwd()
@@ -80,4 +94,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    submit()

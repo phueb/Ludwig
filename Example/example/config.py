@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 class RemoteDirs:
-    root = Path('/media/research_data') / 'Your_Module'
+    root = Path('/media/research_data') / 'Example'
     runs = root / 'runs'
 
 
