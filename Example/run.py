@@ -8,9 +8,9 @@ import sys
 
 # TODO import these programmatically
 
-from your_module import config
-from your_module.params import param2requests, param2default
-from your_module.job import main
+from Example.example import config
+from Example.example.params import param2requests, param2default
+from Example.example.job import main
 
 hostname = socket.gethostname()
 

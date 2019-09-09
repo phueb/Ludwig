@@ -8,7 +8,7 @@ class RemoteDirs:
 
 class LocalDirs:
     root = Path(__file__).parent.parent
-    src = root / 'your_module'
+    src = root / 'example'
     runs = root / '{}_runs'.format(src.name)
 
 

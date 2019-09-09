@@ -34,6 +34,12 @@ It is recommend to use a machine with a Linux OS to submit tasks.
 ### Python
 Tasks submitted to LudwigCluster must be programmed in Python.
 
+### Project Organization
+
+```ludwigcluster``` requires that the user create two special modules:
+* ```src.params```: contains information about which parameters to use for each job
+* ```src.config```: contains basic information like the name of the user's project
+
 ### Access to the shared drive
 See the administrator to provide access to the lab's shared drive. Mount the drive at ```/media/research_data```.
 The share is hosted by the lab's file server using ```samba```, and is shared with each node. 
@@ -45,71 +51,50 @@ It is recommended to use password-less access via keypair authentication.
 Create ```config``` in ```/home/.ssh```.
 Ask the administrator to populate this file with the names of the worker names and their IP addresses.
 
-## Submitting a Task
+## Submitting a Job
 
-### 1) LudwigCluster client
-Submit neural network jobs to ```LudwigCluster ``` directly from your project by importing the ```LudwigCluster``` client.
-First, install the client in your project's virtual environment,
+### 1) Install ludwigcluster
+
+In a terminal, type:
 
 ```bash
 (venv) pip3 install git+https://github.com/phueb/LudwigCluster.git
 ```
 
-Here is an example file:
+### 2) run.py
 
-```python
-from pathlib import Path
-from ludwigcluster.client import Client
+Copy the ```run.py``` file provided by ```ludwigcluster``` into the root folder of your project.
 
-# create list of neural network parameter configurations to trian on cluster
-param2val_list = [param2val1, param2val2] # each is a dict mapping a parameter name to a value
-# submit
-client = Client('your_project_name')  # creates a directory on server 
-client.submit(src_ps=[Path('src')],  # specify path to source code (is uploaded to worker)
-              data_ps=[Path('corpora'), Path('tasks')],  # specify paths to any data (is uploaded to file server)
-              param2val_list=param2val_list,
-              reps=2)  # number of replications per job
-```
+### 3) The command-line tool
 
-### 2) 
-Create a ```run.py``` file which calls a neural-network training function. 
-Here is an example of the content of ```run.py```:
+To submit jobs, go to your project root folder, and invoke the command-line tool that has been installed:
 
-```python
-from pathlib import Path
-import pickle
-from your_module import neural_net_job
-
-hostname = 'your_hostname'
-# load list of neural network configurations provided by ludwigcluster (saved to file server)
-p = Path('/media/research_data/<your_project_name>') / '{}_param2val_chunk.pkl'.format(hostname)  
-with p.open('rb') as f:
-    param2val_chunk = pickle.load(f)
-# iterate over neural network configurations, and for each, do some neural_net_job
-for param2val in param2val_chunk:
-    neural_net_job(param2val)
-```
+```bash
+(venv) ludwig
+``` 
 
 ### Saving Data
-Any data (e.g. accuracy per epoch) that needs to persist, should be written to the worker. 
-Write any data to a directory (with a name unique to your project) on the worker.
-It is recommended you move all files to the file-server only after a neural network has completed training.
-This prevents accumulation on the file-server of data from jobs that have not completed. 
-For example:
+Any data (e.g. accuracy per epoch) that needs to persist, should be returned by job.main() as a list of pandas DataFrame objects.
+These will be automatically saved to the shared drive after a job has completed.
+
+Alternatively, if the data is too big to be held in memory, it is recommended to write the data to disk,
+and manually move it to the shared drive at the end of main.job(), as illustrated here: 
 
 ```python
 from pathlib import Path
 import shutil
 
-for epoch in range(10):
-    data = train_epoch()
-    save_to_worker(data)  # save intermediate data to worker
+def main():
 
-# at end of training copy all data files to file server
-for data_path in Path('/var/sftp/ludwig/<unique_data_folder_name>').glob('data*.csv'):
-    src = str(data_path)
-    dst = '/media/research_data/<your_project_name>/{}'.format(data_path.name)
-    shutil.move(src, dst)
+    for epoch in range(10):
+        data = train_epoch()
+        save_to_worker(data)  # save intermediate data to worker
+    
+    # at end of training copy all data files to file server
+    for data_path in Path('/var/sftp/ludwig/<unique_data_folder_name>').glob('data*.csv'):
+        src = str(data_path)
+        dst = '/media/research_data/<your_project_name>/{}'.format(data_path.name)
+        shutil.move(src, dst)
 ```
 
 ### Logging
@@ -120,7 +105,8 @@ Retry when the node is no longer busy.
 
 ## Note
 
-Tasks cannot be stopped, once started. Please see a administrator to stop running tasks.
+Calling ```ludwig``` while previously submitted jobs are still being executed, 
+will stop all previously submitted jobs.
 
 Strictly speaking, LudwigCluster is not really a "cluster". 
 Each node is unaware of every other. Although, each has access to the same shared drive. 

@@ -1,6 +1,7 @@
 import argparse
 import importlib
 from pathlib import Path
+import sys
 
 from ludwigcluster.client import Client
 from ludwigcluster.config import SFTP
@@ -9,7 +10,7 @@ from ludwigcluster.config import SFTP
 def main():
     """
     This script should be called in root directory of the Python project.
-    If not specified via CL arguments, it will try to import your_module.config and your_module.params.
+    If not specified via CL arguments, it will try to import example.config and example.params.
     module.config is where this script will try to find the name of your project
     module.params is where this script will try to find the parameters with which to execute your jobs.
     """
@@ -17,18 +18,15 @@ def main():
     cwd = Path.cwd()
     print('Current working directory:\n{}'.format(cwd))
     src_path = cwd / cwd.name.lower()  # best guess where source code is located (e.g. modules: params and config)
-    print('Looking for source code in folder with name "{}"'.format(src_path))
     if not src_path.exists():
-        raise SystemExit('Guessed path to source code does not exist.\n'
-                         'Please specify path to source code manually.')
+        is_required = True
+    else:
+        is_required=False
 
     # parse cmd-line args
     parser = argparse.ArgumentParser()
-
-    # TODO do not require  -c and -pr ; as default try to find modules in cwd
-
     parser.add_argument('-src', '--src', default=src_path.name, action='store', dest='src',
-                        required=False,
+                        required=is_required,
                         help='Specify path to your source code.')
 
     parser.add_argument('-r', '--reps', default=2, action='store', dest='reps', type=int,
@@ -53,6 +51,10 @@ def main():
     if namespace.debug:
         print('WARNING: Debugging is on.')
 
+    sys.path.append(str(cwd))
+    sys.path.append(str(src_path))
+
+    print('Looking for source code in:\n{}'.format(namespace.src))
     job    = importlib.import_module(namespace.src + '.job')
     params = importlib.import_module(namespace.src + '.params')
     config = importlib.import_module(namespace.src + '.config')

@@ -15,7 +15,7 @@ setup(
     description='Run Python jobs on multiple LudwigCluster nodes',
     entry_points={
         'console_scripts': [
-            'ludwig=submit:main'
+            'ludwig=ludwigcluster.submit:main'
         ]
     }
 )
