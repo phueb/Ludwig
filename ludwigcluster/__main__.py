@@ -10,7 +10,7 @@ from ludwigcluster import config
 from ludwigcluster.config import SFTP
 
 
-def status():  # TODO test
+def status():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--worker', default='*', action='store', dest='worker',
@@ -20,16 +20,13 @@ def status():  # TODO test
 
     command = 'cat {}/{}.out'.format(config.Dirs.stdout, namespace.worker)
 
-    try:
-        output = subprocess.getoutput(command)  # stdout is already redirected, cannot do it here
-
-    except CalledProcessError as e:  # this is required to continue to the next item in queue if current item fails
-        return e
-    else:
-        lines = str(output).split('\n')
-        res = '\n'.join([line for line in lines
-                         if 'LudwigCluster' in line])
-        return res
+    status_, output = subprocess.getstatusoutput(command)
+    if status_ != 0:
+        return 'Something went wrong. Check your access to {}'.format(config.Dirs.research_data)
+    lines = str(output).split('\n')
+    res = '\n'.join([line for line in lines
+                     if 'LudwigCluster' in line])
+    return res
 
 
 def submit():
