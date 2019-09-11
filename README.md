@@ -61,17 +61,19 @@ In a terminal, type:
 (venv) pip3 install git+https://github.com/phueb/LudwigCluster.git
 ```
 
-### 2) run.py
-
-Copy the ```run.py``` file provided by ```ludwigcluster``` into the root folder of your project.
-
-### 3) The command-line tool
+### 2) The command-line tool
 
 To submit jobs, go to your project root folder, and invoke the command-line tool that has been installed:
 
 ```bash
 (venv) ludwig
 ``` 
+
+Next, check the status of the LudwigCluster machines:
+
+```bash
+(venv) ludwig-status
+```
 
 ### Saving Data
 Any data (e.g. accuracy per epoch) that needs to persist, should be returned by job.main() as a list of pandas DataFrame objects.

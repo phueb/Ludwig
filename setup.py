@@ -16,6 +16,8 @@ setup(
     entry_points={
         'console_scripts': [
             'ludwig=ludwigcluster.__main__:submit',
+            'ludwig-local=ludwigcluster.__main__:run_on_host',
+            'ludwig-stats=ludwigcluster.__main__:stats',
             'ludwig-status=ludwigcluster.__main__:status'
         ]
     }

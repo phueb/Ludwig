@@ -3,14 +3,71 @@ import importlib
 from pathlib import Path
 import sys
 import subprocess
-from subprocess import CalledProcessError
+import psutil
 
 from ludwigcluster.client import Client
-from ludwigcluster import config
+from ludwigcluster import config as ludwig_config
 from ludwigcluster.config import SFTP
 
 
+def run_on_host():
+    """
+    run jobs on the local host for testing/development
+    """
+
+    cwd = Path.cwd()
+
+    # parse cmd-line args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-src', '--src', default=cwd.name.lower(), action='store', dest='src',
+                        required=False,
+                        help='Specify path to your source code.')
+    parser.add_argument('-d', '--debug', action='store_true', default=False, dest='debug', required=False,
+                        help='Debugging.')
+    namespace = parser.parse_args()
+
+    if not (cwd / namespace.src).is_dir():
+        raise NotADirectoryError('Cannot find source code in {}.'.format(cwd / namespace.src))
+
+    print('Looking for source code in:\n{}'.format(namespace.src))
+    sys.path.append(str(cwd))
+    job = importlib.import_module(namespace.src + '.job')
+    params = importlib.import_module(namespace.src + '.params')
+    config = importlib.import_module(namespace.src + '.config')
+
+    if namespace.debug:
+        config.Global.debug = True
+
+    project_name = config.LocalDirs.root.name
+    client = Client(project_name, params.param2default)
+    for param2val in client.list_all_param2vals(params.param2requests,
+                                                update_d={'param_name': 'test', 'job_name': 'test'}):
+        job.main(param2val)
+
+    # TODO running locally doesn't save data as implemented - should this be an option?
+    # TODO if so, maybe change the naming convention from "test" to "local" and assign each a time_of_init
+
+
+def stats():  # TODO how to get stats of workers, not host?
+    ps = []
+    for proc in psutil.process_iter():
+        try:
+            pinfo = proc.as_dict(attrs=['pid', 'name', 'username'])
+            pinfo['vms'] = proc.memory_info().vms / (1024 * 1024)
+            ps.append(pinfo)
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+
+    # Sort by 'vms' (virtual memory usage)
+    ps = sorted(ps, key=lambda p: p['vms'], reverse=True)
+
+    return ps[:ludwig_config.CLI.num_top_processes]
+
+
 def status():
+    """
+    return filtered stdout (to which workers are printing) to get a sense of what workers are doing
+    """
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--worker', default='*', action='store', dest='worker',
@@ -18,14 +75,14 @@ def status():
                         help='The name of the worker the status of which is requested.')
     namespace = parser.parse_args()
 
-    command = 'cat {}/{}.out'.format(config.Dirs.stdout, namespace.worker)
+    command = 'cat {}/{}.out'.format(ludwig_config.Dirs.stdout, namespace.worker)
 
     status_, output = subprocess.getstatusoutput(command)
     if status_ != 0:
-        return 'Something went wrong. Check your access to {}'.format(config.Dirs.research_data)
+        return 'Something went wrong. Check your access to {}'.format(ludwig_config.Dirs.research_data)
     lines = str(output).split('\n')
     res = '\n'.join([line for line in lines
-                     if 'LudwigCluster' in line])
+                     if 'LudwigCluster' in line][-ludwig_config.CLI.num_stdout_lines:])
     return res
 
 
@@ -38,17 +95,11 @@ def submit():
     """
 
     cwd = Path.cwd()
-    print('Current working directory:\n{}'.format(cwd))
-    src_path = cwd / cwd.name.lower()  # best guess where source code is located (e.g. modules: params and config)
-    if not src_path.exists():
-        is_required = True
-    else:
-        is_required=False
 
     # parse cmd-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument('-src', '--src', default=src_path.name, action='store', dest='src',
-                        required=is_required,
+    parser.add_argument('-src', '--src', default=cwd.name.lower(), action='store', dest='src',
+                        required=False,
                         help='Specify path to your source code.')
 
     parser.add_argument('-r', '--reps', default=2, action='store', dest='reps', type=int,
@@ -66,18 +117,14 @@ def submit():
                         help='For debugging/testing purpose only')
     parser.add_argument('-p', '--prepare_data', action='store_true', default=False, dest='prepare_data', required=False,
                         help='Whether to save results of pre-processing job to file-server')
-    parser.add_argument('-d', '--debug', action='store_true', default=False, dest='debug', required=False,
-                        help='Debugging. Minimal param configuration')
     namespace = parser.parse_args()
 
-    if namespace.debug:
-        print('WARNING: Debugging is on.')
-
-    sys.path.append(str(cwd))
-    sys.path.append(str(src_path))
+    if not (cwd / namespace.src).is_dir():
+        raise NotADirectoryError('Cannot find source code in {}.'.format(cwd / namespace.src))
 
     print('Looking for source code in:\n{}'.format(namespace.src))
-    job    = importlib.import_module(namespace.src + '.job')
+    sys.path.append(str(cwd))
+    job = importlib.import_module(namespace.src + '.job')
     params = importlib.import_module(namespace.src + '.params')
     config = importlib.import_module(namespace.src + '.config')
 
@@ -90,10 +137,10 @@ def submit():
         print('WARNING: Not preparing any data')
 
     # submit to cluster
-    data_dirs = [] if not namespace.skip_data else []  # this data is copied to file server not workers
+    data_dirs = [] if not namespace.skip_data else []  # this data is copied to file server not workers  # TODO
     project_name = config.RemoteDirs.root.name
     client = Client(project_name, params.param2default)
-    client.submit(src_ps=[config.LocalDirs.src],
+    client.submit(src_p=config.LocalDirs.src,
                   data_ps=[config.LocalDirs.root / d for d in data_dirs],
                   param2requests=params.param2requests,
                   reps=namespace.reps,

@@ -20,4 +20,9 @@ class Time:
     format = '%Y-%m-%d-%H-%M-%S'
 
 
+class CLI:
+    num_top_processes = 5
+    num_stdout_lines = 10
+
+
 hostname = socket.gethostname()

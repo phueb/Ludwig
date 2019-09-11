@@ -17,6 +17,7 @@ import time
 
 from ludwigcluster import config
 from ludwigcluster.logger import Logger
+import ludwigcluster
 
 DISK_USAGE_MAX = 90
 
@@ -137,7 +138,7 @@ class Client:
             res.append(param2val)
         return res
 
-    def submit(self, src_ps, param2requests, data_ps=None, reps=1, test=True, worker=None, run_f_name='run.py'):
+    def submit(self, src_p, param2requests, data_ps, reps=1, test=True, worker=None):
         self.check_lab_disk_space()
 
         # make list of hyper-parameter configurations to submit
@@ -161,7 +162,7 @@ class Client:
         # add reps
         param2val_list = self.add_reps(param2val_list, reps)
 
-        # distribute expensive jobs approximately evenly across workers
+        # distribute (expensive) jobs approximately evenly across workers
         param2val_list = np.random.permutation(param2val_list)
         sys.stdout.flush()
 
@@ -201,20 +202,20 @@ class Client:
                                      private_key_pass=self.private_key_pass)
 
             # upload src code to worker
-            for p in src_ps:
-                localpath = str(p)
-                remotepath = '{}/{}'.format(self.ludwig, p.name)
-                print('Uploading {} to {}'.format(localpath, remotepath))
-                sftp.makedirs(remotepath)
-                sftp.put_r(localpath=localpath, remotepath=remotepath)
+            local_path = str(src_p)
+            remote_path = '{}/{}'.format(self.ludwig, src_p.name)
+            print('Uploading {} to {}'.format(local_path, remote_path))
+            sftp.makedirs(remote_path)
+            sftp.put_r(localpath=local_path, remotepath=remote_path)
             sys.stdout.flush()
-            if test:
-                print('Test successful. Not uploading run.py.')
-                continue
 
             # upload run.py
-            sftp.put(localpath=run_f_name,  # TODO this always uses run.py in cwd (where "ludwig" is called)
-                     remotepath='{}/{}'.format(self.ludwig, 'run_{}.py'.format(self.project_name)))
+            if test:
+                print('Test successful. Not uploading run.py.')
+            else:
+                sftp.put(localpath='{}/run.py'.format(ludwigcluster.__path__._path[-1]),  # TODO improve
+                         remotepath='{}/{}'.format(self.ludwig, 'run_{}.py'.format(src_p.name)))
+
             print('--------------')
             print()
 

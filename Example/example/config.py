@@ -12,5 +12,5 @@ class LocalDirs:
     runs = root / '{}_runs'.format(src.name)
 
 
-class Eval:
+class Global:
     debug = False
