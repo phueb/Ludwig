@@ -17,7 +17,7 @@ import time
 
 from ludwigcluster import config
 from ludwigcluster.logger import Logger
-import ludwigcluster
+from ludwigcluster import run
 
 DISK_USAGE_MAX = 90
 
@@ -138,16 +138,16 @@ class Client:
             res.append(param2val)
         return res
 
-    def submit(self, src_p, param2requests, data_ps, reps=1, test=True, worker=None):
+    def submit(self, src_p, param2requests, additional_code_ps, reps=1, test=True, worker=None):
         self.check_lab_disk_space()
 
         # make list of hyper-parameter configurations to submit
         param2val_list = self.list_all_param2vals(param2requests)
 
-        # copy data to file server
-        for data_p in data_ps:
-            src = str(data_p)
-            dst = str(config.Dirs.research_data / self.project_name / data_p.name)
+        # copy custom Python packages to file server
+        for package_p in additional_code_ps:
+            src = str(package_p)
+            dst = str(config.Dirs.research_data / self.project_name / package_p.name)
             print('Copying data in {} to {}'.format(src, dst))
             copy_tree(src, dst)
 
@@ -213,7 +213,7 @@ class Client:
             if test:
                 print('Test successful. Not uploading run.py.')
             else:
-                sftp.put(localpath='{}/run.py'.format(ludwigcluster.__path__._path[-1]),  # TODO improve
+                sftp.put(localpath=run.__file__,
                          remotepath='{}/{}'.format(self.ludwig, 'run_{}.py'.format(src_p.name)))
 
             print('--------------')

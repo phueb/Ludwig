@@ -111,8 +111,9 @@ def submit():
 
     # TODO add option to specify multiple workers - or specific "teams" of workers
 
-    parser.add_argument('-s', '--skip_data', default=False, action='store_true', dest='skip_data', required=False,
-                        help='Whether or not to skip uploading data to file-server. ')
+    parser.add_argument('-c', '--additional_code_paths', nargs='*', default=[], action='store', dest='additional_code_paths',
+                        required=False,
+                        help='Paths to additional Python packages that are needed (e.g. childeshub). ')
     parser.add_argument('-t', '--test', action='store_true', dest='test', required=False,
                         help='For debugging/testing purpose only')
     parser.add_argument('-p', '--prepare_data', action='store_true', default=False, dest='prepare_data', required=False,
@@ -136,12 +137,20 @@ def submit():
     else:
         print('WARNING: Not preparing any data')
 
+    # are additional source code files required?
+    additional_code_ps = []
+    for code_path in namespace.additional_code_paths:
+        p = Path(code_path)
+        if not p.is_dir():
+            raise NotADirectoryError('{} is not a directory'.format(p))
+        else:
+            additional_code_ps.append(p)
+
     # submit to cluster
-    data_dirs = [] if not namespace.skip_data else []  # this data is copied to file server not workers  # TODO
     project_name = config.RemoteDirs.root.name
     client = Client(project_name, params.param2default)
-    client.submit(src_p=config.LocalDirs.src,
-                  data_ps=[config.LocalDirs.root / d for d in data_dirs],
+    client.submit(src_p=config.LocalDirs.src,  # uploaded to workers
+                  additional_code_ps=additional_code_ps,  # uploaded to shared drive not workers
                   param2requests=params.param2requests,
                   reps=namespace.reps,
                   test=namespace.test,

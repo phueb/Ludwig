@@ -4,11 +4,12 @@ import yaml
 import pandas as pd
 import importlib
 from pathlib import Path
+import sys
 
 
 def run_on_cluster():
     """
-    run multiple jobs on on a single LudwigCluster machine.
+    run multiple jobs on on a single LudwigCluster worker.
     """
 
     p = config.RemoteDirs.root / '{}_param2val_chunk.pkl'.format(hostname)
@@ -50,10 +51,17 @@ def run_on_cluster():
 
 if __name__ == '__main__':
 
-    # import source code
     # get name of folder containing source code from name of file
     src_path_name = Path(__file__).stem.replace('run_', '')
+
+    # import config for user's project
     config = importlib.import_module('{}.config'.format(src_path_name))
+
+    # allow import of modules in root directory of project - e.g. childeshub
+    path_to_remote_project_root = str(config.RemoteDirs.root)
+    sys.path.append(path_to_remote_project_root)
+
+    # import user's job to execute
     job = importlib.import_module('{}.job'.format(src_path_name))
 
     hostname = socket.gethostname()
