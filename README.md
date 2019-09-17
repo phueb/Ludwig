@@ -3,7 +3,7 @@
 ## Info
 
 The UIUC Learning & language Lab provides compute resources for lab members and collaborators wishing to train large neural network models. 
-The resource consists of a file server and 8 compute nodes with GPU acceleration for deep learning tasks.
+The resource consists of a file server and 8 Ubuntu 16.04 machines with GPU acceleration for deep learning tasks.
 
 ## Specs
 
@@ -19,10 +19,10 @@ The resource consists of a file server and 8 compute nodes with GPU acceleration
 | bengio    |1 Geforce GTX 1080 Ti  | Alienware Aurora R7 |
 
 All machines are configured to use:
-* CUDA 8.0
-* cudnn 6
+* CUDA 10.0
+* cudnn 7
 * python3.5
-* tensorflow-gpu
+* tensorflow-gpu==2.0.0rc1
 * pytorch
 
 
@@ -32,7 +32,7 @@ All machines are configured to use:
 It is recommend to use a machine with a Linux OS to submit tasks. 
 
 ### Python
-Tasks submitted to LudwigCluster must be programmed in Python.
+Tasks submitted to LudwigCluster must be programmed in Python 3.
 
 ### Project Organization
 
