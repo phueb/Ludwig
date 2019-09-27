@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='ludwigcluster',
-    version='0.2',
+    version='1.0',
     packages=['ludwigcluster'],
     install_requires=['psutil',
                       'pysftp',
