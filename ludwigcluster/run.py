@@ -44,6 +44,7 @@ def run_job_on_ludwig_worker():
         param2val_p = config.RemoteDirs.runs / param2val['param_name'] / 'param2val.yaml'
         print('Saving param2val to:\n{}\n'.format(param2val_p))
         if not param2val_p.exists():
+            param2val_p.parent.mkdir()
             param2val['job_name'] = None
             with param2val_p.open('w', encoding='utf8') as f:
                 yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
