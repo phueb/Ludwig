@@ -109,6 +109,12 @@ def submit():
                         choices=SFTP.worker_names, required=False,
                         help='Specify a single worker name if submitting to single worker only')
 
+    # TODO test custom mount point
+
+    parser.add_argument('-mnt', '--mnt_path_name', default=None, action='store', dest='mnt_path_name',
+                        required=False,
+                        help='Specify where the shared drive is mounted on your system (if not /media/research_data).')
+
     # TODO add option to specify multiple workers - or specific "teams" of workers
 
     parser.add_argument('-c', '--extra_folders', nargs='*', default=[], action='store', dest='extra_folders',
@@ -154,7 +160,8 @@ def submit():
                   param2requests=params.param2requests,
                   reps=namespace.reps,
                   test=namespace.test,
-                  worker=namespace.worker)
+                  worker=namespace.worker,
+                  mnt_path_name=namespace.mnt_path_name)
 
 
 if __name__ == '__main__':
