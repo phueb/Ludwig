@@ -102,7 +102,7 @@ def submit():
                         required=False,
                         help='Specify path to your source code.')
 
-    parser.add_argument('-r', '--reps', default=2, action='store', dest='reps', type=int,
+    parser.add_argument('-r', '--reps', default=1, action='store', dest='reps', type=int,
                         choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50], required=False,
                         help='Number of replications to train per hyper-param configuration')
     parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',

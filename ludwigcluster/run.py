@@ -7,7 +7,7 @@ from pathlib import Path
 import sys
 
 
-def run_on_cluster():
+def run_job_on_ludwig_worker():
     """
     run multiple jobs on on a single LudwigCluster worker.
     """
@@ -66,4 +66,4 @@ if __name__ == '__main__':
 
     hostname = socket.gethostname()
 
-    run_on_cluster()
+    run_job_on_ludwig_worker()

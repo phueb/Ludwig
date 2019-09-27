@@ -83,7 +83,9 @@ class Client:
             res += [param2val.copy() for _ in range(num_times_train)]  # make sure that each is unique (copied)
         if not res:
             time.sleep(1)
-            raise SystemExit('{} replications of each model already exist.'.format(reps))
+            raise SystemExit('{} replication{} of each job already exist{}.'.format(reps,
+                                                                                    's' if reps > 1 else '',
+                                                                                    ' ' if reps > 1 else 's'))
         return res
 
     @staticmethod
@@ -140,6 +142,10 @@ class Client:
 
     def submit(self, src_p, param2requests, additional_code_ps, reps=1, test=True, worker=None):
         self.check_lab_disk_space()
+
+        # check that requests are lists
+        for k, v in param2requests.items():
+            assert isinstance(v, list)
 
         # make list of hyper-parameter configurations to submit
         param2val_list = self.list_all_param2vals(param2requests)
