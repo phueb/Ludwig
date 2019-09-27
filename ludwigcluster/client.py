@@ -141,7 +141,7 @@ class Client:
         return res
 
     def submit(self, src_p, param2requests, extra_folder_ps,
-               reps=1, test=True, worker=None, research_dat_mount_p=None):
+               reps=1, test=True, worker=None, research_data_mount_p=None):
         self.check_lab_disk_space()
 
         # check that requests are lists
@@ -152,13 +152,13 @@ class Client:
         param2val_list = self.list_all_param2vals(param2requests)
 
         # copy extra folders to file server  (can be Python packages, which will be importable, or contain data)
-        if research_dat_mount_p is None:
-            research_dat_mount_p = config.Dirs.research_data
+        if research_data_mount_p is None:
+            research_data_mount_p = config.Dirs.research_data
         else:
-            assert research_dat_mount_p.exists()  # TODO test
+            assert research_data_mount_p.exists()  # TODO test
         for package_p in extra_folder_ps:
             src = str(package_p)
-            dst = str(research_dat_mount_p / self.project_name / package_p.name)
+            dst = str(research_data_mount_p / self.project_name / package_p.name)
             print('Copying {} to {}'.format(src, dst))
             copy_tree(src, dst)
 
