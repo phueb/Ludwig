@@ -140,7 +140,8 @@ class Client:
             res.append(param2val)
         return res
 
-    def submit(self, src_p, param2requests, additional_code_ps, reps=1, test=True, worker=None):
+    def submit(self, src_p, param2requests, extra_folder_ps,
+               reps=1, test=True, worker=None, research_dat_mount_p=None):
         self.check_lab_disk_space()
 
         # check that requests are lists
@@ -150,11 +151,15 @@ class Client:
         # make list of hyper-parameter configurations to submit
         param2val_list = self.list_all_param2vals(param2requests)
 
-        # copy custom Python packages to file server
-        for package_p in additional_code_ps:
+        # copy extra folders to file server  (can be Python packages, which will be importable, or contain data)
+        if research_dat_mount_p is None:
+            research_dat_mount_p = config.Dirs.research_data
+        else:
+            assert research_dat_mount_p.exists()  # TODO test
+        for package_p in extra_folder_ps:
             src = str(package_p)
-            dst = str(config.Dirs.research_data / self.project_name / package_p.name)
-            print('Copying data in {} to {}'.format(src, dst))
+            dst = str(research_dat_mount_p / self.project_name / package_p.name)
+            print('Copying {} to {}'.format(src, dst))
             copy_tree(src, dst)
 
         # add param_name to param2val

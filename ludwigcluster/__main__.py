@@ -111,9 +111,9 @@ def submit():
 
     # TODO add option to specify multiple workers - or specific "teams" of workers
 
-    parser.add_argument('-c', '--additional_code_paths', nargs='*', default=[], action='store', dest='additional_code_paths',
+    parser.add_argument('-c', '--extra_folders', nargs='*', default=[], action='store', dest='extra_folders',
                         required=False,
-                        help='Paths to additional Python packages that are needed (e.g. childeshub). ')
+                        help='Paths to additional Python packages or data. ')
     parser.add_argument('-t', '--test', action='store_true', dest='test', required=False,
                         help='For debugging/testing purpose only')
     parser.add_argument('-p', '--prepare_data', action='store_true', default=False, dest='prepare_data', required=False,
@@ -138,19 +138,19 @@ def submit():
         print('WARNING: Not preparing any data')
 
     # are additional source code files required?
-    additional_code_ps = []
-    for code_path in namespace.additional_code_paths:
-        p = Path(code_path)
+    extra_fodler_ps = []
+    for extra_folder in namespace.extra_folders:
+        p = Path(extra_folder)
         if not p.is_dir():
             raise NotADirectoryError('{} is not a directory'.format(p))
         else:
-            additional_code_ps.append(p)
+            extra_fodler_ps.append(p)
 
     # submit to cluster
     project_name = config.RemoteDirs.root.name
     client = Client(project_name, params.param2default)
     client.submit(src_p=config.LocalDirs.src,  # uploaded to workers
-                  additional_code_ps=additional_code_ps,  # uploaded to shared drive not workers
+                  extra_folder_ps=extra_fodler_ps,  # uploaded to shared drive not workers
                   param2requests=params.param2requests,
                   reps=namespace.reps,
                   test=namespace.test,
