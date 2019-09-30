@@ -1,9 +1,18 @@
 from pathlib import Path
 import socket
+import sys
+
+if 'win' in sys.platform:
+    raise SystemExit('LudwigCluster does not support Windows')
+elif 'linux' == sys.platform:
+    mnt_point = '/media'
+else:
+    # assume MacOS
+    mnt_point = '/Volumes'
 
 
 class Dirs:
-    research_data = Path('/') / 'media' / 'research_data'
+    research_data = Path(mnt_point) / 'research_data'
     stdout = research_data / 'stdout'
     watched = Path('/var/sftp/ludwig')
 
