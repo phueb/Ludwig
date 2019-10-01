@@ -54,6 +54,6 @@ class Logger:
             param_name = 'param_{}'.format(new_param_num)
             return 'new', param_name
 
-    def count_num_times_run(self, param_name):
+    def count_num_times_logged(self, param_name):
         res = len(list((config.Dirs.research_data / self.project_name / 'runs' / param_name).glob('*num*')))
         return res

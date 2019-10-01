@@ -75,12 +75,12 @@ class Client:
         res = []
         for n, param2val in enumerate(param2val_list):
             param_name = param2val['param_name']
-            num_times_logged = self.logger.count_num_times_run(param_name)
-            num_times_train = reps - num_times_logged
-            num_times_train = max(0, num_times_train)
-            print('{:<10} logged {:>3} times. Will train {:>3} times'.format(
-                param_name, num_times_logged, num_times_train))
-            res += [param2val.copy() for _ in range(num_times_train)]  # make sure that each is unique (copied)
+            num_times_logged = self.logger.count_num_times_logged(param_name)
+            num_times_run = reps - num_times_logged
+            num_times_run = max(0, num_times_run)
+            print('{:<10} logged {:>3} times. Will execute job {:>3} times'.format(
+                param_name, num_times_logged, num_times_run))
+            res += [param2val.copy() for _ in range(num_times_run)]  # make sure that each is unique (copied)
         if not res:
             time.sleep(1)
             raise SystemExit('{} replication{} of each job already exist{}.'.format(reps,

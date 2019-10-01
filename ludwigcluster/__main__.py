@@ -30,6 +30,7 @@ def run_on_host():
     if not (cwd / namespace.src).is_dir():
         raise NotADirectoryError('Cannot find source code in {}.'.format(cwd / namespace.src))
 
+    # import user's code
     print('Looking for source code in:\n{}'.format(namespace.src))
     sys.path.append(str(cwd))
     job = importlib.import_module(namespace.src + '.job')
@@ -37,12 +38,18 @@ def run_on_host():
     config = importlib.import_module(namespace.src + '.config')
 
     if namespace.debug:
-        config.Global.debug = True
+        config.Global.debug = True  # this results in using param2debug instead of param2default
 
+    # iterate over jobs, and execute each in sequence
     project_name = config.LocalDirs.root.name
     client = Client(project_name, params.param2default)
     for param2val in client.list_all_param2vals(params.param2requests,
                                                 update_d={'param_name': 'test', 'job_name': 'test'}):
+
+        if namespace.debug:
+            print('Updating params.param2val with params.param2debug because debug=True')
+            param2val.update(params.param2debug)
+
         job.main(param2val)
 
         if namespace.debug:
@@ -108,7 +115,7 @@ def submit():
 
     parser.add_argument('-r', '--reps', default=1, action='store', dest='reps', type=int,
                         choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50], required=False,
-                        help='Number of replications to train per hyper-param configuration')
+                        help='Number of times each job will be executed')
     parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',
                         choices=SFTP.worker_names, required=False,
                         help='Specify a single worker name if submitting to single worker only')
