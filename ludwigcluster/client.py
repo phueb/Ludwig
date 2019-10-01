@@ -121,6 +121,11 @@ class Client:
         return param_ids
 
     def list_all_param2vals(self, param2requests, update_d=None, add_names=True):
+
+        # check that requests are lists
+        for k, v in param2requests.items():
+            assert isinstance(v, list)
+
         # complete partial request made by user
         full_request = {k: [v] if k not in param2requests else param2requests[k]
                         for k, v in self.param2default.copy().items()}

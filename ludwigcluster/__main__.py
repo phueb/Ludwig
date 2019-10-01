@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 import subprocess
 import psutil
+import shutil
 
 from ludwigcluster.client import Client
 from ludwigcluster import config as ludwig_config
@@ -43,6 +44,9 @@ def run_on_host():
     for param2val in client.list_all_param2vals(params.param2requests,
                                                 update_d={'param_name': 'test', 'job_name': 'test'}):
         job.main(param2val)
+
+        if namespace.debug:
+            raise SystemExit('Completed first job and exited because debug=True.')
 
     # TODO running locally doesn't save data as implemented - should this be an option?
     # TODO if so, maybe change the naming convention from "test" to "local" and assign each a time_of_init
@@ -108,8 +112,10 @@ def submit():
     parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',
                         choices=SFTP.worker_names, required=False,
                         help='Specify a single worker name if submitting to single worker only')
+    parser.add_argument('-x', '--clear_runs', action='store_true', default=False, dest='clear_runs', required=False)
 
-    # TODO test custom mount point
+
+    # TODO test custom mount point on MacOs
 
     parser.add_argument('-mnt', '--mnt_path_name', default=None, action='store', dest='mnt_path_name',
                         required=False,
@@ -135,6 +141,13 @@ def submit():
     params = importlib.import_module(namespace.src + '.params')
     config = importlib.import_module(namespace.src + '.config')
 
+    # delete all runs in remote root
+    if namespace.clear_runs:
+        for param_p in config.RemoteDirs.runs.glob('*param*'):
+            print('Removing\n{}'.format(param_p))
+            sys.stdout.flush()
+            shutil.rmtree(str(param_p))
+
     # prepare any data and save pickle to shared drive - do this only once - import this function from jobs module
     if namespace.prepare_data:
         print('Starting to prepare data')
@@ -144,19 +157,19 @@ def submit():
         print('WARNING: Not preparing any data')
 
     # are additional source code files required?
-    extra_fodler_ps = []
+    extra_folder_ps = []
     for extra_folder in namespace.extra_folders:
         p = Path(extra_folder)
         if not p.is_dir():
             raise NotADirectoryError('{} is not a directory'.format(p))
         else:
-            extra_fodler_ps.append(p)
+            extra_folder_ps.append(p)
 
     # submit to cluster
     project_name = config.RemoteDirs.root.name
     client = Client(project_name, params.param2default)
     client.submit(src_p=config.LocalDirs.src,  # uploaded to workers
-                  extra_folder_ps=extra_fodler_ps,  # uploaded to shared drive not workers
+                  extra_folder_ps=extra_folder_ps,  # uploaded to shared drive not workers
                   param2requests=params.param2requests,
                   reps=namespace.reps,
                   test=namespace.test,
