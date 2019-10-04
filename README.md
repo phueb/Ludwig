@@ -69,6 +69,12 @@ To submit jobs, go to your project root folder, and invoke the command-line tool
 (venv) ludwig
 ``` 
 
+Alternatively, use 
+
+```bash
+python3 -m ludwigcluster
+```
+
 Next, check the status of the LudwigCluster machines:
 
 ```bash
