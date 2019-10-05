@@ -212,7 +212,7 @@ class Client:
                 print(param2val)
 
             # connect via sftp
-            sftp = pysftp.Connection(username='ludwig',  # TODO change to ludwig
+            sftp = pysftp.Connection(username='ludwig',
                                      host=self.hostname2ip[worker_name],
                                      private_key=self.private_key,
                                      private_key_pass=self.private_key_pass)
@@ -221,10 +221,6 @@ class Client:
             local_path = str(src_p)
             remote_path = '{}/{}'.format(config.SFTP.watched_dir_name, src_p.name)
             print('Uploading {} to {}'.format(local_path, remote_path))
-
-            # TODO test
-            # print(sftp.chdir('ludwig_jobs'))
-            # print(sftp.getcwd())
 
             sftp.makedirs(remote_path)
             sftp.put_r(localpath=local_path, remotepath=remote_path)
