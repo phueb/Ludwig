@@ -6,9 +6,9 @@ import subprocess
 import psutil
 import shutil
 
-from src.client import Client
-from src import config as ludwig_config
-from src.config import SFTP
+from ludwig.client import Client
+from ludwig import config as ludwig_config
+from ludwig.config import SFTP
 
 
 def run_on_host():
@@ -97,7 +97,7 @@ def status():
     return res
 
 
-def submit():
+def submit(src=None, worker=None):  # use argument for unit testing only
     """
     This script should be called in root directory of the Python project.
     If not specified via CL arguments, it will try to import src.config and src.params.
@@ -138,6 +138,21 @@ def submit():
     parser.add_argument('-p', '--prepare_data', action='store_true', default=False, dest='prepare_data', required=False,
                         help='Whether to save results of pre-processing job to file-server')
     namespace = parser.parse_args()
+
+    # TODO debug
+    print('---------------------')
+    print('Arguments:')
+    for k, v in namespace.__dict__.items():
+        print('{:<16}= {}'.format(k, v))
+    print('---------------------\n')
+
+    # unit testing
+    if src is not None:
+        namespace.src = src
+    if worker is not None:
+        namespace.worker = worker
+
+
 
     if not (cwd / namespace.src).is_dir():
         raise NotADirectoryError('Cannot find source code in {}.'.format(cwd / namespace.src))

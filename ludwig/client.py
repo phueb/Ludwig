@@ -15,9 +15,9 @@ from distutils.dir_util import copy_tree
 import sys
 import time
 
-from src import config
-from src.logger import Logger
-from src import run
+from ludwig import config
+from ludwig.logger import Logger
+from ludwig import run
 
 DISK_USAGE_MAX = 90
 
@@ -212,15 +212,20 @@ class Client:
                 print(param2val)
 
             # connect via sftp
-            sftp = pysftp.Connection(username='ludwig',
+            sftp = pysftp.Connection(username='ludwig',  # TODO change to ludwig
                                      host=self.hostname2ip[worker_name],
                                      private_key=self.private_key,
                                      private_key_pass=self.private_key_pass)
 
-            # upload src code to worker
+            # upload ludwig code to worker
             local_path = str(src_p)
             remote_path = '{}/{}'.format(config.Dirs.watched, src_p.name)
             print('Uploading {} to {}'.format(local_path, remote_path))
+
+            # TODO test
+            # print(sftp.chdir('ludwig_jobs'))
+            # print(sftp.getcwd())
+
             sftp.makedirs(remote_path)
             sftp.put_r(localpath=local_path, remotepath=remote_path)
             sys.stdout.flush()

@@ -13,7 +13,7 @@ import datetime
 import shutil
 import socket
 
-from src import config
+from ludwig import config
 
 hostname = socket.gethostname()
 

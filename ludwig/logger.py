@@ -1,7 +1,7 @@
 import yaml
 import shutil
 
-from src import config
+from ludwig import config
 
 
 class Logger:

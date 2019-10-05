@@ -12,9 +12,10 @@ else:
 
 
 class Dirs:
+    root = Path(__file__).parent.parent
     research_data = Path(mnt_point) / 'research_data'
     stdout = research_data / 'stdout'
-    watched = Path('/var/sftp/ludwig_jobs')
+    watched = Path('/var/sftp/ludwig')  # TODO change to ludwig_jobs
 
 
 class SFTP:
