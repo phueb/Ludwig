@@ -3,7 +3,7 @@ import socket
 import sys
 
 if 'win' in sys.platform:
-    raise SystemExit('LudwigCluster does not support Windows')
+    raise SystemExit('Ludwig does not support Windows')
 elif 'linux' == sys.platform:
     mnt_point = '/media'
 else:

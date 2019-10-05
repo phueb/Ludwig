@@ -1,6 +1,6 @@
 """
-The client is used to submit jobs to one or more nodes in LudwigCluster.
-It uses an sftp client library to upload all files in a user's project to LudwigCluster.
+The client is used to submit jobs to one or more machines in Ludwig.
+It uses an sftp client library to upload all files in a user's project to Ludwig.
 """
 from itertools import cycle
 from pathlib import Path
@@ -15,9 +15,9 @@ from distutils.dir_util import copy_tree
 import sys
 import time
 
-from ludwigcluster import config
-from ludwigcluster.logger import Logger
-from ludwigcluster import run
+from src import config
+from src.logger import Logger
+from src import run
 
 DISK_USAGE_MAX = 90
 

@@ -8,7 +8,7 @@ do
     scp ../watcher.py ${hostname}:/var/sftp/LudwigCluster/watcher.py
     scp ../ludwigcluster/config.py ${hostname}:/var/sftp/LudwigCluster/ludwigcluster/config.py
 
-    echo "Killing active jobs"  # TODO
+    echo "Killing active jobs"
     ssh ${hostname} 'pkill -u ph'
 
     echo "Killing active watcher"

@@ -2,25 +2,25 @@ from setuptools import setup
 
 
 setup(
-    name='ludwigcluster',
-    version='1.0',
-    packages=['ludwigcluster'],
+    name='src',
+    version='1.0.1',
+    packages=['src'],
     install_requires=['psutil',
                       'pysftp',
                       'watchdog',
                       'numpy',
                       'pandas'],
-    url='https://github.com/languagelearninglab/LudwigCluster',
+    url='https://github.com/languagelearninglab/Ludwig',
     license='',
     author='Philip Huebner',
     author_email='info@philhuebner.com',
-    description='Run Python jobs on multiple LudwigCluster nodes',
+    description='Run Python jobs on Ludwig',
     entry_points={
         'console_scripts': [
-            'ludwig=ludwigcluster.__main__:submit',
-            'ludwig-local=ludwigcluster.__main__:run_on_host',
-            'ludwig-stats=ludwigcluster.__main__:stats',
-            'ludwig-status=ludwigcluster.__main__:status'
+            'ludwig=src.__main__:submit',
+            'ludwig-local=src.__main__:run_on_host',
+            'ludwig-stats=src.__main__:stats',
+            'ludwig-status=src.__main__:status'
         ]
     }
 )

@@ -1,4 +1,4 @@
-# LudwigCluster
+# Ludwig
 
 ## Info
 
@@ -32,11 +32,11 @@ All machines are configured to use:
 It is recommend to use a machine with a Linux OS to submit tasks. 
 
 ### Python
-Tasks submitted to LudwigCluster must be programmed in Python 3.
+Tasks submitted to Ludwig must be programmed in Python 3.
 
 ### Project Organization
 
-```ludwigcluster``` requires that the user create two special modules:
+```ludwig``` requires that the user create two special modules:
 * ```src.params```: contains information about which parameters to use for each job
 * ```src.config```: contains basic information like the name of the user's project
 
@@ -53,12 +53,12 @@ Ask the administrator to populate this file with the names of the worker names a
 
 ## Submitting a Job
 
-### 1) Install ludwigcluster
+### 1) Install ludwig
 
 In a terminal, type:
 
 ```bash
-(venv) pip3 install git+https://github.com/phueb/LudwigCluster.git
+(venv) pip3 install git+https://github.com/phueb/Ludwig.git
 ```
 
 ### 2) The command-line tool
@@ -72,10 +72,10 @@ To submit jobs, go to your project root folder, and invoke the command-line tool
 Alternatively, use 
 
 ```bash
-python3 -m ludwigcluster
+python3 -m ludwig
 ```
 
-Next, check the status of the LudwigCluster machines:
+Next, check the status of the Ludwig machines:
 
 ```bash
 (venv) ludwig-status
@@ -115,6 +115,3 @@ Retry when the node is no longer busy.
 
 Calling ```ludwig``` while previously submitted jobs are still being executed, 
 will stop all previously submitted jobs.
-
-Strictly speaking, LudwigCluster is not really a "cluster". 
-Each node is unaware of every other. Although, each has access to the same shared drive. 

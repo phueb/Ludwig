@@ -6,9 +6,9 @@ import subprocess
 import psutil
 import shutil
 
-from ludwigcluster.client import Client
-from ludwigcluster import config as ludwig_config
-from ludwigcluster.config import SFTP
+from src.client import Client
+from src import config as ludwig_config
+from src.config import SFTP
 
 
 def run_on_host():
@@ -93,7 +93,7 @@ def status():
         return 'Something went wrong. Check your access to {}'.format(ludwig_config.Dirs.research_data)
     lines = str(output).split('\n')
     res = '\n'.join([line for line in lines
-                     if 'LudwigCluster' in line][-ludwig_config.CLI.num_stdout_lines:])
+                     if 'Ludwig' in line][-ludwig_config.CLI.num_stdout_lines:])
     return res
 
 
@@ -172,7 +172,7 @@ def submit():
         else:
             extra_folder_ps.append(p)
 
-    # submit to cluster
+    # submit
     project_name = config.RemoteDirs.root.name
     client = Client(project_name, params.param2default)
     client.submit(src_p=config.LocalDirs.src,  # uploaded to workers

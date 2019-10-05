@@ -13,16 +13,16 @@ import datetime
 import shutil
 import socket
 
-from ludwigcluster import config
+from src import config
 
 hostname = socket.gethostname()
 
 
 def custom_print(string):
     sys.stdout.flush()
-    print('{:<20} LudwigCluster ({:<8}): {}'.format(datetime.datetime.now().strftime(config.Time.format),
-                                                    hostname,
-                                                    string))
+    print('{:<20} Ludwig ({:<8}): {}'.format(datetime.datetime.now().strftime(config.Time.format),
+                                             hostname,
+                                             string))
     sys.stdout.flush()
 
 
@@ -99,7 +99,7 @@ class Handler(FileSystemEventHandler):
 
 
 def main():
-    custom_print('Started LudwigCluster/watcher.py')
+    custom_print('Started Ludwig/watcher.py')
     sys.stdout.flush()
     observer = Observer()
     handler = Handler()

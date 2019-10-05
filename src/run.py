@@ -9,7 +9,7 @@ import sys
 
 def run_job_on_ludwig_worker():
     """
-    run multiple jobs on on a single LudwigCluster worker.
+    run multiple jobs on on a single worker.
     """
 
     p = config.RemoteDirs.root / '{}_param2val_chunk.pkl'.format(hostname)
