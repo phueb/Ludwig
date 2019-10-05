@@ -224,7 +224,7 @@ class Client:
 
             # upload ludwig code to worker
             local_path = str(src_p)
-            remote_path = '{}/{}'.format(config.SFTP.watched_dir_name, src_p.name)
+            remote_path = '{}/{}'.format(config.Dirs.watched.name, src_p.name)
             print('Uploading {} to {}'.format(local_path, remote_path))
 
             sftp.makedirs(remote_path)
@@ -236,7 +236,7 @@ class Client:
                 print('Test successful. Not uploading run.py.')
             else:
                 sftp.put(localpath=run.__file__,
-                         remotepath='{}/{}'.format(config.SFTP.watched_dir_name, 'run_{}.py'.format(src_p.name)))
+                         remotepath='{}/{}'.format(config.Dirs.watched.name, 'run_{}.py'.format(src_p.name)))
 
             print('--------------')
             print()

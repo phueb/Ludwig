@@ -49,8 +49,8 @@ class Handler(FileSystemEventHandler):
             if time_delta.total_seconds() < 1:
                 custom_print('Ignoring trigger event because it happened less than 1 sec after previous.')
             else:
-                custom_print('Adding job to queue: {}'.format(event.src_path))
                 self.stop_active_jobs(event.src_path)
+                custom_print('Adding job to queue: {}'.format(event.src_path))
                 self.q.put(event)
 
             self.time_stamps.append(ts)
