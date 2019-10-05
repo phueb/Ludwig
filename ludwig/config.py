@@ -12,6 +12,7 @@ else:
 
 
 class Dirs:
+    root = Path(__file__).parent.parent
     research_data = Path(mnt_point) / 'research_data'
     stdout = research_data / 'stdout'
 
