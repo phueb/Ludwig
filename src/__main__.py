@@ -182,7 +182,3 @@ def submit():
                   test=namespace.test,
                   worker=namespace.worker,
                   mnt_path_name=namespace.mnt_path_name)
-
-
-if __name__ == '__main__':
-    submit()

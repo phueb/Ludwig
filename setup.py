@@ -2,7 +2,7 @@ from setuptools import setup
 
 
 setup(
-    name='src',
+    name='ludwig',
     version='1.0.1',
     packages=['src'],
     install_requires=['psutil',
