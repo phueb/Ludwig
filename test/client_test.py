@@ -1,13 +1,17 @@
 import unittest
 import os
+from pathlib import Path
 
 from ludwig import config
-from ludwig.__main__ import submit
+from ludwig.client import Client
+
+from Example.example import params
 
 
 class MyTest(unittest.TestCase):
 
-    example_root_path_name = str(config.Dirs.root / 'Example')
+    project_name = 'Example'
+    example_root_path_name = str(config.Dirs.root / project_name)
 
     def test_submit(self):
         """
@@ -16,7 +20,13 @@ class MyTest(unittest.TestCase):
         """
 
         os.chdir(self.example_root_path_name)
-        submit(src='example', worker='hawkins')
+
+        client = Client(self.project_name, params.param2default)
+        client.submit(src_p=Path('example'),  # uploaded to workers
+                      extra_folder_ps=[Path('third_party_code')],  # uploaded to shared drive not workers
+                      param2requests=params.param2requests,
+                      reps=1,
+                      test=False)
 
         return True
 

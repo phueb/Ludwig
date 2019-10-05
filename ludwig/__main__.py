@@ -97,7 +97,7 @@ def status():
     return res
 
 
-def submit(src=None, worker=None):  # use argument for unit testing only
+def submit():
     """
     This script should be called in root directory of the Python project.
     If not specified via CL arguments, it will try to import src.config and src.params.
@@ -121,7 +121,6 @@ def submit(src=None, worker=None):  # use argument for unit testing only
                         help='Specify a single worker name if submitting to single worker only')
     parser.add_argument('-x', '--clear_runs', action='store_true', default=False, dest='clear_runs', required=False)
 
-
     # TODO test custom mount point on MacOs
 
     parser.add_argument('-mnt', '--mnt_path_name', default=None, action='store', dest='mnt_path_name',
@@ -139,20 +138,12 @@ def submit(src=None, worker=None):  # use argument for unit testing only
                         help='Whether to save results of pre-processing job to file-server')
     namespace = parser.parse_args()
 
-    # TODO debug
+    # print all arguments
     print('---------------------')
     print('Arguments:')
     for k, v in namespace.__dict__.items():
         print('{:<16}= {}'.format(k, v))
     print('---------------------\n')
-
-    # unit testing
-    if src is not None:
-        namespace.src = src
-    if worker is not None:
-        namespace.worker = worker
-
-
 
     if not (cwd / namespace.src).is_dir():
         raise NotADirectoryError('Cannot find source code in {}.'.format(cwd / namespace.src))

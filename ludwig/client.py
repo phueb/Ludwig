@@ -14,6 +14,7 @@ import yaml
 from distutils.dir_util import copy_tree
 import sys
 import time
+import os
 
 from ludwig import config
 from ludwig.logger import Logger
@@ -24,6 +25,10 @@ DISK_USAGE_MAX = 90
 
 class Client:
     def __init__(self, project_name, param2default):
+
+        if not os.path.ismount(str(config.Dirs.research_data)):
+            raise SystemExit('Please mount {}'.format(config.Dirs.research_data))
+
         self.project_name = project_name
         self.param2default = param2default
         self.hostname2ip = self.make_hostname2ip()
