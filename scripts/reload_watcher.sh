@@ -5,8 +5,8 @@ for hostname in bengio hebb hinton hoff norman pitts hawkins;  # TODO yash is us
 do
     echo Uploading watcher to ${hostname}
 
-    scp ../watcher.py ${hostname}:/var/sftp/LudwigCluster/watcher.py
-    scp ../ludwigcluster/config.py ${hostname}:/var/sftp/LudwigCluster/ludwigcluster/config.py
+    scp ../watcher.py ${hostname}:/var/sftp/Ludwig/watcher.py
+    scp ../ludwig/config.py ${hostname}:/var/sftp/Ludwig/ludwig/config.py
 
     echo "Killing active jobs"
     ssh ${hostname} 'pkill -u ph'
@@ -18,6 +18,6 @@ do
     test -e /media/research_data/stdout/${hostname}.out && rm /media/research_data/stdout/${hostname}.out || echo "file not found"
 
     echo "Starting new watcher"
-    ssh ${hostname} "cd /var/sftp/LudwigCluster; nohup python3 watcher.py > /media/research_data/stdout/${hostname}.out 2>&1 &"
+    ssh ${hostname} "cd /var/sftp/Ludwig; nohup python3 watcher.py > /media/research_data/stdout/${hostname}.out 2>&1 &"
 echo
 done

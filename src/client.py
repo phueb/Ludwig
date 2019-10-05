@@ -31,7 +31,6 @@ class Client:
         self.num_workers = len(config.SFTP.worker_names)
         self.private_key_pass = config.SFTP.private_key_pass_path.read_text().strip('\n')
         self.private_key = '{}/.ssh/id_rsa'.format(Path.home())
-        self.ludwig = 'ludwig'
 
     @staticmethod
     def make_hostname2ip():
@@ -220,7 +219,7 @@ class Client:
 
             # upload src code to worker
             local_path = str(src_p)
-            remote_path = '{}/{}'.format(self.ludwig, src_p.name)
+            remote_path = '{}/{}'.format(config.Dirs.watched, src_p.name)
             print('Uploading {} to {}'.format(local_path, remote_path))
             sftp.makedirs(remote_path)
             sftp.put_r(localpath=local_path, remotepath=remote_path)
@@ -231,7 +230,7 @@ class Client:
                 print('Test successful. Not uploading run.py.')
             else:
                 sftp.put(localpath=run.__file__,
-                         remotepath='{}/{}'.format(self.ludwig, 'run_{}.py'.format(src_p.name)))
+                         remotepath='{}/{}'.format(config.Dirs.watched, 'run_{}.py'.format(src_p.name)))
 
             print('--------------')
             print()

@@ -14,7 +14,7 @@ else:
 class Dirs:
     research_data = Path(mnt_point) / 'research_data'
     stdout = research_data / 'stdout'
-    watched = Path('/var/sftp/ludwig')
+    watched = Path('/var/sftp/ludwig_jobs')
 
 
 class SFTP:
