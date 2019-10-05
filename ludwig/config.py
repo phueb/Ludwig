@@ -12,16 +12,15 @@ else:
 
 
 class Dirs:
-    root = Path(__file__).parent.parent
     research_data = Path(mnt_point) / 'research_data'
     stdout = research_data / 'stdout'
-    watched = Path('/var/sftp/ludwig')  # TODO change to ludwig_jobs
 
 
 class SFTP:
     # TODO yash is using lecun
     worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio']
     watched_pattern = 'run*.py'  # this is required for watcher to know which file to run
+    watched_dir_name = 'ludwig_jobs'  # must be relative to /var/sftp
     private_key_pass_path = Path.home() / '.rsapub_passwd'
 
 

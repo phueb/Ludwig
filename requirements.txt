@@ -1,6 +1,6 @@
 pandas
 psutil
-numpy==1.15.2
-pysftp==0.2.9
+numpy
+pysftp
 PyYAML
 watchdog==0.9.0
