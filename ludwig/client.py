@@ -24,7 +24,7 @@ DISK_USAGE_MAX = 90
 
 
 class Client:
-    def __init__(self, project_name, param2default):
+    def __init__(self, project_name, param2default, unittest=False):
 
         if not os.path.ismount(str(config.Dirs.research_data)):
             raise SystemExit('Please mount {}'.format(config.Dirs.research_data))
@@ -36,6 +36,7 @@ class Client:
         self.num_workers = len(config.SFTP.worker_names)
         self.private_key_pass = config.SFTP.private_key_pass_path.read_text().strip('\n')
         self.private_key = '{}/.ssh/id_rsa'.format(Path.home())
+        self.unittest = unittest
 
     @staticmethod
     def make_hostname2ip():
@@ -58,6 +59,9 @@ class Client:
 
     @staticmethod
     def check_lab_disk_space():
+        """
+        this returns disk space used on server, not locally - verified on Linux
+        """
         if platform.system() == 'Linux':
             usage_stats = psutil.disk_usage(str(config.Dirs.research_data))
             percent_used = usage_stats[3]
@@ -79,7 +83,7 @@ class Client:
         res = []
         for n, param2val in enumerate(param2val_list):
             param_name = param2val['param_name']
-            num_times_logged = self.logger.count_num_times_logged(param_name)
+            num_times_logged = self.logger.count_num_times_logged(param_name) if not self.unittest else 0
             num_times_run = reps - num_times_logged
             num_times_run = max(0, num_times_run)
             print('{:<10} logged {:>3} times. Will execute job {:>3} times'.format(

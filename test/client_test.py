@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 from ludwig import config
-from ludwig.client import Client
+from ludwig.client import Client  # import client after modifying config.is_unit_test
 
 from Example.example import params
 
@@ -21,7 +21,7 @@ class MyTest(unittest.TestCase):
 
         os.chdir(self.example_root_path_name)
 
-        client = Client(self.project_name, params.param2default)
+        client = Client(self.project_name, params.param2default, unittest=True)
         client.submit(src_p=Path('example'),  # uploaded to workers
                       extra_folder_ps=[Path('third_party_code')],  # uploaded to shared drive not workers
                       param2requests=params.param2requests,
