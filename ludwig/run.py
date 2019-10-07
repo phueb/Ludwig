@@ -21,24 +21,24 @@ def run_job_on_ludwig_worker():
         assert config.RemoteDirs.runs.exists()  # this throws error if host is down
 
         # execute job
-        dfs = job.main(param2val)  # name the returned dataframes using 'name' attribute
+        series_list = job.main(param2val)  # name the returned series using 'name' attribute
 
         if config.Global.debug:
-            for df in dfs:
-                print(df.name)
-                print(df)
+            for series in series_list:
+                print(series.name)
+                print(series)
             raise SystemExit('Debugging: Not saving results')
 
-        # save dfs
+        # save series_list
         dst = config.RemoteDirs.runs / param2val['param_name'] / param2val['job_name']
         if not dst.exists():
             dst.mkdir(parents=True)
-        for df in dfs:
-            if not isinstance(df, pd.DataFrame):
-                print('WARNING: Object returned by job is not a pandas.DataFrame object.')
+        for series in series_list:
+            if not isinstance(series, pd.Series):
+                print('WARNING: Object returned by job must be a pandas.Series.')
                 continue
-            with (dst / '{}.csv'.format(df.name)).open('w') as f:
-                df.to_csv(f, index=True)
+            with (dst / '{}.csv'.format(series.name)).open('w') as f:
+                series.to_csv(f, index=True)
 
         # write param2val to shared drive
         param2val_p = config.RemoteDirs.runs / param2val['param_name'] / 'param2val.yaml'
