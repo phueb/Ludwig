@@ -156,14 +156,20 @@ class Client:
     def submit(self, src_p, param2requests, extra_folder_ps,
                reps=1, test=True, worker=None, mnt_path_name=None):
 
+        # ------------------------------- checks start
+
         if not os.path.ismount(str(config.Dirs.research_data)):
             raise SystemExit('Please mount {}'.format(config.Dirs.research_data))
 
         self.check_lab_disk_space()
 
-        # check that requests are lists
+        # check that requests are lists and that each list does not contain repeated values
         for k, v in param2requests.items():
             assert isinstance(v, list)
+            if len(v) != len(set(v)):  # otherwise each identical value will be assigned a unique param_name
+                raise ValueError('Each requested parameter value must be unique')
+
+        # ------------------------------- checks end
 
         # make list of hyper-parameter configurations to submit
         param2val_list = self.list_all_param2vals(param2requests)
@@ -263,8 +269,6 @@ class Client:
                                    if val != self.param2default[param]] + (label_params or [])))
 
         requested_param2vals = self.list_all_param2vals(param2requests, add_names=False)
-
-
 
         if runs_p is None:
             runs_p = config.Dirs.research_data / self.project_name / 'runs'

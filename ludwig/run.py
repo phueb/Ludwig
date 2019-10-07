@@ -38,7 +38,7 @@ def run_job_on_ludwig_worker():
                 print('WARNING: Object returned by job must be a pandas.Series.')
                 continue
             with (dst / '{}.csv'.format(series.name)).open('w') as f:
-                series.to_csv(f, index=True)
+                series.to_csv(f, index=True, header=[series.name])  # cannot name the index with "header" arg
 
         # write param2val to shared drive
         param2val_p = config.RemoteDirs.runs / param2val['param_name'] / 'param2val.yaml'

@@ -120,5 +120,4 @@ will stop all previously submitted jobs.
 ## TODO
 
 * virtual environment
-* Ludwig assigns requests in `param2requests = {'lr': [0.1, 0.1, 0.1]}` three unique param_names
 * track code complexity with Python package wily
