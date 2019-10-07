@@ -15,6 +15,7 @@ from distutils.dir_util import copy_tree
 import sys
 import time
 import os
+from cached_property import cached_property
 
 from ludwig import config
 from ludwig.logger import Logger
@@ -25,18 +26,17 @@ DISK_USAGE_MAX = 90
 
 class Client:
     def __init__(self, project_name, param2default, unittest=False):
-
-        if not os.path.ismount(str(config.Dirs.research_data)):
-            raise SystemExit('Please mount {}'.format(config.Dirs.research_data))
-
         self.project_name = project_name
         self.param2default = param2default
         self.hostname2ip = self.make_hostname2ip()
-        self.logger = Logger(project_name)
         self.num_workers = len(config.SFTP.worker_names)
         self.private_key_pass = config.SFTP.private_key_pass_path.read_text().strip('\n')
         self.private_key = '{}/.ssh/id_rsa'.format(Path.home())
         self.unittest = unittest
+
+    @cached_property
+    def logger(self):
+        return Logger(self.project_name)  # TODO test cached property
 
     @staticmethod
     def make_hostname2ip():
@@ -155,6 +155,10 @@ class Client:
 
     def submit(self, src_p, param2requests, extra_folder_ps,
                reps=1, test=True, worker=None, mnt_path_name=None):
+
+        if not os.path.ismount(str(config.Dirs.research_data)):
+            raise SystemExit('Please mount {}'.format(config.Dirs.research_data))
+
         self.check_lab_disk_space()
 
         # check that requests are lists

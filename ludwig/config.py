@@ -2,6 +2,8 @@ from pathlib import Path
 import socket
 import sys
 
+from ludwig import try_mounting
+
 if 'win' in sys.platform:
     raise SystemExit('Ludwig does not support Windows')
 elif 'linux' == sys.platform:
@@ -13,16 +15,20 @@ else:
 
 class Dirs:
     root = Path(__file__).parent.parent
-    research_data = Path(mnt_point) / 'research_data'
-    stdout = research_data / 'stdout'
-    watched = Path('/var/sftp/ludwig_jobs')
+    if try_mounting:
+        research_data = Path(mnt_point) / 'research_data'
+        stdout = research_data / 'stdout'
+        watched = Path('/var/sftp/ludwig_jobs')
+    else:
+        print("Ludwig: Not trying to mount {}/research_data".format(mnt_point))
 
 
 class SFTP:
-    # TODO yash is using lecun
-    worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio']
     watched_pattern = 'run*.py'  # this is required for watcher to know which file to run
     private_key_pass_path = Path.home() / '.rsapub_passwd'
+
+    # TODO yash is using lecun
+    worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio']
 
 
 class Time:

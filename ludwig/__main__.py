@@ -6,15 +6,16 @@ import subprocess
 import psutil
 import shutil
 
-from ludwig.client import Client
-from ludwig import config as ludwig_config
-from ludwig.config import SFTP
+
+import ludwig
 
 
 def run_on_host():
     """
     run jobs on the local host for testing/development
     """
+
+    ludwig.try_mounting = False
 
     cwd = Path.cwd()
 
@@ -40,8 +41,11 @@ def run_on_host():
     if namespace.debug:
         config.Global.debug = True  # this results in using param2debug instead of param2default
 
+    config.Global.local = True  # allows user job to set RemoteDirs = LocalDirs
+
     # iterate over jobs, and execute each in sequence
     project_name = config.LocalDirs.root.name
+    from ludwig.client import Client  # import Client only after ludwig.try_mounting set to False
     client = Client(project_name, params.param2default)
     for param2val in client.list_all_param2vals(params.param2requests,
                                                 update_d={'param_name': 'test', 'job_name': 'test'}):
@@ -60,6 +64,9 @@ def run_on_host():
 
 
 def stats():  # TODO how to get stats of workers, not host?
+
+    from ludwig import config as ludwig_config
+
     ps = []
     for proc in psutil.process_iter():
         try:
@@ -80,9 +87,11 @@ def status():
     return filtered stdout (to which workers are printing) to get a sense of what workers are doing
     """
 
+    from ludwig import config as ludwig_config
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--worker', default='*', action='store', dest='worker',
-                        choices=SFTP.worker_names, required=False,
+                        choices=ludwig_config.SFTP.worker_names, required=False,
                         help='The name of the worker the status of which is requested.')
     namespace = parser.parse_args()
 
@@ -105,6 +114,9 @@ def submit():
     src.params is where this script will try to find the parameters with which to execute your jobs.
     """
 
+    from ludwig.client import Client
+    from ludwig import config as ludwig_config
+
     cwd = Path.cwd()
 
     # parse cmd-line args
@@ -117,7 +129,7 @@ def submit():
                         choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50], required=False,
                         help='Number of times each job will be executed')
     parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',
-                        choices=SFTP.worker_names, required=False,
+                        choices=ludwig_config.SFTP.worker_names, required=False,
                         help='Specify a single worker name if submitting to single worker only')
     parser.add_argument('-x', '--clear_runs', action='store_true', default=False, dest='clear_runs', required=False)
 

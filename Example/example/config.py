@@ -1,8 +1,18 @@
 from pathlib import Path
+import sys
+
+if 'win' in sys.platform:
+    raise SystemExit('Not supported on Windows')
+elif 'linux' == sys.platform:
+    mnt_point = '/media'
+else:
+    # assume MacOS
+    mnt_point = '/Volumes'
 
 
 class RemoteDirs:
-    root = Path('/media/research_data') / 'Example'
+    research_data = Path(mnt_point) / 'research_data'
+    root = research_data / 'Example'
     runs = root / 'runs'
 
 
@@ -14,3 +24,4 @@ class LocalDirs:
 
 class Global:
     debug = False
+    local = False
