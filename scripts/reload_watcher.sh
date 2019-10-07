@@ -5,8 +5,9 @@ for hostname in bengio hebb hinton hoff norman pitts hawkins;  # TODO yash is us
 do
     echo Uploading watcher to ${hostname}
 
+    echo "Syncing source code"
     scp ../watcher.py ${hostname}:/var/sftp/Ludwig/watcher.py
-    scp ../ludwig/config.py ${hostname}:/var/sftp/Ludwig/ludwig/config.py
+    scp -r  ../ludwig ${hostname}:/var/sftp/Ludwig
 
     echo "Killing active jobs"
     ssh ${hostname} 'pkill -u ph'
