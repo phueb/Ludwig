@@ -21,9 +21,10 @@ The resource consists of a file server and 8 Ubuntu 16.04 machines with GPU acce
 All machines are configured to use:
 * CUDA 10.0
 * cudnn 7
-* python3.5
+* python3.7
 * tensorflow-gpu==2.0.0rc1
 * pytorch
+* allennlp==0.9.0
 
 
 ## Requirements
@@ -32,7 +33,7 @@ All machines are configured to use:
 It is recommend to use a machine with a Linux OS to submit tasks. 
 
 ### Python
-Tasks submitted to Ludwig must be programmed in Python 3.
+Tasks submitted to Ludwig must be programmed in Python 3 (3.7 is recommended).
 
 ### Project Organization
 
