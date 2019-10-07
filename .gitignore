@@ -102,3 +102,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# ph
+scripts/pip_on_workers.sh  # protect password

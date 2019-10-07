@@ -249,13 +249,13 @@ class Client:
             print('--------------')
             print()
 
-    def gen_param_ps(self, param2requests, runs_p=None, label_params=None):
+    def gen_param_ps(self, param2requests, runs_p=None, label_params=None, verbose=True):
         """
         Return path objects that point to folders with job results.
          Folders located in those paths are each generated with the same parameter configuration.
          Use this for retrieving data after a job has been completed
         """
-        print('Requested:')
+        print('Generating paths to jobs matching the following configuration:')
         print(param2requests)
         print()
 
@@ -264,10 +264,13 @@ class Client:
 
         requested_param2vals = self.list_all_param2vals(param2requests, add_names=False)
 
+
+
         if runs_p is None:
             runs_p = config.Dirs.research_data / self.project_name / 'runs'
         for param_p_ in runs_p.glob('param_*'):
-            print('Checking {}...'.format(param_p_))
+            if verbose:
+                print('Checking {}...'.format(param_p_))
 
             # load param2val
             with (param_p_ / 'param2val.yaml').open('r') as f:
@@ -280,10 +283,12 @@ class Client:
             if loaded_param2val in requested_param2vals:
                 label_ = '\n'.join(['{}={}'.format(param, param2val[param]) for param in label_params])
                 label_ += '\nn={}'.format(len(list(param_p_.glob('*num*'))))
-                print('Param2val matches')
-                print(label_)
+                if verbose:
+                    print('Param2val matches')
+                    print(label_)
                 yield param_p_, label_
             else:
-                print('Params do not match')
+                if verbose:
+                    print('Params do not match')
 
 

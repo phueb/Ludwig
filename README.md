@@ -29,11 +29,11 @@ All machines are configured to use:
 
 ## Requirements
 
-### Linux
-It is recommend to use a machine with a Linux OS to submit tasks. 
+### Linux or MacOS
+Windows is currently not supported due to uncertainty about how mounting is performed.
 
 ### Python
-Tasks submitted to Ludwig must be programmed in Python 3 (3.7 is recommended).
+Tasks submitted to Ludwig must be programmed in Python 3 (the Python3.7 interpreter is used on each worker).
 
 ### Project Organization
 

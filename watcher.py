@@ -79,7 +79,7 @@ class Handler(FileSystemEventHandler):
     def start_jobs(event_src_path):
         custom_print('Executing "{}"'.format(event_src_path))
 
-        command = 'python3 {}'.format(event_src_path)
+        command = 'python3.7 {}'.format(event_src_path)
 
         try:
             subprocess.check_call([command], shell=True)  # stdout is already redirected, cannot do it here

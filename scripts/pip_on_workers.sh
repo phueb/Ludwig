@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 
-pwd=$(cat ../../.sudo_pwd)
+pwd="PASSWORD HERE"
 for hostname in lecun bengio hawkins hebb hinton hoff norman pitts;
 do
     echo ${hostname}:
 
-    ssh ${hostname} "echo ${pwd} | sudo -S pip3 install allennlp==0.9.0"
+    ssh ${hostname} "echo ${pwd} | sudo -S pip3.7 install torch numpy tensorflow-gpu==2.0.0rc1"
 
 echo
 done
