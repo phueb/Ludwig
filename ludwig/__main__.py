@@ -144,8 +144,8 @@ def submit():
     parser.add_argument('-c', '--extra_folders', nargs='*', default=[], action='store', dest='extra_folders',
                         required=False,
                         help='Paths to additional Python packages or data. ')
-    parser.add_argument('-t', '--test', action='store_true', dest='test', required=False,
-                        help='For debugging/testing purpose only')
+    parser.add_argument('-n', '--no-upload', action='store_true', dest='no_upload', required=False,
+                        help='Whether to upload jobs to Ludwig. Set false for testing')
     parser.add_argument('-p', '--prepare_data', action='store_true', default=False, dest='prepare_data', required=False,
                         help='Whether to save results of pre-processing job to file-server')
     namespace = parser.parse_args()
@@ -197,6 +197,6 @@ def submit():
                   extra_folder_ps=extra_folder_ps,  # uploaded to shared drive not workers
                   param2requests=params.param2requests,
                   reps=namespace.reps,
-                  test=namespace.test,
+                  no_upload=namespace.no_upload,
                   worker=namespace.worker,
                   mnt_path_name=namespace.mnt_path_name)

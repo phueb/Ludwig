@@ -154,7 +154,7 @@ class Client:
         return res
 
     def submit(self, src_p, param2requests, extra_folder_ps,
-               reps=1, test=True, worker=None, mnt_path_name=None):
+               reps=1, no_upload=True, worker=None, mnt_path_name=None):
 
         # ------------------------------- checks start
 
@@ -246,8 +246,8 @@ class Client:
             sys.stdout.flush()
 
             # upload run.py
-            if test:
-                print('Test successful. Not uploading run.py.')
+            if no_upload:
+                print('Flag --upload set to False. Not uploading run.py.')
             else:
                 sftp.put(localpath=run.__file__,
                          remotepath='{}/{}'.format(config.Dirs.watched.name, 'run_{}.py'.format(src_p.name)))
