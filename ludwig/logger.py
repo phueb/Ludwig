@@ -11,21 +11,21 @@ class Logger:
 
     def __init__(self, project_name):
         self.project_name = project_name
-        if not (config.Dirs.research_data / project_name).exists():
-            (config.Dirs.research_data / project_name).mkdir()
-        if not (config.Dirs.research_data / self.project_name / 'runs').exists():
-            (config.Dirs.research_data / self.project_name / 'runs').mkdir(parents=True)
+        if not (config.RemoteDirs.research_data / project_name).exists():
+            (config.RemoteDirs.research_data / project_name).mkdir()
+        if not (config.RemoteDirs.research_data / self.project_name / 'runs').exists():
+            (config.RemoteDirs.research_data / self.project_name / 'runs').mkdir(parents=True)
         self.remove_test_runs()
         self.param_nums = self.load_param_nums()
 
     def remove_test_runs(self):  # otherwise 'param_test' will be included in param_names
-        for p in (config.Dirs.research_data / self.project_name / 'runs').iterdir():
+        for p in (config.RemoteDirs.research_data / self.project_name / 'runs').iterdir():
             if p.name.endswith('test'):
                 shutil.rmtree(str(p))
 
     def load_param_nums(self):
         res = [int(p.name.split('_')[-1])
-               for p in (config.Dirs.research_data / self.project_name / 'runs').glob('param*')] or [0]
+               for p in (config.RemoteDirs.research_data / self.project_name / 'runs').glob('param*')] or [0]
         return res
 
     @staticmethod
@@ -40,7 +40,7 @@ class Logger:
         only if it doesn't exist, create a new one (otherwise problems with queued runs might occur)
         """
         # check runs
-        for param_p in (config.Dirs.research_data / self.project_name / 'runs').glob('param_*'):
+        for param_p in (config.RemoteDirs.research_data / self.project_name / 'runs').glob('param_*'):
             with (param_p / 'param2val.yaml').open('r') as f:
                 param2val2 = yaml.load(f, Loader=yaml.FullLoader)
             if self.is_same(param2val1, param2val2):
@@ -52,5 +52,5 @@ class Logger:
             return 'new', param_name
 
     def count_num_times_logged(self, param_name):
-        res = len(list((config.Dirs.research_data / self.project_name / 'runs' / param_name).glob('*num*')))
+        res = len(list((config.RemoteDirs.research_data / self.project_name / 'runs' / param_name).glob('*num*')))
         return res

@@ -12,7 +12,7 @@ elif 'linux' == sys.platform:
     mnt_point = '/media'
 
 
-class Dirs:
+class RemoteDirs:
     root = Path(__file__).parent.parent
     if try_mounting:
         research_data = Path(mnt_point) / 'research_data'
@@ -24,7 +24,8 @@ class Dirs:
 
 class SFTP:
     watched_pattern = 'run*.py'  # this is required for watcher to know which file to run
-    path_to_private_key = Dirs.research_data / '.ludwig' / 'id_rsa'  # private key
+    path_to_private_key = RemoteDirs.research_data / '.ludwig' / 'id_rsa'  # private key
+    path_to_ssh_config = Path.home() / '.ssh' / 'ludwig_config'
     online_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio']
     all_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio', 'lecun']
 

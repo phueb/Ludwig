@@ -22,7 +22,8 @@ setup(
             'ludwig=ludwig.__main__:submit',
             'ludwig-local=ludwig.__main__:run_on_host',
             'ludwig-stats=ludwig.__main__:stats',
-            'ludwig-status=ludwig.__main__:status'
+            'ludwig-status=ludwig.__main__:status',
+            'ludwig-add-ssh-config=ludwig.__main__:add_ssh_config'
         ]
     }
 )

@@ -39,12 +39,12 @@ class Client:
 
     @staticmethod
     def make_hostname2ip():
-        """load hostname aliases from .ssh/config"""
+        """load hostname aliases from .ssh/ludwig_config"""
         res = {}
         h = None
-        p = Path.home() / '.ssh' / 'config'
+        p = config.SFTP.path_to_ssh_config
         if not p.exists():
-            raise FileNotFoundError('Please specify hostname-to-IP mappings in .ssh/config.')
+            raise FileNotFoundError('Please specify hostname-to-IP mappings in {}'.format(p))
         with p.open('r') as f:
             for line in f.readlines():
                 words = line.split()
@@ -62,9 +62,9 @@ class Client:
         this returns disk space used on server, not locally - verified on Linux
         """
         if platform.system() == 'Linux':
-            usage_stats = psutil.disk_usage(str(config.Dirs.research_data))
+            usage_stats = psutil.disk_usage(str(config.RemoteDirs.research_data))
             percent_used = usage_stats[3]
-            print_ludwig('Percent Disk Space used at {}: {}'.format(config.Dirs.research_data, percent_used))
+            print_ludwig('Percent Disk Space used at {}: {}'.format(config.RemoteDirs.research_data, percent_used))
             if percent_used > DISK_USAGE_MAX:
                 raise RuntimeError('Disk space usage > {}.'.format(DISK_USAGE_MAX))
         else:
@@ -73,7 +73,7 @@ class Client:
     def make_job_base_name(self, worker_name):
         time_of_init = datetime.datetime.now().strftime(config.Time.format)
         res = '{}_{}'.format(worker_name, time_of_init)
-        path = config.Dirs.research_data / self.project_name / res
+        path = config.RemoteDirs.research_data / self.project_name / res
         if path.is_dir():
             raise IsADirectoryError('Directory "{}" already exists.'.format(res))
         return res
@@ -157,8 +157,8 @@ class Client:
 
         # ------------------------------- checks start
 
-        if not os.path.ismount(str(config.Dirs.research_data)):
-            raise SystemExit('Please mount {}'.format(config.Dirs.research_data))
+        if not os.path.ismount(str(config.RemoteDirs.research_data)):
+            raise SystemExit('Please mount {}'.format(config.RemoteDirs.research_data))
 
         self.check_lab_disk_space()
 
@@ -175,7 +175,7 @@ class Client:
 
         # copy extra folders to file server  (can be Python packages, which will be importable, or contain data)
         if mnt_path_name is None:
-            mnt_p = config.Dirs.research_data
+            mnt_p = config.RemoteDirs.research_data
         else:
             mnt_p = Path(mnt_path_name)
             assert mnt_p.exists()  # TODO test
@@ -220,7 +220,7 @@ class Client:
                 param2val['job_name'] = job_name
 
             # save chunk to shared drive (after addition of job_name)
-            p = config.Dirs.research_data / self.project_name / '{}_param2val_chunk.pkl'.format(worker_name)
+            p = config.RemoteDirs.research_data / self.project_name / '{}_param2val_chunk.pkl'.format(worker_name)
             with p.open('wb') as f:
                 pickle.dump(param2val_chunk, f)
 
@@ -236,7 +236,7 @@ class Client:
 
             # upload ludwig code to worker
             local_path = str(src_p)
-            remote_path = '{}/{}'.format(config.Dirs.watched.name, src_p.name)
+            remote_path = '{}/{}'.format(config.RemoteDirs.watched.name, src_p.name)
             print_ludwig('Uploading {} to {}'.format(local_path, remote_path))
 
             sftp.makedirs(remote_path)
@@ -248,7 +248,7 @@ class Client:
                 print_ludwig('Flag --upload set to False. Not uploading run.py.')
             else:
                 sftp.put(localpath=run.__file__,
-                         remotepath='{}/{}'.format(config.Dirs.watched.name, 'run_{}.py'.format(src_p.name)))
+                         remotepath='{}/{}'.format(config.RemoteDirs.watched.name, 'run_{}.py'.format(src_p.name)))
 
     def gen_param_ps(self, param2requests, runs_p=None, label_params=None, verbose=True):
         """
@@ -266,7 +266,7 @@ class Client:
         requested_param2vals = self.list_all_param2vals(param2requests, add_names=False)
 
         if runs_p is None:
-            runs_p = config.Dirs.research_data / self.project_name / 'runs'
+            runs_p = config.RemoteDirs.research_data / self.project_name / 'runs'
         for param_p_ in runs_p.glob('param_*'):
             if verbose:
                 print_ludwig('Checking {}...'.format(param_p_))

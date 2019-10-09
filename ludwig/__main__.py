@@ -66,13 +66,17 @@ def run_on_host():
 
 def add_ssh_config():
     """
-    append contents of /media/research_data/.ludwig/config to ~/.ssh/config
+    append contents of /media/research_data/.ludwig/config to ~/.ssh/ludwig_config
     """
+    from ludwig import config
 
-    return NotImplementedError  # TODO implement
+    src = config.RemoteDirs.research_data / '.ludwig' / 'config'
+    dst = Path().home() / '.ssh' / 'ludwig_config'  # do not overwrite existing config
+    print_ludwig('Copying {} to {}'.format(src, dst))
+    shutil.copy(src, dst)
 
 
-def stats():  # TODO how to get stats of workers, not host?
+def stats():  # TODO how to get stats of workers, not host? - use this on remote to check if a job can run immediately
 
     from ludwig import config as ludwig_config
 
@@ -104,11 +108,11 @@ def status():
                         help='The name of the worker the status of which is requested.')
     namespace = parser.parse_args()
 
-    command = 'cat {}/{}.out'.format(ludwig_config.Dirs.stdout, namespace.worker)
+    command = 'cat {}/{}.out'.format(ludwig_config.RemoteDirs.stdout, namespace.worker)
 
     status_, output = subprocess.getstatusoutput(command)
     if status_ != 0:
-        return 'Something went wrong. Check your access to {}'.format(ludwig_config.Dirs.research_data)
+        return 'Something went wrong. Check your access to {}'.format(ludwig_config.RemoteDirs.research_data)
     lines = str(output).split('\n')
     res = '\n'.join([line for line in lines
                      if 'Ludwig' in line][-ludwig_config.CLI.num_stdout_lines:])
