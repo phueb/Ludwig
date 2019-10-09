@@ -265,8 +265,17 @@ class Client:
 
         requested_param2vals = self.list_all_param2vals(param2requests, add_names=False)
 
+        # check that research_data is mounted
+        if not os.path.ismount(config.RemoteDirs.research_data):
+            raise OSError('{} is not mounted'.format(config.RemoteDirs.research_data))
+
+        # get + check path to runs
         if runs_p is None:
             runs_p = config.RemoteDirs.research_data / self.project_name / 'runs'
+        if not runs_p.exists():
+            raise FileNotFoundError('{} does not exist.'.format(runs_p))
+
+        # look for param_paths
         for param_p_ in runs_p.glob('param_*'):
             if verbose:
                 print_ludwig('Checking {}...'.format(param_p_))
