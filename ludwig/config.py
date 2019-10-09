@@ -24,8 +24,7 @@ class Dirs:
 
 class SFTP:
     watched_pattern = 'run*.py'  # this is required for watcher to know which file to run
-    private_key_pass_path = Path.home() / '.rsapub_passwd'  # TODO improve
-
+    path_to_private_key = Dirs.research_data / '.ludwig' / 'id_rsa'  # private key
     online_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio']
     all_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio', 'lecun']
 

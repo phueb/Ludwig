@@ -31,8 +31,6 @@ class Client:
         self.param2default = param2default
         self.hostname2ip = self.make_hostname2ip()
         self.num_workers = len(config.SFTP.online_worker_names)
-        self.private_key_pass = config.SFTP.private_key_pass_path.read_text().strip('\n')
-        self.private_key = '{}/.ssh/id_rsa'.format(Path.home())
         self.unittest = unittest
 
     @cached_property
@@ -234,8 +232,7 @@ class Client:
             # connect via sftp
             sftp = pysftp.Connection(username='ludwig',
                                      host=self.hostname2ip[worker_name],
-                                     private_key=self.private_key,
-                                     private_key_pass=self.private_key_pass)
+                                     private_key=str(config.SFTP.path_to_private_key))
 
             # upload ludwig code to worker
             local_path = str(src_p)

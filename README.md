@@ -116,8 +116,3 @@ Retry when the node is no longer busy.
 
 Calling ```ludwig``` while previously submitted jobs are still being executed, 
 will stop all previously submitted jobs.
-
-## TODO
-
-* virtual environment
-* track code complexity with Python package wily

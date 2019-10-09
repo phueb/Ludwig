@@ -26,6 +26,7 @@ class MyTest(unittest.TestCase):
                       extra_folder_ps=[Path('third_party_code')],  # uploaded to shared drive not workers
                       param2requests=params.param2requests,
                       reps=1,
+                      worker='bengio',
                       no_upload=True)
 
         return True
