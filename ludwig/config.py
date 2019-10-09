@@ -24,10 +24,10 @@ class Dirs:
 
 class SFTP:
     watched_pattern = 'run*.py'  # this is required for watcher to know which file to run
-    private_key_pass_path = Path.home() / '.rsapub_passwd'
+    private_key_pass_path = Path.home() / '.rsapub_passwd'  # TODO improve
 
-    # TODO yash is using lecun
-    worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio']
+    online_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio']
+    all_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio', 'lecun']
 
 
 class Time:

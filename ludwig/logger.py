@@ -13,9 +13,7 @@ class Logger:
         self.project_name = project_name
         if not (config.Dirs.research_data / project_name).exists():
             (config.Dirs.research_data / project_name).mkdir()
-        print('Initialized logger with project_name={}'.format(project_name))
         if not (config.Dirs.research_data / self.project_name / 'runs').exists():
-            print('Making runs dir')
             (config.Dirs.research_data / self.project_name / 'runs').mkdir(parents=True)
         self.remove_test_runs()
         self.param_nums = self.load_param_nums()
@@ -23,7 +21,6 @@ class Logger:
     def remove_test_runs(self):  # otherwise 'param_test' will be included in param_names
         for p in (config.Dirs.research_data / self.project_name / 'runs').iterdir():
             if p.name.endswith('test'):
-                print('Removing {}'.format(p))
                 shutil.rmtree(str(p))
 
     def load_param_nums(self):

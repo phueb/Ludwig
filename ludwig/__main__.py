@@ -91,7 +91,7 @@ def status():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--worker', default='*', action='store', dest='worker',
-                        choices=ludwig_config.SFTP.worker_names, required=False,
+                        choices=ludwig_config.SFTP.online_worker_names, required=False,
                         help='The name of the worker the status of which is requested.')
     namespace = parser.parse_args()
 
@@ -129,7 +129,7 @@ def submit():
                         choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50], required=False,
                         help='Number of times each job will be executed')
     parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',
-                        choices=ludwig_config.SFTP.worker_names, required=False,
+                        choices=ludwig_config.SFTP.online_worker_names, required=False,
                         help='Specify a single worker name if submitting to single worker only')
     parser.add_argument('-x', '--clear_runs', action='store_true', default=False, dest='clear_runs', required=False)
 

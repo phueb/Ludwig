@@ -18,6 +18,7 @@ import os
 from cached_property import cached_property
 
 from ludwig import config
+from ludwig import print_ludwig
 from ludwig.logger import Logger
 from ludwig import run
 
@@ -29,14 +30,14 @@ class Client:
         self.project_name = project_name
         self.param2default = param2default
         self.hostname2ip = self.make_hostname2ip()
-        self.num_workers = len(config.SFTP.worker_names)
+        self.num_workers = len(config.SFTP.online_worker_names)
         self.private_key_pass = config.SFTP.private_key_pass_path.read_text().strip('\n')
         self.private_key = '{}/.ssh/id_rsa'.format(Path.home())
         self.unittest = unittest
 
     @cached_property
     def logger(self):
-        return Logger(self.project_name)  # TODO test cached property
+        return Logger(self.project_name)
 
     @staticmethod
     def make_hostname2ip():
@@ -65,11 +66,11 @@ class Client:
         if platform.system() == 'Linux':
             usage_stats = psutil.disk_usage(str(config.Dirs.research_data))
             percent_used = usage_stats[3]
-            print('Percent Disk Space used at {}: {}'.format(config.Dirs.research_data, percent_used))
+            print_ludwig('Percent Disk Space used at {}: {}'.format(config.Dirs.research_data, percent_used))
             if percent_used > DISK_USAGE_MAX:
                 raise RuntimeError('Disk space usage > {}.'.format(DISK_USAGE_MAX))
         else:
-            print('WARNING: Cannot determine disk space on non-Linux platform.')
+            print_ludwig('WARNING: Cannot determine disk space on non-Linux platform.')
 
     def make_job_base_name(self, worker_name):
         time_of_init = datetime.datetime.now().strftime(config.Time.format)
@@ -86,7 +87,7 @@ class Client:
             num_times_logged = self.logger.count_num_times_logged(param_name) if not self.unittest else 0
             num_times_run = reps - num_times_logged
             num_times_run = max(0, num_times_run)
-            print('{:<10} logged {:>3} times. Will execute job {:>3} times'.format(
+            print_ludwig('{:<10} logged {:>3} times. Will execute job {:>3} times'.format(
                 param_name, num_times_logged, num_times_run))
             res += [param2val.copy() for _ in range(num_times_run)]  # make sure that each is unique (copied)
         if not res:
@@ -183,15 +184,15 @@ class Client:
         for package_p in extra_folder_ps:
             src = str(package_p)
             dst = str(mnt_p / self.project_name / package_p.name)
-            print('Copying {} to {}'.format(src, dst))
+            print_ludwig('Copying {} to {}'.format(src, dst))
             copy_tree(src, dst)
 
         # add param_name to param2val
-        print('Assigning param_names...')
+        print_ludwig('Assigning param_names...')
         for n, param2val in enumerate(param2val_list):
             old_or_new, param_name = self.logger.get_param_name(param2val)
             param2val['param_name'] = param_name
-            print('param2val {}/{} assigned to {} "{}"'.format(n + 1, len(param2val_list), old_or_new, param_name))
+            print_ludwig('param2val {}/{} assigned to {} "{}"'.format(n + 1, len(param2val_list), old_or_new, param_name))
             sys.stdout.flush()
 
         # add reps
@@ -202,7 +203,7 @@ class Client:
         sys.stdout.flush()
 
         # split into chunks (one per node)
-        worker_names = iter(np.random.permutation(config.SFTP.worker_names)) if worker is None else iter([worker])
+        worker_names = iter(np.random.permutation(config.SFTP.online_worker_names)) if worker is None else iter([worker])
         num_workers = 1 if worker is not None else self.num_workers
         for param2val_chunk in np.array_split(param2val_list, num_workers):
             try:
@@ -211,7 +212,7 @@ class Client:
                 raise SystemExit('Using only worker "{}" because "worker" arg is not None.'.format(worker))
             #
             if len(param2val_chunk) == 0:
-                print('Not submitting to {}'.format(worker_name))
+                print_ludwig('Not submitting to {}'.format(worker_name))
                 continue
 
             # add job_name to each param2val
@@ -226,9 +227,9 @@ class Client:
                 pickle.dump(param2val_chunk, f)
 
             # console
-            print('Connecting to {}'.format(worker_name))
+            print_ludwig('Connecting to {}'.format(worker_name))
             for param2val in param2val_chunk:
-                print(param2val)
+                print_ludwig(param2val)
 
             # connect via sftp
             sftp = pysftp.Connection(username='ludwig',
@@ -239,7 +240,7 @@ class Client:
             # upload ludwig code to worker
             local_path = str(src_p)
             remote_path = '{}/{}'.format(config.Dirs.watched.name, src_p.name)
-            print('Uploading {} to {}'.format(local_path, remote_path))
+            print_ludwig('Uploading {} to {}'.format(local_path, remote_path))
 
             sftp.makedirs(remote_path)
             sftp.put_r(localpath=local_path, remotepath=remote_path)
@@ -247,12 +248,11 @@ class Client:
 
             # upload run.py
             if no_upload:
-                print('Flag --upload set to False. Not uploading run.py.')
+                print_ludwig('Flag --upload set to False. Not uploading run.py.')
             else:
                 sftp.put(localpath=run.__file__,
                          remotepath='{}/{}'.format(config.Dirs.watched.name, 'run_{}.py'.format(src_p.name)))
 
-            print('--------------')
             print()
 
     def gen_param_ps(self, param2requests, runs_p=None, label_params=None, verbose=True):
@@ -261,8 +261,8 @@ class Client:
          Folders located in those paths are each generated with the same parameter configuration.
          Use this for retrieving data after a job has been completed
         """
-        print('Generating paths to jobs matching the following configuration:')
-        print(param2requests)
+        print_ludwig('Generating paths to jobs matching the following configuration:')
+        print_ludwig(param2requests)
         print()
 
         label_params = sorted(set([param for param, val in param2requests.items()
@@ -274,7 +274,7 @@ class Client:
             runs_p = config.Dirs.research_data / self.project_name / 'runs'
         for param_p_ in runs_p.glob('param_*'):
             if verbose:
-                print('Checking {}...'.format(param_p_))
+                print_ludwig('Checking {}...'.format(param_p_))
 
             # load param2val
             with (param_p_ / 'param2val.yaml').open('r') as f:
@@ -288,11 +288,11 @@ class Client:
                 label_ = '\n'.join(['{}={}'.format(param, param2val[param]) for param in label_params])
                 label_ += '\nn={}'.format(len(list(param_p_.glob('*num*'))))
                 if verbose:
-                    print('Param2val matches')
-                    print(label_)
+                    print_ludwig('Param2val matches')
+                    print_ludwig(label_)
                 yield param_p_, label_
             else:
                 if verbose:
-                    print('Params do not match')
+                    print_ludwig('Params do not match')
 
 

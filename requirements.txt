@@ -1,7 +1,0 @@
-pandas
-psutil
-numpy
-pysftp
-PyYAML
-watchdog==0.9.0
-cached_property

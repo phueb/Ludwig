@@ -1,17 +1,18 @@
 from setuptools import setup
 
+from ludwig import __name__, __version__
 
 setup(
-    name='ludwig',
-    version='1.0.0',
-    packages=['ludwig'],
+    name=__name__,
+    version=__version__,
+    packages=[__name__],
     install_requires=['psutil',
                       'pysftp',
                       'watchdog',
                       'numpy',
                       'pandas',
                       'cached_property'],
-    url='https://github.com/languagelearninglab/Ludwig',
+    url='https://github.com/phueb/Ludwig',
     license='',
     author='Philip Huebner',
     author_email='info@philhuebner.com',
