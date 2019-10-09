@@ -26,8 +26,10 @@ class SFTP:
     watched_pattern = 'run*.py'  # this is required for watcher to know which file to run
     path_to_private_key = RemoteDirs.research_data / '.ludwig' / 'id_rsa'  # private key
     path_to_ssh_config = Path.home() / '.ssh' / 'ludwig_config'
-    online_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio']
+    online_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'hawkins', 'bengio']
     all_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio', 'lecun']
+
+    # note: Yash is using pitts, and lecun
 
 
 class Time:
