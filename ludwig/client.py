@@ -225,9 +225,9 @@ class Client:
                 pickle.dump(param2val_chunk, f)
 
             # console
-            print_ludwig('Connecting to {}'.format(worker_name))
+            print_ludwig('\nConnecting to {}'.format(worker_name))
             for param2val in param2val_chunk:
-                print_ludwig(param2val)
+                print(param2val)
 
             # connect via sftp
             sftp = pysftp.Connection(username='ludwig',
@@ -249,8 +249,6 @@ class Client:
             else:
                 sftp.put(localpath=run.__file__,
                          remotepath='{}/{}'.format(config.Dirs.watched.name, 'run_{}.py'.format(src_p.name)))
-
-            print()
 
     def gen_param_ps(self, param2requests, runs_p=None, label_params=None, verbose=True):
         """

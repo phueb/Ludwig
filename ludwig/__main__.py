@@ -8,6 +8,7 @@ import shutil
 
 
 import ludwig
+from ludwig import print_ludwig
 
 
 def run_on_host():
@@ -32,7 +33,7 @@ def run_on_host():
         raise NotADirectoryError('Cannot find source code in {}.'.format(cwd / namespace.src))
 
     # import user's code
-    print('Looking for source code in:\n{}'.format(namespace.src))
+    print_ludwig('Looking for source code in:\n{}'.format(namespace.src))
     sys.path.append(str(cwd))
     job = importlib.import_module(namespace.src + '.job')
     params = importlib.import_module(namespace.src + '.params')
@@ -48,10 +49,10 @@ def run_on_host():
     from ludwig.client import Client  # import Client only after ludwig.try_mounting set to False
     client = Client(project_name, params.param2default)
     for param2val in client.list_all_param2vals(params.param2requests,
-                                                update_d={'param_name': 'test', 'job_name': 'test'}):
+                                                update_d={'param_name': 'test', 'job_name': 'test'}):  # TODO save local jobs normally
 
         if namespace.debug:
-            print('Updating params.param2val with params.param2debug because debug=True')
+            print_ludwig('Updating params.param2val with params.param2debug because debug=True')
             param2val.update(params.param2debug)
 
         job.main(param2val)
@@ -61,6 +62,14 @@ def run_on_host():
 
     # TODO running locally doesn't save data as implemented - should this be an option?
     # TODO if so, maybe change the naming convention from "test" to "local" and assign each a time_of_init
+
+
+def add_ssh_config():
+    """
+    append contents of /media/research_data/.ludwig/config to ~/.ssh/config
+    """
+
+    return NotImplementedError  # TODO implement
 
 
 def stats():  # TODO how to get stats of workers, not host?
@@ -151,16 +160,15 @@ def submit():
     namespace = parser.parse_args()
 
     # print all arguments
-    print('---------------------')
-    print('Arguments:')
+    print_ludwig('Arguments:')
     for k, v in namespace.__dict__.items():
         print('{:<16}= {}'.format(k, v))
-    print('---------------------\n')
+    print()
 
     if not (cwd / namespace.src).is_dir():
         raise NotADirectoryError('Cannot find source code in {}.'.format(cwd / namespace.src))
 
-    print('Looking for source code in:\n{}'.format(namespace.src))
+    print_ludwig('Looking for source code in:\n{}'.format(namespace.src))
     sys.path.append(str(cwd))
     job = importlib.import_module(namespace.src + '.job')
     params = importlib.import_module(namespace.src + '.params')
@@ -169,17 +177,17 @@ def submit():
     # delete all runs in remote root
     if namespace.clear_runs:
         for param_p in config.RemoteDirs.runs.glob('*param*'):
-            print('Removing\n{}'.format(param_p))
+            print_ludwig('Removing\n{}'.format(param_p))
             sys.stdout.flush()
             shutil.rmtree(str(param_p))
 
     # prepare any data and save pickle to shared drive - do this only once - import this function from jobs module
     if namespace.prepare_data:
-        print('Starting to prepare data')
+        print_ludwig('Starting to prepare data')
         job.prepare_data()
-        print('Completed preparing data')
+        print_ludwig('Completed preparing data')
     else:
-        print('WARNING: Not preparing any data')
+        print_ludwig('WARNING: Not preparing any data')
 
     # are additional source code files required?
     extra_folder_ps = []
