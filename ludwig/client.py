@@ -232,7 +232,7 @@ class Client:
             # connect via sftp
             sftp = pysftp.Connection(username='ludwig',
                                      host=self.hostname2ip[worker_name],
-                                     private_key=str(config.SFTP.path_to_private_key))
+                                     private_key=str(config.RemoteDirs.research_data / '.ludwig' / 'id_rsa'))
 
             # upload ludwig code to worker
             local_path = str(src_p)
