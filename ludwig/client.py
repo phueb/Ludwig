@@ -246,9 +246,10 @@ class Client:
                 continue
 
             # connect via sftp
+            pivate_key_path = config.RemoteDirs.research_data / '.ludwig' / 'id_rsa'
             sftp = pysftp.Connection(username='ludwig',
                                      host=worker2ip[worker_name],
-                                     private_key=str(config.SFTP.path_to_private_key))
+                                     private_key=str(pivate_key_path))
 
             sftp.makedirs(remote_path)
             sftp.put_r(localpath=local_path, remotepath=remote_path)
