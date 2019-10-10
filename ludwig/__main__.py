@@ -9,6 +9,7 @@ import shutil
 
 import ludwig
 from ludwig import print_ludwig
+from ludwig import __version__
 
 
 def run_on_host():
@@ -145,6 +146,10 @@ def submit():
                         choices=ludwig_config.SFTP.online_worker_names, required=False,
                         help='Specify a single worker name if submitting to single worker only')
     parser.add_argument('-x', '--clear_runs', action='store_true', default=False, dest='clear_runs', required=False)
+
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
+
+
 
     # TODO test custom mount point on MacOs
 

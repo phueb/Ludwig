@@ -29,7 +29,6 @@ class Client:
     def __init__(self, project_name, param2default, unittest=False):
         self.project_name = project_name
         self.param2default = param2default
-        self.hostname2ip = self.make_hostname2ip()
         self.num_workers = len(config.SFTP.online_worker_names)
         self.unittest = unittest
 
@@ -38,7 +37,7 @@ class Client:
         return Logger(self.project_name)
 
     @staticmethod
-    def make_hostname2ip():
+    def make_worker2ip():
         """load hostname aliases from .ssh/ludwig_config"""
         res = {}
         h = None
@@ -170,6 +169,11 @@ class Client:
 
         # ------------------------------- checks end
 
+        if not no_upload:
+            worker2ip = self.make_worker2ip()
+        else:
+            worker2ip = None
+
         # make list of hyper-parameter configurations to submit
         param2val_list = self.list_all_param2vals(param2requests)
 
@@ -178,7 +182,9 @@ class Client:
             mnt_p = config.RemoteDirs.research_data
         else:
             mnt_p = Path(mnt_path_name)
-            assert mnt_p.exists()  # TODO test
+            if not mnt_p.exists():
+                raise OSError('{} does not exist. '
+                              'Please set the correct path to your custom mount point.'.format(mnt_p))
         for package_p in extra_folder_ps:
             src = str(package_p)
             dst = str(mnt_p / self.project_name / package_p.name)
@@ -225,30 +231,33 @@ class Client:
                 pickle.dump(param2val_chunk, f)
 
             # console
-            print_ludwig('\nConnecting to {}'.format(worker_name))
+            print()
+            print_ludwig('Connecting to {}'.format(worker_name))
             for param2val in param2val_chunk:
                 print(param2val)
 
-            # connect via sftp
-            sftp = pysftp.Connection(username='ludwig',
-                                     host=self.hostname2ip[worker_name],
-                                     private_key=str(config.RemoteDirs.research_data / '.ludwig' / 'id_rsa'))
-
-            # upload ludwig code to worker
+            # prepare paths
             local_path = str(src_p)
             remote_path = '{}/{}'.format(config.RemoteDirs.watched.name, src_p.name)
-            print_ludwig('Uploading {} to {}'.format(local_path, remote_path))
+            print_ludwig('Will upload {} to {}'.format(local_path, remote_path))
+
+            if no_upload:
+                print_ludwig('Flag --upload set to False. Not uploading run.py.')
+                continue
+
+            # connect via sftp
+            sftp = pysftp.Connection(username='ludwig',
+                                     host=worker2ip[worker_name],
+                                     private_key=str(config.SFTP.path_to_private_key))
 
             sftp.makedirs(remote_path)
             sftp.put_r(localpath=local_path, remotepath=remote_path)
             sys.stdout.flush()
 
             # upload run.py
-            if no_upload:
-                print_ludwig('Flag --upload set to False. Not uploading run.py.')
-            else:
-                sftp.put(localpath=run.__file__,
-                         remotepath='{}/{}'.format(config.RemoteDirs.watched.name, 'run_{}.py'.format(src_p.name)))
+            sftp.put(localpath=run.__file__,
+                     remotepath='{}/{}'.format(config.RemoteDirs.watched.name, 'run_{}.py'.format(src_p.name)))
+            print_ludwig('Upload complete')
 
     def gen_param_ps(self, param2requests, runs_p=None, label_params=None, verbose=True):
         """
