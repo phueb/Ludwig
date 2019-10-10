@@ -41,16 +41,27 @@ Tasks submitted to Ludwig must be programmed in Python 3 (the Python3.7 interpre
 * ```src.params```: contains information about which parameters to use for each job
 * ```src.config```: contains basic information like the name of the user's project
 
+See the `Example` folder for a simple project that is compatible with `Ludwig`. 
+
 ### Access to the shared drive
 See the administrator to provide access to the lab's shared drive. Mount the drive at ```/media/research_data```.
 The share is hosted by the lab's file server using ```samba```, and is shared with each node. 
 Because we do not allow direct shell access to nodes, all data and logs must be saved to the shared drive.
 
-### Access to jailed SFTP on one or multiple nodes
-You must ask the administrator to provide you with sftp access to one or multiple nodes.
-It is recommended to use password-less access via keypair authentication. 
-Create ```config``` in ```/home/.ssh```.
-Ask the administrator to populate this file with the names of the worker names and their IP addresses.
+### Worker IP addresses
+
+Upon trying to submit jobs, first-time users will notice the following error message:
+
+```
+FileNotFoundError: Please specify hostname-to-IP mappings in /home/ph/.ssh/ludwig_config
+```
+
+This means that `Ludwig` does not know the IP address of the workers to submit jobs to.
+To remedy, type:
+
+```bash
+ludwig-add-ssh-config
+```
 
 ## Submitting a Job
 
