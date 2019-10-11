@@ -5,7 +5,8 @@ import sys
 import subprocess
 import psutil
 import shutil
-
+import yaml
+import datetime
 
 import ludwig
 from ludwig import print_ludwig
@@ -16,6 +17,7 @@ def run_on_host():
     """
     run jobs on the local host for testing/development
     """
+    from ludwig import config as ludwig_config
 
     ludwig.try_mounting = False
 
@@ -49,20 +51,36 @@ def run_on_host():
     project_name = config.LocalDirs.root.name
     from ludwig.client import Client  # import Client only after ludwig.try_mounting set to False
     client = Client(project_name, params.param2default)
-    for param2val in client.list_all_param2vals(params.param2requests,
-                                                update_d={'param_name': 'test', 'job_name': 'test'}):  # TODO save local jobs normally
+    for n, param2val in enumerate(client.list_all_param2vals(params.param2requests,
+                                                             update_d={'param_name': 'localhost'})):
 
         if namespace.debug:
             print_ludwig('Updating params.param2val with params.param2debug because debug=True')
             param2val.update(params.param2debug)
 
-        job.main(param2val)
+        # update job_name
+        time_of_init = datetime.datetime.now().strftime(ludwig_config.Time.format)
+        base_name = '{}_{}'.format('local', time_of_init)
+        job_name = '{}_num{}'.format(base_name, n)
+        param2val['job_name'] = job_name
+
+        res = job.main(param2val)
+
+        # TODO make option to save results created by running ludwig-local to server or not
+        if res:
+            print_ludwig('WARNING: Not saving results to shared drive')
+
+        # write param2val locally
+        param2val_p = config.LocalDirs.runs / param2val['param_name'] / 'param2val.yaml'
+        print('Saving param2val to:\n{}\n'.format(param2val_p))
+        if not param2val_p.exists():
+            param2val_p.parent.mkdir(exist_ok=True)
+            param2val['job_name'] = None
+            with param2val_p.open('w', encoding='utf8') as f:
+                yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
 
         if namespace.debug:
             raise SystemExit('Completed first job and exited because debug=True.')
-
-    # TODO running locally doesn't save data as implemented - should this be an option?
-    # TODO if so, maybe change the naming convention from "test" to "local" and assign each a time_of_init
 
 
 def add_ssh_config():
