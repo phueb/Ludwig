@@ -93,6 +93,19 @@ Next, check the status of the Ludwig machines:
 (venv) ludwig-status
 ```
 
+### Non-standard mount location
+
+Across different operating systems, the default mount location is different.
+That means that the path to the shared drive will be different.
+To upload data or third-party source code to the shared drive, ```ludwig``` must be explicitly told where to find the shared drive:
+
+For example, if `research_data` is mounted at `/Volumes/research_data`:
+
+```
+ludwig -mnt /Volumes/research_data
+```
+The ```-mnt``` flag is used to specify where the shared drive is mounted on the user's machine.
+
 ### Saving Data
 Any data (e.g. accuracy per epoch) that needs to persist, should be returned by job.main() as a list of pandas DataFrame objects.
 These will be automatically saved to the shared drive after a job has completed.
