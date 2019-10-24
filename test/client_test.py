@@ -22,8 +22,8 @@ class MyTest(unittest.TestCase):
         os.chdir(self.example_root_path_name)
 
         client = Client(self.project_name, params.param2default, unittest=True)
-        client.submit(src_p=Path('example'),  # uploaded to workers
-                      extra_folder_ps=[Path('third_party_code')],  # uploaded to shared drive not workers
+        client.submit(src_name='example',  # uploaded to workers
+                      extra_folder_names=['third_party_code'],  # uploaded to shared drive not workers
                       param2requests=params.param2requests,
                       reps=1,
                       worker='bengio',

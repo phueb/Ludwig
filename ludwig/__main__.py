@@ -52,7 +52,7 @@ def run_on_host():
     from ludwig.client import Client  # import Client only after ludwig.try_mounting set to False
     client = Client(project_name, params.param2default)
     for n, param2val in enumerate(client.list_all_param2vals(params.param2requests,
-                                                             update_d={'param_name': 'localhost'})):
+                                                             update_dict={'param_name': 'localhost'})):
 
         if namespace.debug:
             print_ludwig('Updating params.param2val with params.param2debug because debug=True')
@@ -217,19 +217,19 @@ def submit():
         print_ludwig('WARNING: Not preparing any data')
 
     # are additional source code files required?
-    extra_folder_ps = []
+    extra_folder_names = []
     for extra_folder in namespace.extra_folders:
         p = Path(extra_folder)
         if not p.is_dir():
             raise NotADirectoryError('{} is not a directory'.format(p))
         else:
-            extra_folder_ps.append(p)
+            extra_folder_names.append(p.name)
 
     # submit
     project_name = config.RemoteDirs.root.name
     client = Client(project_name, params.param2default)
-    client.submit(src_p=config.LocalDirs.src,  # uploaded to workers
-                  extra_folder_ps=extra_folder_ps,  # uploaded to shared drive not workers
+    client.submit(src_name=config.LocalDirs.src.name,  # uploaded to workers
+                  extra_folder_names=extra_folder_names,  # uploaded to shared drive not workers
                   param2requests=params.param2requests,
                   reps=namespace.reps,
                   no_upload=namespace.no_upload,

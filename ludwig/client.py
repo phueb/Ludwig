@@ -1,6 +1,6 @@
 """
-The client is used to submit jobs to one or more machines in Ludwig.
-It uses an sftp client library to upload all files in a user's project to Ludwig.
+The client is used to submit jobs to one or more compute machines at the UIUC Learning & Language Lab
+An sftp-client library is used to upload code files to each machine.
 """
 from itertools import cycle
 from pathlib import Path
@@ -16,6 +16,7 @@ import sys
 import time
 import os
 from cached_property import cached_property
+from typing import List, Dict, Union, Any, Tuple
 
 from ludwig import config
 from ludwig import print_ludwig
@@ -26,7 +27,11 @@ DISK_USAGE_MAX = 90
 
 
 class Client:
-    def __init__(self, project_name, param2default, unittest=False):
+    def __init__(self,
+                 project_name: str,
+                 param2default: Dict[str, Any],
+                 unittest: bool = False
+                 ):
         self.project_name = project_name
         self.param2default = param2default
         self.num_workers = len(config.SFTP.online_worker_names)
@@ -69,7 +74,9 @@ class Client:
         else:
             print_ludwig('WARNING: Cannot determine disk space on non-Linux platform.')
 
-    def make_job_base_name(self, worker_name):
+    def make_job_base_name(self,
+                           worker_name: str
+                           ):
         time_of_init = datetime.datetime.now().strftime(config.Time.format)
         res = '{}_{}'.format(worker_name, time_of_init)
         path = config.RemoteDirs.research_data / self.project_name / res
@@ -95,7 +102,8 @@ class Client:
         return res
 
     @staticmethod
-    def _iter_over_cycles(param2opts):
+    def _iter_over_cycles(param2opts: Tuple[str, list],
+                          ):
         """
         return list of mappings from param name to integer which is index to possible param values
         all possible combinations are returned
@@ -126,7 +134,11 @@ class Client:
         assert len(param_ids) == total
         return param_ids
 
-    def list_all_param2vals(self, param2requests, update_d=None, add_names=True):
+    def list_all_param2vals(self,
+                            param2requests: Dict[str, list],
+                            update_dict: Union[Dict[str, Any], None] = None,
+                            add_names=True
+                            ):
 
         # check that requests are lists
         for k, v in param2requests.items():
@@ -146,14 +158,20 @@ class Client:
             param2val = {k: v[i] for (k, v), i in zip(param2opts, ids)}
             if add_names:
                 param2val.update({'param_name': None, 'job_name': None})
-            if isinstance(update_d, dict):
-                param2val.update(update_d)
+            if isinstance(update_dict, dict):
+                param2val.update(update_dict)
 
             res.append(param2val)
         return res
 
-    def submit(self, src_p, param2requests, extra_folder_ps,
-               reps=1, no_upload=True, worker=None, mnt_path_name=None):
+    def submit(self,
+               src_name: str,
+               param2requests: Dict[str, list],
+               extra_folder_names: List[str],
+               reps: int = 1,
+               no_upload: bool = True,
+               worker: Union[str, None] = None,
+               mnt_path_name: Union[str, None] = None):
 
         # ------------------------------- checks start
 
@@ -180,16 +198,16 @@ class Client:
 
         # copy extra folders to file server  (can be Python packages, which will be importable, or contain data)
         if mnt_path_name is None:
-            mnt_p = config.RemoteDirs.research_data
+            mnt_path = config.RemoteDirs.research_data
         else:
-            mnt_p = Path(mnt_path_name)
-            if not mnt_p.exists():
-                raise OSError('{} does not exist. '
-                              'Please set the correct path to your custom mount point.'.format(mnt_p))
-        for package_p in extra_folder_ps:
-            src = str(package_p)
-            dst = str(mnt_p / self.project_name / package_p.name)
-            print_ludwig('Copying {} to {}'.format(src, dst))
+            mnt_path = Path(mnt_path_name)
+            if not mnt_path.exists():
+                raise OSError(f'{mnt_path} does not exist. '
+                              'Please set the correct path to your custom mount point.')
+        for folder_name in extra_folder_names:
+            src = folder_name
+            dst = str(mnt_path / self.project_name / folder_name)
+            print_ludwig(f'Copying {src} to {dst}')
             copy_tree(src, dst)
 
         # add param_name to param2val
@@ -197,7 +215,7 @@ class Client:
         for n, param2val in enumerate(param2val_list):
             old_or_new, param_name = self.logger.get_param_name(param2val)
             param2val['param_name'] = param_name
-            print_ludwig('param2val {}/{} assigned to {} "{}"'.format(n + 1, len(param2val_list), old_or_new, param_name))
+            print_ludwig(f'param2val {n + 1}/{len(param2val_list)} assigned to {old_or_new} {param_name}')
             sys.stdout.flush()
 
         # add reps
@@ -214,33 +232,32 @@ class Client:
             try:
                 worker_name = next(worker_names)  # distribute jobs across workers randomly
             except StopIteration:
-                raise SystemExit('Using only worker "{}" because "worker" arg is not None.'.format(worker))
+                raise SystemExit(f'Using only {worker} because "worker" arg is not None.')
             #
             if len(param2val_chunk) == 0:
-                print_ludwig('Not submitting to {}'.format(worker_name))
+                print_ludwig(f'Not submitting to {worker_name}')
                 continue
 
             # add job_name to each param2val
             base_name = self.make_job_base_name(worker_name)
             for n, param2val in enumerate(param2val_chunk):
-                job_name = '{}_num{}'.format(base_name, n)
+                job_name = f'{base_name}_num{n}'
                 param2val['job_name'] = job_name
 
             # save chunk to shared drive (after addition of job_name)
-            p = config.RemoteDirs.research_data / self.project_name / '{}_param2val_chunk.pkl'.format(worker_name)
+            p = config.RemoteDirs.research_data / self.project_name / f'{worker_name}_param2val_chunk.pkl'
             with p.open('wb') as f:
                 pickle.dump(param2val_chunk, f)
 
             # console
             print()
-            print_ludwig('Connecting to {}'.format(worker_name))
+            print_ludwig(f'Connecting to {worker_name}')
             for param2val in param2val_chunk:
                 print(param2val)
 
             # prepare paths
-            local_path = str(src_p)
-            remote_path = '{}/{}'.format(config.RemoteDirs.watched.name, src_p.name)
-            print_ludwig('Will upload {} to {}'.format(local_path, remote_path))
+            remote_path = f'{config.RemoteDirs.watched.name}/{src_name}'
+            print_ludwig(f'Will upload {src_name} to {remote_path}')
 
             if no_upload:
                 print_ludwig('Flag --upload set to False. Not uploading run.py.')
@@ -253,15 +270,21 @@ class Client:
                                      private_key=str(pivate_key_path))
 
             sftp.makedirs(remote_path)
-            sftp.put_r(localpath=local_path, remotepath=remote_path)
+            sftp.put_r(localpath=src_name, remotepath=remote_path)
             sys.stdout.flush()
 
             # upload run.py
+            run_file_name = f'run_{src_name}.py'
             sftp.put(localpath=run.__file__,
-                     remotepath='{}/{}'.format(config.RemoteDirs.watched.name, 'run_{}.py'.format(src_p.name)))
+                     remotepath=f'{config.RemoteDirs.watched.name}/{run_file_name}')
             print_ludwig('Upload complete')
 
-    def gen_param_ps(self, param2requests, runs_p=None, label_params=None, verbose=True):
+    def gen_param_ps(self,
+                     param2requests: Dict[str, list],
+                     runs_path: Union[Path, None] = None,
+                     label_params: List[str] = None,
+                     label_n: bool = True,
+                     verbose: bool = True):
         """
         Return path objects that point to folders with job results.
          Folders located in those paths are each generated with the same parameter configuration.
@@ -278,21 +301,21 @@ class Client:
 
         # check that research_data is mounted
         if not os.path.ismount(config.RemoteDirs.research_data):
-            raise OSError('{} is not mounted'.format(config.RemoteDirs.research_data))
+            raise OSError(f'{config.RemoteDirs.research_data} is not mounted')
 
         # get + check path to runs
-        if runs_p is None:
-            runs_p = config.RemoteDirs.research_data / self.project_name / 'runs'
-        if not runs_p.exists():
-            raise FileNotFoundError('{} does not exist.'.format(runs_p))
+        if runs_path is None:
+            runs_path = config.RemoteDirs.research_data / self.project_name / 'runs'
+        if not runs_path.exists():
+            raise FileNotFoundError(f'{runs_path} does not exist.')
 
         # look for param_paths
-        for param_p_ in runs_p.glob('param_*'):
+        for param_path in runs_path.glob('param_*'):
             if verbose:
-                print_ludwig('Checking {}...'.format(param_p_))
+                print_ludwig(f'Checking {param_path}...')
 
             # load param2val
-            with (param_p_ / 'param2val.yaml').open('r') as f:
+            with (param_path / 'param2val.yaml').open('r') as f:
                 param2val = yaml.load(f, Loader=yaml.FullLoader)
             loaded_param2val = param2val.copy()
             del loaded_param2val['param_name']
@@ -300,12 +323,14 @@ class Client:
 
             # is match?
             if loaded_param2val in requested_param2vals:
-                label_ = '\n'.join(['{}={}'.format(param, param2val[param]) for param in label_params])
-                label_ += '\nn={}'.format(len(list(param_p_.glob('*num*'))))
+                label_ = '\n'.join([f'{param}={param2val[param]}' for param in label_params])
+                if label_n:
+                    n = len(list(param_path.glob('*num*')))
+                    label_ += f'\nn={n}'
                 if verbose:
                     print_ludwig('Param2val matches')
                     print_ludwig(label_)
-                yield param_p_, label_
+                yield param_path, label_
             else:
                 if verbose:
                     print_ludwig('Params do not match')
