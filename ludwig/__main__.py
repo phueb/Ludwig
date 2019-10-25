@@ -218,7 +218,7 @@ def submit():
 
     # are additional source code files required?
     extra_paths = []
-    for extra_path in namespace.extra_folders:
+    for extra_path in namespace.extra_paths:
         p = Path(extra_path)
         if not p.is_dir():
             raise NotADirectoryError('{} is not a directory'.format(p))
