@@ -16,7 +16,7 @@ import sys
 import time
 import os
 from cached_property import cached_property
-from typing import List, Dict, Union, Any, Tuple
+from typing import List, Dict, Optional, Any, Tuple
 
 from ludwig import config
 from ludwig import print_ludwig
@@ -102,7 +102,7 @@ class Client:
         return res
 
     @staticmethod
-    def _iter_over_cycles(param2opts: Tuple[str, list],
+    def _iter_over_cycles(param2opts: Tuple[Any, ...],
                           ):
         """
         return list of mappings from param name to integer which is index to possible param values
@@ -136,7 +136,7 @@ class Client:
 
     def list_all_param2vals(self,
                             param2requests: Dict[str, list],
-                            update_dict: Union[Dict[str, Any], None] = None,
+                            update_dict: Optional[Dict[str, Any]] = None,
                             add_names=True
                             ):
 
@@ -170,8 +170,8 @@ class Client:
                extra_paths: List[Path],
                reps: int = 1,
                no_upload: bool = True,
-               worker: Union[str, None] = None,
-               mnt_path_name: Union[str, None] = None):
+               worker: Optional[str] = None,
+               mnt_path_name: Optional[str] = None):
 
         # ------------------------------- checks start
 
@@ -281,7 +281,7 @@ class Client:
 
     def gen_param_ps(self,
                      param2requests: Dict[str, list],
-                     runs_path: Union[Path, None] = None,
+                     runs_path: Optional[Path] = None,
                      label_params: List[str] = None,
                      label_n: bool = True,
                      verbose: bool = True):
