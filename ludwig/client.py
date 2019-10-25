@@ -167,7 +167,7 @@ class Client:
     def submit(self,
                src_name: str,
                param2requests: Dict[str, list],
-               extra_folder_names: List[str],
+               extra_paths: List[Path],
                reps: int = 1,
                no_upload: bool = True,
                worker: Union[str, None] = None,
@@ -204,9 +204,9 @@ class Client:
             if not mnt_path.exists():
                 raise OSError(f'{mnt_path} does not exist. '
                               'Please set the correct path to your custom mount point.')
-        for folder_name in extra_folder_names:
-            src = folder_name
-            dst = str(mnt_path / self.project_name / folder_name)
+        for p in extra_paths:
+            src = str(p)
+            dst = str(mnt_path / self.project_name / p.name)
             print_ludwig(f'Copying {src} to {dst}')
             copy_tree(src, dst)
 

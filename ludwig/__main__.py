@@ -177,7 +177,7 @@ def submit():
 
     # TODO add option to specify multiple workers - or specific "teams" of workers
 
-    parser.add_argument('-c', '--extra_folders', nargs='*', default=[], action='store', dest='extra_folders',
+    parser.add_argument('-e', '--extra_paths', nargs='*', default=[], action='store', dest='extra_paths',
                         required=False,
                         help='Paths to additional Python packages or data. ')
     parser.add_argument('-n', '--no-upload', action='store_true', dest='no_upload', required=False,
@@ -217,19 +217,19 @@ def submit():
         print_ludwig('WARNING: Not preparing any data')
 
     # are additional source code files required?
-    extra_folder_names = []
-    for extra_folder in namespace.extra_folders:
-        p = Path(extra_folder)
+    extra_paths = []
+    for extra_path in namespace.extra_folders:
+        p = Path(extra_path)
         if not p.is_dir():
             raise NotADirectoryError('{} is not a directory'.format(p))
         else:
-            extra_folder_names.append(p.name)
+            extra_paths.append(p)
 
     # submit
     project_name = config.RemoteDirs.root.name
     client = Client(project_name, params.param2default)
     client.submit(src_name=config.LocalDirs.src.name,  # uploaded to workers
-                  extra_folder_names=extra_folder_names,  # uploaded to shared drive not workers
+                  extra_paths=extra_paths,  # uploaded to shared drive not workers
                   param2requests=params.param2requests,
                   reps=namespace.reps,
                   no_upload=namespace.no_upload,
