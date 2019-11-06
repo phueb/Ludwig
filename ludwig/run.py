@@ -5,9 +5,41 @@ import pandas as pd
 import importlib
 from pathlib import Path
 import sys
+from typing import Dict, Any
+
+# do not import ludwig here - this file is run on Ludwig workers
 
 
-def run_job_on_ludwig_worker():
+def save_job_files(param2val: Dict[str, Any],
+                   series_list: list,
+                   runs_path: Path,
+                   ) -> None:
+
+    if not series_list:
+        print('WARNING: Job did not return any results')
+
+    # save series_list
+    dst = runs_path / param2val['param_name'] / param2val['job_name']
+    if not dst.exists():
+        dst.mkdir(parents=True)
+    for series in series_list:
+        if not isinstance(series, pd.Series):
+            print('WARNING: Object returned by job must be a pandas.Series.')
+            continue
+        with (dst / '{}.csv'.format(series.name)).open('w') as f:
+            series.to_csv(f, index=True, header=[series.name])  # cannot name the index with "header" arg
+
+    # save param2val
+    param2val_p = runs_path / param2val['param_name'] / 'param2val.yaml'
+    print('Saving param2val to:\n{}\n'.format(param2val_p))
+    if not param2val_p.exists():
+        param2val_p.parent.mkdir(exist_ok=True)
+        param2val['job_name'] = None
+        with param2val_p.open('w', encoding='utf8') as f:
+            yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
+
+
+def run_jobs_on_ludwig_worker():
     """
     run multiple jobs on on a single worker.
     """
@@ -23,31 +55,8 @@ def run_job_on_ludwig_worker():
         # execute job
         series_list = job.main(param2val)  # name the returned series using 'name' attribute
 
-        if config.Global.debug:
-            for series in series_list:
-                print(series.name)
-                print(series)
-            raise SystemExit('Debugging: Not saving results')
-
-        # save series_list
-        dst = config.RemoteDirs.runs / param2val['param_name'] / param2val['job_name']
-        if not dst.exists():
-            dst.mkdir(parents=True)
-        for series in series_list:
-            if not isinstance(series, pd.Series):
-                print('WARNING: Object returned by job must be a pandas.Series.')
-                continue
-            with (dst / '{}.csv'.format(series.name)).open('w') as f:
-                series.to_csv(f, index=True, header=[series.name])  # cannot name the index with "header" arg
-
-        # write param2val to shared drive
-        param2val_p = config.RemoteDirs.runs / param2val['param_name'] / 'param2val.yaml'
-        print('Saving param2val to:\n{}\n'.format(param2val_p))
-        if not param2val_p.exists():
-            param2val_p.parent.mkdir(exist_ok=True)
-            param2val['job_name'] = None
-            with param2val_p.open('w', encoding='utf8') as f:
-                yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
+        # save results
+        save_job_files(param2val, series_list, runs_path=config.RemoteDirs.runs)
 
 
 if __name__ == '__main__':
@@ -67,4 +76,4 @@ if __name__ == '__main__':
 
     hostname = socket.gethostname()
 
-    run_job_on_ludwig_worker()
+    run_jobs_on_ludwig_worker()

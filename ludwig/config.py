@@ -1,25 +1,17 @@
 from pathlib import Path
 import socket
-import sys
 
 from ludwig import try_mounting
 
-if sys.platform == 'darwin':
-    mnt_point = '/Volumes'
-elif 'linux' == sys.platform:
-    mnt_point = '/media'
-else:
-    raise SystemExit('Ludwig does not support this platform')
 
-
-class RemoteDirs:
+class WorkerDirs:
     root = Path(__file__).parent.parent
     if try_mounting:
-        research_data = Path(mnt_point) / 'research_data'
+        research_data = Path('/media') / 'research_data'
         stdout = research_data / 'stdout'
         watched = Path('/var/sftp/ludwig_jobs')
     else:
-        print("Ludwig: Not trying to mount {}/research_data".format(mnt_point))
+        print("Ludwig: Not trying to mount media/research_data")
 
 
 class SFTP:

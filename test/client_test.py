@@ -11,7 +11,7 @@ from Example.example import params
 class MyTest(unittest.TestCase):
 
     project_name = 'Example'
-    example_root_path_name = str(config.RemoteDirs.root / project_name)
+    example_root_path_name = str(config.WorkerDirs.root / project_name)
 
     def test_submit(self):
         """

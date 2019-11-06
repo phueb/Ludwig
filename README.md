@@ -5,7 +5,7 @@
 The UIUC Learning & language Lab provides compute resources for lab members and collaborators wishing to train large neural network models. 
 The resource consists of a file server and 8 Ubuntu 16.04 machines with GPU acceleration for deep learning tasks.
 
-## Specs
+## Worker Specs
 
 | hostname  |GPU                    | Model               |
 |-----------|-----------------------|---------------------|
@@ -81,16 +81,10 @@ To submit jobs, go to your project root folder, and invoke the command-line tool
 (venv) ludwig
 ``` 
 
-Alternatively, use 
+Check the status of a Ludwig worker (e.g. hebb):
 
 ```bash
-python3 -m ludwig
-```
-
-Next, check the status of the Ludwig machines:
-
-```bash
-(venv) ludwig-status
+(venv) ludwig-status -w hebb
 ```
 
 ### Non-standard mount location
@@ -124,9 +118,9 @@ def main():
         save_to_worker(data)  # save intermediate data to worker
     
     # at end of training copy all data files to file server
-    for data_path in Path('/var/sftp/ludwig/<unique_data_folder_name>').glob('data*.csv'):
+    for data_path in Path('/var/sftp/ludwig/DATA_FOLDER_NAME').glob('data*.csv'):
         src = str(data_path)
-        dst = '/media/research_data/<your_project_name>/{}'.format(data_path.name)
+        dst = '/media/research_data/PROJECT_NAME/{}'.format(data_path.name)
         shutil.move(src, dst)
 ```
 
@@ -136,7 +130,28 @@ After uploading your code, verify that your task is being processed by reading t
 If you don't recognize the output in the file, it is likely that the node is currently processing another user's task.
 Retry when the node is no longer busy. 
 
+## Run jobs locally
+
+To run jobs locally, go to the root directory of your project and:
+
+```bash
+ludwig-local
+```
+
+Results will be saved locally in `runs`. 
+
+If the job requires retrieving data from the lab's server, add the followign flag:
+
+```bash
+ludwig-local --server
+```
+In this case, results will be saved in `research_data/PROJECT_NAME/runs`.
+Note that if your mounting location is non-standard (e.g. not `/media/research_data`),
+you can specify the path to where `research_data` is mounted via the `--mnt` flag. 
+ 
+
+
 ## Note
 
 Calling ```ludwig``` while previously submitted jobs are still being executed, 
-will stop all previously submitted jobs.
+will stop all previously submitted jobs associated with the same project name.

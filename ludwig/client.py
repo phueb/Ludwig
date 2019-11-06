@@ -66,9 +66,9 @@ class Client:
         this returns disk space used on server, not locally - verified on Linux
         """
         if platform.system() == 'Linux':
-            usage_stats = psutil.disk_usage(str(config.RemoteDirs.research_data))
+            usage_stats = psutil.disk_usage(str(config.WorkerDirs.research_data))
             percent_used = usage_stats[3]
-            print_ludwig('Percent Disk Space used at {}: {}'.format(config.RemoteDirs.research_data, percent_used))
+            print_ludwig('Percent Disk Space used at {}: {}'.format(config.WorkerDirs.research_data, percent_used))
             if percent_used > DISK_USAGE_MAX:
                 raise RuntimeError('Disk space usage > {}.'.format(DISK_USAGE_MAX))
         else:
@@ -79,7 +79,7 @@ class Client:
                            ):
         time_of_init = datetime.datetime.now().strftime(config.Time.format)
         res = '{}_{}'.format(worker_name, time_of_init)
-        path = config.RemoteDirs.research_data / self.project_name / res
+        path = config.WorkerDirs.research_data / self.project_name / res
         if path.is_dir():
             raise IsADirectoryError('Directory "{}" already exists.'.format(res))
         return res
@@ -175,8 +175,8 @@ class Client:
 
         # ------------------------------- checks start
 
-        if not os.path.ismount(str(config.RemoteDirs.research_data)):
-            raise SystemExit('Please mount {}'.format(config.RemoteDirs.research_data))
+        if not os.path.ismount(str(config.WorkerDirs.research_data)):
+            raise SystemExit('Please mount {}'.format(config.WorkerDirs.research_data))
 
         self.check_lab_disk_space()
 
@@ -198,7 +198,7 @@ class Client:
 
         # copy extra folders to file server  (can be Python packages, which will be importable, or contain data)
         if mnt_path_name is None:
-            mnt_path = config.RemoteDirs.research_data
+            mnt_path = config.WorkerDirs.research_data
         else:
             mnt_path = Path(mnt_path_name)
             if not mnt_path.exists():
@@ -245,7 +245,7 @@ class Client:
                 param2val['job_name'] = job_name
 
             # save chunk to shared drive (after addition of job_name)
-            p = config.RemoteDirs.research_data / self.project_name / f'{worker_name}_param2val_chunk.pkl'
+            p = config.WorkerDirs.research_data / self.project_name / f'{worker_name}_param2val_chunk.pkl'
             with p.open('wb') as f:
                 pickle.dump(param2val_chunk, f)
 
@@ -256,7 +256,7 @@ class Client:
                 print(param2val)
 
             # prepare paths
-            remote_path = f'{config.RemoteDirs.watched.name}/{src_name}'
+            remote_path = f'{config.WorkerDirs.watched.name}/{src_name}'
             print_ludwig(f'Will upload {src_name} to {remote_path}')
 
             if no_upload:
@@ -264,7 +264,7 @@ class Client:
                 continue
 
             # connect via sftp
-            pivate_key_path = config.RemoteDirs.research_data / '.ludwig' / 'id_rsa'
+            pivate_key_path = config.WorkerDirs.research_data / '.ludwig' / 'id_rsa'
             sftp = pysftp.Connection(username='ludwig',
                                      host=worker2ip[worker_name],
                                      private_key=str(pivate_key_path))
@@ -276,7 +276,7 @@ class Client:
             # upload run.py
             run_file_name = f'run_{src_name}.py'
             sftp.put(localpath=run.__file__,
-                     remotepath=f'{config.RemoteDirs.watched.name}/{run_file_name}')
+                     remotepath=f'{config.WorkerDirs.watched.name}/{run_file_name}')
             print_ludwig('Upload complete')
 
     def gen_param_ps(self,
@@ -300,12 +300,12 @@ class Client:
         requested_param2vals = self.list_all_param2vals(param2requests, add_names=False)
 
         # check that research_data is mounted
-        if not os.path.ismount(config.RemoteDirs.research_data):
-            raise OSError(f'{config.RemoteDirs.research_data} is not mounted')
+        if not os.path.ismount(config.WorkerDirs.research_data):
+            raise OSError(f'{config.WorkerDirs.research_data} is not mounted')
 
         # get + check path to runs
         if runs_path is None:
-            runs_path = config.RemoteDirs.research_data / self.project_name / 'runs'
+            runs_path = config.WorkerDirs.research_data / self.project_name / 'runs'
         if not runs_path.exists():
             raise FileNotFoundError(f'{runs_path} does not exist.')
 

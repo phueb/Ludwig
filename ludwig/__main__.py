@@ -5,12 +5,12 @@ import sys
 import subprocess
 import psutil
 import shutil
-import yaml
 import datetime
 
 import ludwig
 from ludwig import print_ludwig
 from ludwig import __version__
+from ludwig.run import save_job_files
 
 
 def run_on_host():
@@ -30,6 +30,13 @@ def run_on_host():
                         help='Specify path to your source code.')
     parser.add_argument('-d', '--debug', action='store_true', default=False, dest='debug', required=False,
                         help='Debugging.')
+    parser.add_argument('-s', '--server', action='store_true', default=False, dest='server', required=False,
+                        help='Use connection to server for loading data and saving results.')
+    parser.add_argument('-f', '--first_only', action='store_true', default=False, dest='first_only', required=False,
+                        help='Run first job and exit.')
+    parser.add_argument('-mnt', '--mnt_path_name', default=None, action='store', dest='mnt_path_name',
+                        required=False,
+                        help='Specify where the shared drive is mounted on your system (if not /media/research_data).')
     namespace = parser.parse_args()
 
     if not (cwd / namespace.src).is_dir():
@@ -42,21 +49,42 @@ def run_on_host():
     params = importlib.import_module(namespace.src + '.params')
     config = importlib.import_module(namespace.src + '.config')
 
+    if namespace.mnt_path_name:
+        mnt_path = Path(namespace.mnt_path_name)
+        if not mnt_path.exists():
+            raise OSError(f'{mnt_path} does not exist. '
+                          'Please set the correct path to your custom mount point.')
+        else:
+            ludwig.try_mounting = True
+
+    # give user option to run job using a custom param2debug instead of param2default
     if namespace.debug:
-        config.Global.debug = True  # this results in using param2debug instead of param2default
+        config.Global.debug = True
 
-    config.Global.local = True  # allows user job to set RemoteDirs = LocalDirs
+    # in case user does not have access to file server or there is no network connection
+    if not namespace.server and not namespace.mnt_path_name:
+        print_ludwig('WARNING: Setting RemoteDirs = LocalDirs')
+        config.RemoteDirs = config.LocalDirs  # TODO test
 
-    # iterate over jobs, and execute each in sequence
+    # make client + logger
     project_name = config.LocalDirs.root.name
     from ludwig.client import Client  # import Client only after ludwig.try_mounting set to False
+    from ludwig.logger import Logger
     client = Client(project_name, params.param2default)
-    for n, param2val in enumerate(client.list_all_param2vals(params.param2requests,
-                                                             update_dict={'param_name': 'localhost'})):
+    logger = Logger(project_name)
+
+    # iterate over jobs, and execute each in sequence
+    for n, param2val in enumerate(client.list_all_param2vals(params.param2requests)):
 
         if namespace.debug:
             print_ludwig('Updating params.param2val with params.param2debug because debug=True')
             param2val.update(params.param2debug)
+
+        # must update param_name because it is not automatically assigned
+        _, param_name = logger.get_param_name(param2val, runs_path=config.RemoteDirs.runs)
+        param2val['param_name'] = f'not-ludwig_{param_name}'
+        print_ludwig(f'Assigned param_name={param_name}')
+        # TODO no mechanism in place for protecting existing param folders locally - they are overwritten
 
         # update job_name
         time_of_init = datetime.datetime.now().strftime(ludwig_config.Time.format)
@@ -64,23 +92,12 @@ def run_on_host():
         job_name = '{}_num{}'.format(base_name, n)
         param2val['job_name'] = job_name
 
-        res = job.main(param2val)
+        # execute job + save results
+        series_list = job.main(param2val)
+        save_job_files(param2val, series_list, runs_path=config.RemoteDirs.runs)
 
-        # TODO make option to save results created by running ludwig-local to server or not
-        if res:
-            print_ludwig('WARNING: Not saving results to shared drive')
-
-        # write param2val locally
-        param2val_p = config.LocalDirs.runs / param2val['param_name'] / 'param2val.yaml'
-        print('Saving param2val to:\n{}\n'.format(param2val_p))
-        if not param2val_p.parent.exists():
-            param2val_p.parent.mkdir(exist_ok=True, parents=True)
-            param2val['job_name'] = None
-            with param2val_p.open('w', encoding='utf8') as f:
-                yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
-
-        if namespace.debug:
-            raise SystemExit('Completed first job and exited because debug=True.')
+        if namespace.first_only:
+            raise SystemExit('Completed first job and exited because --first_only=True.')
 
 
 def add_ssh_config():
@@ -89,7 +106,7 @@ def add_ssh_config():
     """
     from ludwig import config
 
-    src = config.RemoteDirs.research_data / '.ludwig' / 'config'
+    src = config.WorkerDirs.research_data / '.ludwig' / 'config'
     dst = Path().home() / '.ssh' / 'ludwig_config'  # do not overwrite existing config
     print_ludwig('Copying {} to {}'.format(src, dst))
     shutil.copy(src, dst)
@@ -127,11 +144,11 @@ def status():
                         help='The name of the worker the status of which is requested.')
     namespace = parser.parse_args()
 
-    command = 'cat {}/{}.out'.format(ludwig_config.RemoteDirs.stdout, namespace.worker)
+    command = 'cat {}/{}.out'.format(ludwig_config.WorkerDirs.stdout, namespace.worker)
 
     status_, output = subprocess.getstatusoutput(command)
     if status_ != 0:
-        return 'Something went wrong. Check your access to {}'.format(ludwig_config.RemoteDirs.research_data)
+        return 'Something went wrong. Check your access to {}'.format(ludwig_config.WorkerDirs.research_data)
     lines = str(output).split('\n')
     res = '\n'.join([line for line in lines
                      if 'Ludwig' in line][-ludwig_config.CLI.num_stdout_lines:])
@@ -166,11 +183,6 @@ def submit():
     parser.add_argument('-x', '--clear_runs', action='store_true', default=False, dest='clear_runs', required=False)
 
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
-
-
-
-    # TODO test custom mount point on MacOs
-
     parser.add_argument('-mnt', '--mnt_path_name', default=None, action='store', dest='mnt_path_name',
                         required=False,
                         help='Specify where the shared drive is mounted on your system (if not /media/research_data).')
@@ -201,6 +213,12 @@ def submit():
     params = importlib.import_module(namespace.src + '.params')
     config = importlib.import_module(namespace.src + '.config')
 
+    # check config.RemoteDirs
+    if not config.RemoteDirs.root.match('/media/research_data/*'):
+        raise ValueError(f'{config.RemoteDirs.root} must include /media/research_data')
+    if not config.RemoteDirs.runs.match('/media/research_data/*/runs'):
+        raise ValueError(f'{config.RemoteDirs.runs} must include /media/research_data')
+
     # delete all runs in remote root
     if namespace.clear_runs:
         for param_p in config.RemoteDirs.runs.glob('*param*'):
@@ -228,7 +246,7 @@ def submit():
     # submit
     project_name = config.RemoteDirs.root.name
     client = Client(project_name, params.param2default)
-    client.submit(src_name=config.LocalDirs.src.name,  # uploaded to workers
+    client.submit(src_name=namespace.src,  # uploaded to workers
                   extra_paths=extra_paths,  # uploaded to shared drive not workers
                   param2requests=params.param2requests,
                   reps=namespace.reps,

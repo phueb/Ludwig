@@ -60,7 +60,7 @@ class Handler(FileSystemEventHandler):
         custom_print('Deleting job_dirs more than {} hours old...'.format(config.Time.delete_delta))
         delta = datetime.timedelta(hours=config.Time.delete_delta)
         time_of_init_cutoff = datetime.datetime.now() - delta
-        for job_p in config.RemoteDirs.watched.rglob('*num*'):
+        for job_p in config.WorkerDirs.watched.rglob('*num*'):
             result = re.search('_(.*)_', job_p.name)
             time_of_init = result.group(1)
             dt = datetime.datetime.strptime(time_of_init, config.Time.format)
@@ -105,7 +105,7 @@ def main():
     handler = Handler()
     handler.start()
 
-    observer.schedule(handler, str(config.RemoteDirs.watched), recursive=False)
+    observer.schedule(handler, str(config.WorkerDirs.watched), recursive=False)
     observer.start()
 
     try:
@@ -118,7 +118,7 @@ def main():
 
 
 if __name__ == '__main__':
-    p = Path(config.RemoteDirs.stdout)
+    p = Path(config.WorkerDirs.stdout)
     if not p.exists():
         p.mkdir(parents=True)
     main()
