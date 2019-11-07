@@ -101,6 +101,11 @@ def run_on_host():
         # add save_path - must not be on shared drive because contents are copied to shred drive at end of job
         param2val['save_path'] = Path('runs') / param_name / job_name / ludwig_config.Names.save_dir
 
+        # prepare save_path
+        save_path = param2val['save_path']
+        if not save_path.exists():
+            save_path.mkdir(parents=True)
+
         # execute job + save results
         series_list = job.main(param2val)
         save_job_files(param2val, series_list, runs_path)
