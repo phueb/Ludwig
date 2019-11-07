@@ -64,9 +64,8 @@ def run_on_host():
 
     # in case user does not have access to file server or there is no network connection
     if not namespace.server and not namespace.mnt_path_name:
-        print_ludwig('WARNING: Setting RemoteDirs = LocalDirs')
 
-        config.RemoteDirs = config.LocalDirs  # TODO do not use RemoteDirs
+        raise NotImplementedError  # TODO Need to implement modification of project_path and save_path
 
     # make client + logger
     from ludwig.client import Client  # import Client only after ludwig.try_mounting set to False
@@ -81,10 +80,11 @@ def run_on_host():
             print_ludwig('Updating params.param2val with params.param2debug because debug=True')
             param2val.update(params.param2debug)
 
-        # add param_name because it is not automatically assigned
+        # add param_name
         runs_path = ludwig_config.WorkerDirs.research_data / project_name / 'runs'
-        _, param_name = logger.get_param_name(param2val, runs_path)
-        param2val['param_name'] = f'not-ludwig_{param_name}'
+        _, param_name_suffix = logger.get_param_name(param2val, runs_path)
+        param_name = f'not-ludwig_{param_name_suffix}'
+        param2val['param_name'] = param_name
         print_ludwig(f'Assigned param_name={param_name}')
         # TODO no mechanism in place for protecting existing param folders locally - they are overwritten
 
@@ -98,8 +98,8 @@ def run_on_host():
         project_path = ludwig_config.WorkerDirs.research_data / project_name
         param2val['project_path'] = project_path
 
-        # add save_path
-        param2val['save_path'] = runs_path / param_name / job_name / ludwig_config.Names.save_dir
+        # add save_path - must not be on shared drive because contents are copied to shred drive at end of job
+        param2val['save_path'] = Path('runs') / param_name / job_name / ludwig_config.Names.save_dir
 
         # execute job + save results
         series_list = job.main(param2val)

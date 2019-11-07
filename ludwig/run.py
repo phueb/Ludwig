@@ -32,22 +32,23 @@ def save_job_files(param2val: Dict[str, Any],
 
     # save param2val
     param2val_path = runs_path / param2val['param_name'] / 'param2val.yaml'
-    print('Saving param2val to:\n{}\n'.format(param2val_path))
+    print('Saving param2val to:\n{}'.format(param2val_path))
     if not param2val_path.exists():
         param2val_path.parent.mkdir(exist_ok=True)
         param2val['job_name'] = None
         with param2val_path.open('w', encoding='utf8') as f:
             yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
 
-    # move contents of save_path to shared drive  # TODO test
+    # move contents of save_path to shared drive
     save_path = Path(param2val['save_path'])
-    if not save_path.exists():
-        save_path.mkdir(parents=True)
     src = str(save_path)
     dst = str(job_path / save_path.name)
-    print(f'Moving {src} to {dst}...')
+    print(f'Moving {src}\nto\n{dst}')
     shutil.move(src, dst)
-    print('Done')
+
+    # delete temporary folder which was created locally to hold save_path
+    local_param_path = Path('runs') / param2val['param_name']
+    shutil.rmtree(str(local_param_path))
 
 
 def run_jobs_on_ludwig_worker():
@@ -63,6 +64,11 @@ def run_jobs_on_ludwig_worker():
     with param2vals_path.open('rb') as f:
         param2val_chunk = pickle.load(f)
     for param2val in param2val_chunk:
+
+        # prepare save_path
+        save_path = param2val['save_path']
+        if not save_path.exists():
+            save_path.mkdir(parents=True)
 
         # execute job
         series_list = job.main(param2val)  # name each returned series using 'name' attribute

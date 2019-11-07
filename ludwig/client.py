@@ -249,10 +249,10 @@ class Client:
                 # job_name
                 job_name = f'{base_name}_num{n}'
                 param2val['job_name'] = job_name
-                # project_path
+                # project_path - can be used to load data sets from shared drive
                 param2val['project_path'] = config.WorkerDirs.research_data / self.project_name
-                # save_path
-                param2val['save_path'] = self.runs_path / param2val['param_name'] / job_name / config.Names.save_dir
+                # save_path - should be local (contents will be copied to shared drive after job completion)
+                param2val['save_path'] = Path('runs') / param2val['param_name'] / job_name / config.Names.save_dir
 
             # save chunk to shared drive (after addition of job_name)
             p = config.WorkerDirs.research_data / self.project_name / f'{worker_name}_param2val_chunk.pkl'
