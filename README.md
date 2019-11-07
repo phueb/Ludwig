@@ -100,7 +100,22 @@ For example, if `research_data` is mounted at `/Volumes/research_data`:
 ```
 The ```-mnt``` flag is used to specify where the shared drive is mounted on the user's machine.
 
-### Saving Data
+### Reading from File Server during remote job execution
+
+A user might want to load a dataset from the shared drive.
+To do so, the path to the shared drive from the Ludwig worker must be known.
+The path is auto-magically added by `Ludwig` and can be accessed via `param2val['project_path`].
+For example, loading a corpus from the shared drive might look like the following:
+
+```python
+def main(param2val):
+
+    project_path = param2val['project_path']
+    corpus_path = project_path / 'data' / f'{param2val["corpus_name"]}.txt'
+    train_docs, test_docs = load_docs(corpus_path)
+```
+
+### Saving Job Results
 Job results, such as learning curves, or other 1-dimensional performance measures related to neural networks for example,
  should be returned by job.main() as a list of pandas DataFrame objects.
 These will be automatically saved to the shared drive after a job has completed.

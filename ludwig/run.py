@@ -75,8 +75,8 @@ def run_jobs_on_ludwig_worker():
 if __name__ == '__main__':
 
     # get src_name + project_name
-    src_name = Path(__file__).stem.replace('run_', '')
-    project_name = src_name.capitalize()  # TODO test
+    project_name = Path(__file__).stem.replace('run_', '')
+    src_name = project_name.lower()  # TODO test
 
     # define paths - do not use any paths defined in user project (they may be invalid)
     research_data = Path('/') / 'media' / 'research_data'

@@ -22,6 +22,7 @@ def run_on_host():
     ludwig.try_mounting = False
 
     cwd = Path.cwd()
+    project_name = cwd.name
 
     # parse cmd-line args
     parser = argparse.ArgumentParser()
@@ -64,10 +65,10 @@ def run_on_host():
     # in case user does not have access to file server or there is no network connection
     if not namespace.server and not namespace.mnt_path_name:
         print_ludwig('WARNING: Setting RemoteDirs = LocalDirs')
-        config.RemoteDirs = config.LocalDirs  # TODO test
+
+        config.RemoteDirs = config.LocalDirs  # TODO do not use RemoteDirs
 
     # make client + logger
-    project_name = config.LocalDirs.root.name
     from ludwig.client import Client  # import Client only after ludwig.try_mounting set to False
     from ludwig.logger import Logger
     client = Client(project_name, params.param2default)
@@ -81,7 +82,8 @@ def run_on_host():
             param2val.update(params.param2debug)
 
         # add param_name because it is not automatically assigned
-        _, param_name = logger.get_param_name(param2val, runs_path=config.RemoteDirs.runs)
+        runs_path = ludwig_config.WorkerDirs.research_data / project_name / 'runs'
+        _, param_name = logger.get_param_name(param2val, runs_path)
         param2val['param_name'] = f'not-ludwig_{param_name}'
         print_ludwig(f'Assigned param_name={param_name}')
         # TODO no mechanism in place for protecting existing param folders locally - they are overwritten
@@ -92,9 +94,16 @@ def run_on_host():
         job_name = '{}_num{}'.format(base_name, n)
         param2val['job_name'] = job_name
 
+        # add project_path
+        project_path = ludwig_config.WorkerDirs.research_data / project_name
+        param2val['project_path'] = project_path
+
+        # add save_path
+        param2val['save_path'] = runs_path / param_name / job_name / ludwig_config.Names.save_dir
+
         # execute job + save results
         series_list = job.main(param2val)
-        save_job_files(param2val, series_list, runs_path=config.RemoteDirs.runs)
+        save_job_files(param2val, series_list, runs_path)
 
         if namespace.first_only:
             raise SystemExit('Completed first job and exited because --first_only=True.')
@@ -104,9 +113,9 @@ def add_ssh_config():
     """
     append contents of /media/research_data/.ludwig/config to ~/.ssh/ludwig_config
     """
-    from ludwig import config
+    from ludwig import config as ludwig_config
 
-    src = config.WorkerDirs.research_data / '.ludwig' / 'config'
+    src = ludwig_config.WorkerDirs.research_data / '.ludwig' / 'config'
     dst = Path().home() / '.ssh' / 'ludwig_config'  # do not overwrite existing config
     print_ludwig('Copying {} to {}'.format(src, dst))
     shutil.copy(src, dst)

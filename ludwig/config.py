@@ -33,4 +33,8 @@ class CLI:
     num_stdout_lines = 10
 
 
+class Names:
+    save_dir = 'saves'
+
+
 hostname = socket.gethostname()

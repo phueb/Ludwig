@@ -63,7 +63,7 @@ class Client:
         return res
 
     @staticmethod
-    def check_lab_disk_space():
+    def check_server_disk_space():
         """
         this returns disk space used on server, not locally - verified on Linux
         """
@@ -166,15 +166,33 @@ class Client:
                reps: int = 1,
                no_upload: bool = True,
                worker: Optional[str] = None,
-               mnt_path_name: Optional[str] = None,
+               mnt_path_name: Optional[str] = None,  # path to research_data (the shared drive)
                ) -> None:
+
+        # mount point
+        if sys.platform == 'darwin':
+            default_mnt_point = '/Volumes'
+        elif sys.platform == 'linux':
+            default_mnt_point = '/media'
+        else:
+            # unknown default - user must specify mount point via environment variable
+            default_mnt_point = os.environ['LUDWIG_MNT']
+
+        # path to research_data (located on file server)
+        if mnt_path_name is None:
+            research_data_path = Path(default_mnt_point) / config.WorkerDirs.research_data.name
+        else:
+            research_data_path = Path(mnt_path_name)
 
         # ------------------------------- checks start
 
-        if not os.path.ismount(str(config.WorkerDirs.research_data)):
-            raise SystemExit('Please mount {}'.format(config.WorkerDirs.research_data))
+        assert self.project_name.lower() == src_name  # TODO what about when src name must be different?
+        # this must be true because in run.py project_name is converted to src_name
 
-        self.check_lab_disk_space()
+        if not os.path.ismount(str(research_data_path)):
+            raise SystemExit(f'Failed to mount {research_data_path}')
+
+        self.check_server_disk_space()
 
         # check that requests are lists and that each list does not contain repeated values
         for k, v in param2requests.items():
@@ -193,16 +211,9 @@ class Client:
         param2val_list = self.list_all_param2vals(param2requests)
 
         # copy extra folders to file server  (can be Python packages, which will be importable, or contain data)
-        if mnt_path_name is None:
-            mnt_path = config.WorkerDirs.research_data
-        else:
-            mnt_path = Path(mnt_path_name)
-            if not mnt_path.exists():
-                raise OSError(f'{mnt_path} does not exist. '
-                              'Please set the correct path to your custom mount point.')
         for p in extra_paths:
             src = str(p)
-            dst = str(mnt_path / self.project_name / p.name)
+            dst = str(research_data_path / self.project_name / p.name)
             print_ludwig(f'Copying {src} to {dst}')
             copy_tree(src, dst)
 
@@ -238,8 +249,10 @@ class Client:
                 # job_name
                 job_name = f'{base_name}_num{n}'
                 param2val['job_name'] = job_name
+                # project_path
+                param2val['project_path'] = config.WorkerDirs.research_data / self.project_name
                 # save_path
-                param2val['save_path'] = self.runs_path / param2val['param_name'] / job_name / 'saved'
+                param2val['save_path'] = self.runs_path / param2val['param_name'] / job_name / config.Names.save_dir
 
             # save chunk to shared drive (after addition of job_name)
             p = config.WorkerDirs.research_data / self.project_name / f'{worker_name}_param2val_chunk.pkl'
@@ -271,7 +284,7 @@ class Client:
             sys.stdout.flush()
 
             # upload run.py
-            run_file_name = f'run_{src_name}.py'
+            run_file_name = f'run_{self.project_name}.py'
             sftp.put(localpath=run.__file__,
                      remotepath=f'{config.WorkerDirs.watched.name}/{run_file_name}')
             print_ludwig('Upload complete')
