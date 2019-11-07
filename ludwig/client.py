@@ -196,7 +196,8 @@ class Client:
 
         # check that requests are lists and that each list does not contain repeated values
         for k, v in param2requests.items():
-            assert isinstance(v, list)
+            if not isinstance(v, list):
+                raise TypeError('Values of param2requests must be lists')
             if len(v) != len(set(v)):  # otherwise each identical value will be assigned a unique param_name
                 raise ValueError('Each requested parameter value must be unique')
 

@@ -153,19 +153,32 @@ def status():
     from ludwig import config as ludwig_config
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-w', '--worker', default='*', action='store', dest='worker',
+    parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',
                         choices=ludwig_config.SFTP.online_worker_names, required=False,
                         help='The name of the worker the status of which is requested.')
     namespace = parser.parse_args()
 
-    command = 'cat {}/{}.out'.format(ludwig_config.WorkerDirs.stdout, namespace.worker)
+    if namespace.worker is None:
+        match_string = ' '.join([str(ludwig_config.WorkerDirs.stdout / (w + '.out'))
+                                 for w in ludwig_config.SFTP.online_worker_names])
+        tail_length = 1
+        show_num_lines = len(ludwig_config.SFTP.online_worker_names)
+    else:
+        match_string = str(ludwig_config.WorkerDirs.stdout / (namespace.worker + ".out"))
+        tail_length = 10
+        show_num_lines = 10
 
+    command = f'tail -n {tail_length} {match_string}'
     status_, output = subprocess.getstatusoutput(command)
+
     if status_ != 0:
         return 'Something went wrong. Check your access to {}'.format(ludwig_config.WorkerDirs.research_data)
     lines = str(output).split('\n')
-    res = '\n'.join([line for line in lines
-                     if 'Ludwig' in line][-ludwig_config.CLI.num_stdout_lines:])
+    show_lines = [line for line in lines if 'Ludwig' in line][-show_num_lines:]
+    if show_lines:
+        res = '\n'.join(show_lines)
+    else:  # the string 'Ludwig' is not found in the last section of stdout, so assume user project is printing output
+        res = 'Busy working on jobs'
     return res
 
 

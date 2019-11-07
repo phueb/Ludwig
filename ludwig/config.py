@@ -30,7 +30,6 @@ class Time:
 
 class CLI:
     num_top_processes = 5
-    num_stdout_lines = 10
 
 
 class Names:
