@@ -6,4 +6,4 @@ try_mounting = True
 
 
 def print_ludwig(s):
-    print(f'Ludwig-{__version__}: {s}')
+    print(f'Ludwig-{__version__}: {s}', flush=True)

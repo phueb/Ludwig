@@ -34,8 +34,10 @@ class Client:
                  ):
         self.project_name = project_name
         self.param2default = param2default
-        self.num_workers = len(config.SFTP.online_worker_names)
         self.unittest = unittest
+        #
+        self.num_online_workers = len(config.SFTP.online_worker_names)
+        self.runs_path = config.WorkerDirs.research_data / self.project_name / 'runs'
 
     @cached_property
     def logger(self):
@@ -136,9 +138,7 @@ class Client:
 
     def list_all_param2vals(self,
                             param2requests: Dict[str, list],
-                            update_dict: Optional[Dict[str, Any]] = None,
-                            add_names=True
-                            ):
+                            ) -> List[Dict[str, Any]]:
 
         # check that requests are lists
         for k, v in param2requests.items():
@@ -156,11 +156,6 @@ class Client:
         for ids in param_ids:
             # map param names to integers corresponding to which param value to use
             param2val = {k: v[i] for (k, v), i in zip(param2opts, ids)}
-            if add_names:
-                param2val.update({'param_name': None, 'job_name': None})
-            if isinstance(update_dict, dict):
-                param2val.update(update_dict)
-
             res.append(param2val)
         return res
 
@@ -171,7 +166,8 @@ class Client:
                reps: int = 1,
                no_upload: bool = True,
                worker: Optional[str] = None,
-               mnt_path_name: Optional[str] = None):
+               mnt_path_name: Optional[str] = None,
+               ) -> None:
 
         # ------------------------------- checks start
 
@@ -216,18 +212,16 @@ class Client:
             old_or_new, param_name = self.logger.get_param_name(param2val)
             param2val['param_name'] = param_name
             print_ludwig(f'param2val {n + 1}/{len(param2val_list)} assigned to {old_or_new} {param_name}')
-            sys.stdout.flush()
 
         # add reps
         param2val_list = self.add_reps(param2val_list, reps)
 
         # distribute (expensive) jobs approximately evenly across workers
         param2val_list = np.random.permutation(param2val_list)
-        sys.stdout.flush()
 
         # split into chunks (one per node)
         worker_names = iter(np.random.permutation(config.SFTP.online_worker_names)) if worker is None else iter([worker])
-        num_workers = 1 if worker is not None else self.num_workers
+        num_workers = 1 if worker is not None else self.num_online_workers
         for param2val_chunk in np.array_split(param2val_list, num_workers):
             try:
                 worker_name = next(worker_names)  # distribute jobs across workers randomly
@@ -238,11 +232,14 @@ class Client:
                 print_ludwig(f'Not submitting to {worker_name}')
                 continue
 
-            # add job_name to each param2val
+            # add to param2val
             base_name = self.make_job_base_name(worker_name)
             for n, param2val in enumerate(param2val_chunk):
+                # job_name
                 job_name = f'{base_name}_num{n}'
                 param2val['job_name'] = job_name
+                # save_path
+                param2val['save_path'] = self.runs_path / param2val['param_name'] / job_name / 'saved'
 
             # save chunk to shared drive (after addition of job_name)
             p = config.WorkerDirs.research_data / self.project_name / f'{worker_name}_param2val_chunk.pkl'
@@ -264,10 +261,10 @@ class Client:
                 continue
 
             # connect via sftp
-            pivate_key_path = config.WorkerDirs.research_data / '.ludwig' / 'id_rsa'
+            private_key_path = config.WorkerDirs.research_data / '.ludwig' / 'id_rsa'
             sftp = pysftp.Connection(username='ludwig',
                                      host=worker2ip[worker_name],
-                                     private_key=str(pivate_key_path))
+                                     private_key=str(private_key_path))
 
             sftp.makedirs(remote_path)
             sftp.put_r(localpath=src_name, remotepath=remote_path)
@@ -292,12 +289,12 @@ class Client:
         """
         print_ludwig('Generating paths to jobs matching the following configuration:')
         print_ludwig(param2requests)
-        print()
+        print(flush=True)
 
         label_params = sorted(set([param for param, val in param2requests.items()
                                    if val != self.param2default[param]] + (label_params or [])))
 
-        requested_param2vals = self.list_all_param2vals(param2requests, add_names=False)
+        requested_param2vals = self.list_all_param2vals(param2requests)
 
         # check that research_data is mounted
         if not os.path.ismount(config.WorkerDirs.research_data):
@@ -305,7 +302,7 @@ class Client:
 
         # get + check path to runs
         if runs_path is None:
-            runs_path = config.WorkerDirs.research_data / self.project_name / 'runs'
+            runs_path = self.runs_path
         if not runs_path.exists():
             raise FileNotFoundError(f'{runs_path} does not exist.')
 

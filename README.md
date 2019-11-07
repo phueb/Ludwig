@@ -96,12 +96,13 @@ To upload data or third-party source code to the shared drive, ```ludwig``` must
 For example, if `research_data` is mounted at `/Volumes/research_data`:
 
 ```
-ludwig -mnt /Volumes/research_data
+(venv) ludwig -mnt /Volumes/research_data
 ```
 The ```-mnt``` flag is used to specify where the shared drive is mounted on the user's machine.
 
 ### Saving Data
-Any data (e.g. accuracy per epoch) that needs to persist, should be returned by job.main() as a list of pandas DataFrame objects.
+Job results, such as learning curves, or other 1-dimensional performance measures related to neural networks for example,
+ should be returned by job.main() as a list of pandas DataFrame objects.
 These will be automatically saved to the shared drive after a job has completed.
 
 Alternatively, if the data is too big to be held in memory, it is recommended to write the data to disk,
@@ -109,19 +110,18 @@ and manually move it to the shared drive at the end of main.job(), as illustrate
 
 ```python
 from pathlib import Path
-import shutil
 
-def main():
+def main(param2val):
 
-    for epoch in range(10):
-        data = train_epoch()
-        save_to_worker(data)  # save intermediate data to worker
+    # some neural network training code
+    # ....
     
-    # at end of training copy all data files to file server
-    for data_path in Path('/var/sftp/ludwig/DATA_FOLDER_NAME').glob('data*.csv'):
-        src = str(data_path)
-        dst = '/media/research_data/PROJECT_NAME/{}'.format(data_path.name)
-        shutil.move(src, dst)
+    # get save_path - all files in this location will be moved to file-server
+    save_path = Path(param2val['save_path'])
+    # save a file
+    with (save_path / 'test.txt').open('r') as f:
+        f.write('test') 
+    
 ```
 
 ### Logging
@@ -135,7 +135,7 @@ Retry when the node is no longer busy.
 To run jobs locally, go to the root directory of your project and:
 
 ```bash
-ludwig-local
+(venv) ludwig-local
 ```
 
 Results will be saved locally in `runs`. 
@@ -143,7 +143,7 @@ Results will be saved locally in `runs`.
 If the job requires retrieving data from the lab's server, add the followign flag:
 
 ```bash
-ludwig-local --server
+(venv) ludwig-local --server
 ```
 In this case, results will be saved in `research_data/PROJECT_NAME/runs`.
 Note that if your mounting location is non-standard (e.g. not `/media/research_data`),

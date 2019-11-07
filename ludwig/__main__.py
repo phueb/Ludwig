@@ -80,13 +80,13 @@ def run_on_host():
             print_ludwig('Updating params.param2val with params.param2debug because debug=True')
             param2val.update(params.param2debug)
 
-        # must update param_name because it is not automatically assigned
+        # add param_name because it is not automatically assigned
         _, param_name = logger.get_param_name(param2val, runs_path=config.RemoteDirs.runs)
         param2val['param_name'] = f'not-ludwig_{param_name}'
         print_ludwig(f'Assigned param_name={param_name}')
         # TODO no mechanism in place for protecting existing param folders locally - they are overwritten
 
-        # update job_name
+        # add job_name
         time_of_init = datetime.datetime.now().strftime(ludwig_config.Time.format)
         base_name = '{}_{}'.format('local', time_of_init)
         job_name = '{}_num{}'.format(base_name, n)
@@ -158,8 +158,7 @@ def status():
 def submit():
     """
     This script should be called in root directory of the Python project.
-    If not specified via CL arguments, it will try to import src.config and src.params.
-    src.config is where this script will try to find the name of your project
+    If not specified via CL arguments, it will try to import src.params.
     src.params is where this script will try to find the parameters with which to execute your jobs.
     """
 
@@ -167,6 +166,7 @@ def submit():
     from ludwig import config as ludwig_config
 
     cwd = Path.cwd()
+    project_name = cwd.name  # TODO test
 
     # parse cmd-line args
     parser = argparse.ArgumentParser()
@@ -211,20 +211,14 @@ def submit():
     sys.path.append(str(cwd))
     job = importlib.import_module(namespace.src + '.job')
     params = importlib.import_module(namespace.src + '.params')
-    config = importlib.import_module(namespace.src + '.config')
-
-    # check config.RemoteDirs
-    if not config.RemoteDirs.root.match('/media/research_data/*'):
-        raise ValueError(f'{config.RemoteDirs.root} must include /media/research_data')
-    if not config.RemoteDirs.runs.match('/media/research_data/*/runs'):
-        raise ValueError(f'{config.RemoteDirs.runs} must include /media/research_data')
 
     # delete all runs in remote root
     if namespace.clear_runs:
-        for param_p in config.RemoteDirs.runs.glob('*param*'):
-            print_ludwig('Removing\n{}'.format(param_p))
+        runs_path = ludwig_config.WorkerDirs.research_data / project_name / 'runs'
+        for param_path in runs_path.glob('*param*'):
+            print_ludwig('Removing\n{}'.format(param_path))
             sys.stdout.flush()
-            shutil.rmtree(str(param_p))
+            shutil.rmtree(str(param_path))
 
     # prepare any data and save pickle to shared drive - do this only once - import this function from jobs module
     if namespace.prepare_data:
@@ -244,7 +238,6 @@ def submit():
             extra_paths.append(p)
 
     # submit
-    project_name = config.RemoteDirs.root.name
     client = Client(project_name, params.param2default)
     client.submit(src_name=namespace.src,  # uploaded to workers
                   extra_paths=extra_paths,  # uploaded to shared drive not workers
