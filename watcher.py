@@ -41,13 +41,13 @@ class Handler(FileSystemEventHandler):
     def on_any_event(self, event):
         is_trigger_event = self.watched_pattern.match(Path(event.src_path).name)
         if is_trigger_event:
-            custom_print('Detected trigger event')
 
             # sftp produces 2 events within 1 sec - ignore 2nd event
             ts = datetime.datetime.now()
             time_delta = ts - self.time_stamps.pop()
             if time_delta.total_seconds() < 1:
-                custom_print('Ignoring trigger event because it happened less than 1 sec after previous.')
+                # Ignoring trigger event because it happened less than 1 sec after previous
+                pass
             else:
                 self.stop_active_jobs(event.src_path)
                 custom_print('Adding job to queue: {}'.format(event.src_path))
