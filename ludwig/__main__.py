@@ -95,7 +95,7 @@ def run_on_host():
         param2val['job_name'] = job_name
 
         # add project_path
-        project_path = ludwig_config.WorkerDirs.research_data / project_name
+        project_path = cwd
         param2val['project_path'] = project_path
 
         # add save_path - must not be on shared drive because contents are copied to shred drive at end of job
