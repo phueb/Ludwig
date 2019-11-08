@@ -1,9 +1,6 @@
 import pandas as pd
 
 
-def prepare_data():
-    print('Preparing data + Saving data to file server...')
-
 
 def main(param2val):
 

@@ -246,17 +246,19 @@ class Client:
 
             # add to param2val
             base_name = self.make_job_base_name(worker_name)
+            project_path = config.WorkerDirs.research_data / self.project_name
             for n, param2val in enumerate(param2val_chunk):
                 # job_name
                 job_name = f'{base_name}_num{n}'
                 param2val['job_name'] = job_name
                 # project_path - can be used to load data sets from shared drive
-                param2val['project_path'] = config.WorkerDirs.research_data / self.project_name
+                param2val['project_path'] = str(project_path)
                 # save_path - should be local (contents will be copied to shared drive after job completion)
-                param2val['save_path'] = Path('runs') / param2val['param_name'] / job_name / config.Names.save_dir
+                save_path = Path('runs') / param2val['param_name'] / job_name / config.Names.save_dir
+                param2val['save_path'] = str(save_path)
 
             # save chunk to shared drive (after addition of job_name)
-            p = config.WorkerDirs.research_data / self.project_name / f'{worker_name}_param2val_chunk.pkl'
+            p = project_path / f'{worker_name}_param2val_chunk.pkl'
             with p.open('wb') as f:
                 pickle.dump(param2val_chunk, f)
 

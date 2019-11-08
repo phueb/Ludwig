@@ -69,9 +69,7 @@ def run_on_host():
 
     # make client + logger
     from ludwig.client import Client  # import Client only after ludwig.try_mounting set to False
-    from ludwig.logger import Logger
     client = Client(project_name, params.param2default)
-    logger = Logger(project_name)
 
     # iterate over jobs, and execute each in sequence
     for n, param2val in enumerate(client.list_all_param2vals(params.param2requests)):
@@ -82,7 +80,7 @@ def run_on_host():
 
         # add param_name
         runs_path = ludwig_config.WorkerDirs.research_data / project_name / 'runs'
-        _, param_name_suffix = logger.get_param_name(param2val, runs_path)
+        _, param_name_suffix = client.logger.get_param_name(param2val, runs_path)
         param_name = f'not-ludwig_{param_name_suffix}'
         param2val['param_name'] = param_name
         print_ludwig(f'Assigned param_name={param_name}')
@@ -207,7 +205,8 @@ def submit():
     parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',
                         choices=ludwig_config.SFTP.online_worker_names, required=False,
                         help='Specify a single worker name if submitting to single worker only')
-    parser.add_argument('-x', '--clear_runs', action='store_true', default=False, dest='clear_runs', required=False)
+    parser.add_argument('-x', '--clear_runs', action='store_true', default=False, dest='clear_runs', required=False,
+                        help='Delete all saved runs associated with current project on shared drive')
 
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
     parser.add_argument('-mnt', '--mnt_path_name', default=None, action='store', dest='mnt_path_name',
@@ -221,22 +220,14 @@ def submit():
                         help='Paths to additional Python packages or data. ')
     parser.add_argument('-n', '--no-upload', action='store_true', dest='no_upload', required=False,
                         help='Whether to upload jobs to Ludwig. Set false for testing')
-    parser.add_argument('-p', '--prepare_data', action='store_true', default=False, dest='prepare_data', required=False,
-                        help='Whether to save results of pre-processing job to file-server')
     namespace = parser.parse_args()
-
-    # print all arguments
-    print_ludwig('Arguments:')
-    for k, v in namespace.__dict__.items():
-        print('{:<16}= {}'.format(k, v))
-    print()
 
     if not (cwd / namespace.src).is_dir():
         raise NotADirectoryError('Cannot find source code in {}.'.format(cwd / namespace.src))
 
+    # import user params
     print_ludwig('Looking for source code in:\n{}'.format(namespace.src))
     sys.path.append(str(cwd))
-    job = importlib.import_module(namespace.src + '.job')
     params = importlib.import_module(namespace.src + '.params')
 
     # delete all runs in remote root
@@ -246,14 +237,6 @@ def submit():
             print_ludwig('Removing\n{}'.format(param_path))
             sys.stdout.flush()
             shutil.rmtree(str(param_path))
-
-    # prepare any data and save pickle to shared drive - do this only once - import this function from jobs module
-    if namespace.prepare_data:
-        print_ludwig('Starting to prepare data')
-        job.prepare_data()
-        print_ludwig('Completed preparing data')
-    else:
-        print_ludwig('WARNING: Not preparing any data')
 
     # are additional source code files required?
     extra_paths = []
