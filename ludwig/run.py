@@ -43,7 +43,7 @@ def save_job_files(param2val: Dict[str, Any],
     save_path = Path(param2val['save_path'])
     src = str(save_path)
     dst = str(job_path)
-    print(f'Moving {src}\nto\n{dst}')
+    print(f'Moving {src} to shared drive')
     shutil.move(src, dst)  # is a move, so src is no longer available afterwards
 
 

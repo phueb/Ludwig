@@ -51,7 +51,7 @@ class Job:
             self.is_new = True
 
         self.param2val['param_name'] = param_name
-        print_ludwig(f'Assigned param_name={param_name: <12} to job')
+        print_ludwig(f'Assigned job param_name={param_name}')
 
     def calc_num_needed(self,
                         runs_path: Path,

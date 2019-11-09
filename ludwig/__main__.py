@@ -265,7 +265,6 @@ def submit():
                 job.param2val['project_path'] = str(config.WorkerDirs.research_data / project_name)
                 uploader.to_disk(job, worker)
 
-        print('job is new=', job.is_new)
         num_new += int(job.is_new)
 
         if namespace.first_only:
