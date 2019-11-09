@@ -174,14 +174,14 @@ def submit():
 
     if not namespace.isolated:
         if not os.path.ismount(str(research_data_path)):
-            raise SystemError(f'Failed to mount {research_data_path}')
+            raise OSError(f'{research_data_path} is not mounted')
 
     assert not (namespace.extra_paths and namespace.local), 'Do not use  both --extra_paths and --local'
 
     if not src_path.exists():
         raise NotADirectoryError(f'Cannot find source code in {src_path}.')
 
-    if not research_data_path.exists():
+    if not namespace.isolated and not research_data_path.exists():
         raise OSError(f'{research_data_path} does not exist. '
                       'Please set the correct path to your custom mount point.')
 
