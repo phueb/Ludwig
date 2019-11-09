@@ -32,7 +32,7 @@ def save_job_files(param2val: Dict[str, Any],
 
     # save param2val
     param2val_path = runs_path / param2val['param_name'] / 'param2val.yaml'
-    print('Saving param2val to:\n{}'.format(param2val_path))
+    print('Saving param2val to shared drive')
     if not param2val_path.exists():
         param2val_path.parent.mkdir(exist_ok=True)
         param2val['job_name'] = None
@@ -61,7 +61,7 @@ def run_job_on_ludwig_worker():
         param2val = pickle.load(f)
 
     # prepare save_path - this must be done on worker
-    save_path = param2val['save_path']
+    save_path = Path(param2val['save_path'])
     if not save_path.exists():
         save_path.mkdir(parents=True)
 

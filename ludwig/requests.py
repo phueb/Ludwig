@@ -56,7 +56,10 @@ def gen_all_param2vals(param2requests: Dict[str, list],
     param2opts = tuple(full_request.items())
     param_ids = _iter_over_cycles(param2opts)
 
+    seen = []
     for ids in param_ids:
         # map param names to integers corresponding to which param value to use
         param2val = {k: v[i] for (k, v), i in zip(param2opts, ids)}
+        assert param2val not in seen
+        seen.append(param2val)
         yield param2val

@@ -45,12 +45,13 @@ class Uploader:
                     res[h] = ip
         return res
 
-    def check_disk_space(self):
+    def check_disk_space(self, verbose=False):
         if platform.system() in {'Linux'}:
             p = self.project_path.parent
             usage_stats = psutil.disk_usage(str(p))
             percent_used = usage_stats[3]
-            print_ludwig('Percent Disk Space used at {}: {}'.format(p, percent_used))
+            if verbose:
+                print_ludwig('Percent Disk Space used at {}: {}'.format(p, percent_used))
             if percent_used > config.Submit.disk_max_percent:
                 raise RuntimeError('Disk space usage > {}.'.format(config.Submit.disk_max_percent))
         else:
@@ -84,8 +85,7 @@ class Uploader:
             pickle.dump(job.param2val, f)
 
         # console
-        print()
-        print_ludwig(f'Connecting to {worker}')
+        print_ludwig(f'Parameter configuration for {worker}')
         print(job)
 
         # prepare paths
@@ -111,3 +111,4 @@ class Uploader:
         sftp.put(localpath=run.__file__,
                  remotepath=f'{config.WorkerDirs.watched.name}/{run_file_name}')
         print_ludwig('Upload complete')
+        print()

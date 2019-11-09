@@ -24,7 +24,7 @@ class MyTest(unittest.TestCase):
 
         os.chdir(str(self.example_project_path))
         uploader = Uploader(self.example_project_path, self.src_name)
-        job = Job(params.param2default, self.example_project_path)
+        job = Job(params.param2default, self.example_project_path, n=0)
         job.param2val['project_path'] = config.WorkerDirs.research_data / self.project_name
         uploader.upload(job, self.worker, no_upload=True)
 

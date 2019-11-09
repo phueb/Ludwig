@@ -224,32 +224,40 @@ def submit():
 
     # ---------------------------------------------------
 
+    if namespace.minimal:
+        print_ludwig('Using minimal (debug) parameter configuration')
+        param2val = user_params.param2default.copy()
+        param2val.update(user_params.param2debug)
+        param2val_list = [param2val]
+    else:
+        param2val_list = gen_all_param2vals(user_params.param2requests,
+                                            user_params.param2default)
     # iterate over unique jobs
-    for param2val in gen_all_param2vals(user_params.param2requests, user_params.param2default):
-
-        # use minimal configuration only after param2val has been generated
-        if namespace.minimal:
-            print_ludwig('Using minimal (debug) parameter configuration')
-            param2val.update(user_params.param2debug)
+    num_new = 0
+    for param2val in param2val_list:
 
         # assign the same worker to each rep of the same job
         worker = namespace.worker or next(online_workers)
 
-        job = Job(param2val, project_path)
-        for rep_id in range(job.calc_num_needed(namespace.reps, unittest=False)):
+        job = Job(param2val, project_path, num_new)
+        for rep_id in range(job.calc_num_needed(
+                namespace.reps, disable=False if not namespace.minimal else True)):
             job.update_job_name(rep_id)
             if namespace.local or namespace.isolated:
                 save_path = param2val['save_path']
                 if not save_path.exists():
                     save_path.mkdir(parents=True)
-                job.param2val['project_path'] = project_path
+                job.param2val['project_path'] = str(project_path)
                 job.param2val['param_name'] += config.Constants.not_ludwig
                 job.param2val['job_name'] += config.Constants.not_ludwig
                 series_list = user_job.main(job.param2val)
                 save_job_files(job.param2val, series_list, runs_path)
             else:
-                job.param2val['project_path'] = config.WorkerDirs.research_data / project_name
+                job.param2val['project_path'] = str(config.WorkerDirs.research_data / project_name)
                 uploader.upload(job, worker, namespace.no_upload)
+
+        print('job is new=', job.is_new)
+        num_new += int(job.is_new)
 
         if namespace.first_only:
             raise SystemExit('Exited after first job because --first_only=True.')
