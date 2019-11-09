@@ -16,7 +16,7 @@ setup(
                       'watchdog',
                       'numpy',
                       'pandas',
-                      'cached_property'],
+                      'cached_property', 'PyYAML'],
     url='https://github.com/phueb/Ludwig',
     license='',
     author='Philip Huebner',
@@ -25,7 +25,6 @@ setup(
     entry_points={
         'console_scripts': [
             'ludwig=ludwig.__main__:submit',
-            'ludwig-local=ludwig.__main__:run_on_host',
             'ludwig-stats=ludwig.__main__:stats',
             'ludwig-status=ludwig.__main__:status',
             'ludwig-add-ssh-config=ludwig.__main__:add_ssh_config'

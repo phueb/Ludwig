@@ -42,40 +42,35 @@ def save_job_files(param2val: Dict[str, Any],
     # move contents of save_path to shared drive
     save_path = Path(param2val['save_path'])
     src = str(save_path)
-    dst = str(job_path / save_path.name)
+    dst = str(job_path)
     print(f'Moving {src}\nto\n{dst}')
-    shutil.move(src, dst)
-
-    # delete temporary folder which was created locally to hold save_path
-    local_param_path = Path('runs') / param2val['param_name']
-    shutil.rmtree(str(local_param_path))
+    shutil.move(src, dst)  # is a move, so src is no longer available afterwards
 
 
-def run_jobs_on_ludwig_worker():
+def run_job_on_ludwig_worker():
     """
-    run multiple jobs on on a single worker.
+    run a single job on on a single worker.
     this function is called on a Ludwig worker.
     this means that the package ludwig cannot be imported here.
     the package ludwig works client-side, and cannot be used on the workers or the file server.
     """
 
     hostname = socket.gethostname()
-    param2vals_path = remote_root_path / f'{hostname}_param2val_chunk.pkl'
-    with param2vals_path.open('rb') as f:
-        param2val_chunk = pickle.load(f)
-    for param2val in param2val_chunk:
+    param2val_path = remote_root_path / f'{hostname}_param2val.pkl'
+    with param2val_path.open('rb') as f:
+        param2val = pickle.load(f)
 
-        # prepare save_path
-        save_path = param2val['save_path']
-        if not save_path.exists():
-            save_path.mkdir(parents=True)
+    # prepare save_path - this must be done on worker
+    save_path = param2val['save_path']
+    if not save_path.exists():
+        save_path.mkdir(parents=True)
 
-        # execute job
-        series_list = job.main(param2val)  # name each returned series using 'name' attribute
+    # execute job
+    series_list = job.main(param2val)  # name each returned series using 'name' attribute
 
-        # save results
-        runs_path = remote_root_path / 'runs'
-        save_job_files(param2val, series_list, runs_path)
+    # save results
+    runs_path = remote_root_path / 'runs'
+    save_job_files(param2val, series_list, runs_path)
 
 
 if __name__ == '__main__':
@@ -94,4 +89,4 @@ if __name__ == '__main__':
     # import user's job to execute
     job = importlib.import_module('{}.job'.format(src_name))
 
-    run_jobs_on_ludwig_worker()
+    run_job_on_ludwig_worker()

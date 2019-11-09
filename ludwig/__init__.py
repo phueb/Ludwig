@@ -1,8 +1,6 @@
 
 
-__version__ = '1.3.3'
-
-try_mounting = True
+__version__ = '2.0.0'
 
 
 def print_ludwig(s):

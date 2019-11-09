@@ -3,7 +3,8 @@ import os
 from pathlib import Path
 
 from ludwig import config
-from ludwig.client import Client  # import client after modifying config.is_unit_test
+from ludwig.uploader import Uploader  # import client after modifying config.is_unit_test
+from ludwig.job import Job
 
 from Example.example import params
 
@@ -11,7 +12,9 @@ from Example.example import params
 class MyTest(unittest.TestCase):
 
     project_name = 'Example'
-    example_root_path_name = str(config.WorkerDirs.root / project_name)
+    src_name = 'example'
+    example_project_path = Path(__file__).parent.parent / project_name
+    worker = config.Submit.online_worker_names[0]
 
     def test_submit(self):
         """
@@ -19,15 +22,11 @@ class MyTest(unittest.TestCase):
         if this function fails, something is wrong with job submission logic.
         """
 
-        os.chdir(self.example_root_path_name)
-
-        client = Client(self.project_name, params.param2default, unittest=True)
-        client.submit(src_name='example',  # uploaded to workers
-                      extra_paths=[Path('third_party_code')],  # uploaded to shared drive not workers
-                      param2requests=params.param2requests,
-                      reps=1,
-                      worker='bengio',
-                      no_upload=True)
+        os.chdir(str(self.example_project_path))
+        uploader = Uploader(self.example_project_path, self.src_name)
+        job = Job(params.param2default, self.example_project_path)
+        job.param2val['project_path'] = config.WorkerDirs.research_data / self.project_name
+        uploader.upload(job, self.worker, no_upload=True)
 
         return True
 
