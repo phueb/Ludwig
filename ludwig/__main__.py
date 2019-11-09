@@ -220,6 +220,8 @@ def submit():
         copy_tree(src, dst)
 
     uploader = Uploader(project_path, src_path.name)
+    if not namespace.local and not namespace.minimal and not namespace.no_upload:
+        uploader.remove_existing_jobs()
 
     random.shuffle(config.Remote.online_worker_names)
     online_workers = cycle(config.Remote.online_worker_names)
@@ -251,7 +253,7 @@ def submit():
                 disable=False if not namespace.minimal else True)):
             job.update_job_name(rep_id)
             if namespace.local or namespace.isolated:
-                save_path = param2val['save_path']
+                save_path = Path(param2val['save_path'])
                 if not save_path.exists():
                     save_path.mkdir(parents=True)
                 job.param2val['project_path'] = str(project_path)

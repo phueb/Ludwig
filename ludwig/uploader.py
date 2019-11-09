@@ -26,7 +26,13 @@ class Uploader:
         self.runs_path = self.project_path / 'runs'
         self.worker2ip = self.make_worker2ip()
 
-        # remove existing parameter configurations saved to disk
+    def remove_existing_jobs(self):
+        """
+        remove existing parameter configurations saved to disk.
+        WARNING: Do not call this when running locally,
+        as this will remove jobs to be run on Ludwig workers
+
+        """
         for pkl_path in self.project_path.glob('*.pkl'):
             pkl_path.unlink()
 
