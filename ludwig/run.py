@@ -47,18 +47,13 @@ def save_job_files(param2val: Dict[str, Any],
     shutil.move(src, dst)  # is a move, so src is no longer available afterwards
 
 
-def run_job_on_ludwig_worker():
+def run_job_on_ludwig_worker(param2val):
     """
     run a single job on on a single worker.
     this function is called on a Ludwig worker.
     this means that the package ludwig cannot be imported here.
     the package ludwig works client-side, and cannot be used on the workers or the file server.
     """
-
-    hostname = socket.gethostname()
-    param2val_path = remote_root_path / f'{hostname}_param2val.pkl'
-    with param2val_path.open('rb') as f:
-        param2val = pickle.load(f)
 
     # prepare save_path - this must be done on worker
     save_path = Path(param2val['save_path'])
@@ -77,7 +72,7 @@ if __name__ == '__main__':
 
     # get src_name + project_name
     project_name = Path(__file__).stem.replace('run_', '')
-    src_name = project_name.lower()  # TODO test
+    src_name = project_name.lower()
 
     # define paths - do not use any paths defined in user project (they may be invalid)
     research_data = Path('/') / 'media' / 'research_data'
@@ -89,4 +84,17 @@ if __name__ == '__main__':
     # import user's job to execute
     job = importlib.import_module('{}.job'.format(src_name))
 
-    run_job_on_ludwig_worker()
+    # find jobs
+    hostname = socket.gethostname()
+    pattern = f'{hostname.lower()}_*.pkl'
+    param2val_paths = list(remote_root_path.glob(pattern))
+    print(f'Found {len(param2val_paths)} jobs:')
+    for p in param2val_paths:
+        print(p)
+    print()
+
+    # run all jobs
+    for param2val_path in param2val_paths:
+        with param2val_path.open('rb') as f:
+            param2val = pickle.load(f)
+        run_job_on_ludwig_worker(param2val)

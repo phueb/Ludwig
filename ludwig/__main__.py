@@ -56,7 +56,7 @@ def status():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',
-                        choices=config.Submit.online_worker_names, required=False,
+                        choices=config.Remote.online_worker_names, required=False,
                         help='The name of the worker the status of which is requested.')
     parser.add_argument('-mnt', '--research_data', default=None, action='store', dest='research_data_path',
                         required=False,
@@ -72,9 +72,9 @@ def status():
 
     if namespace.worker is None:
         match_string = ' '.join([str(stdout_path / (w + '.out'))
-                                 for w in config.Submit.online_worker_names])
+                                 for w in config.Remote.online_worker_names])
         tail_length = 1
-        show_num_lines = len(config.Submit.online_worker_names)
+        show_num_lines = len(config.Remote.online_worker_names)
     else:
         match_string = str(stdout_path / (namespace.worker + ".out"))
         tail_length = 10
@@ -96,6 +96,8 @@ def status():
 
 def submit():
     """
+    run jobs locally or on Ludwig workers.
+
     This script should be called in root directory of the Python project.
     If not specified via CL arguments, it will try to import src.params.
     src.params is where this script will try to find the parameters with which to execute your jobs.
@@ -123,7 +125,7 @@ def submit():
                         required=False,
                         help='Do not connect to server. Use this only when all daa is available')
     parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',
-                        choices=config.Submit.online_worker_names,
+                        choices=config.Remote.online_worker_names,
                         required=False,
                         help='Specify a single worker name if submitting to single worker only')
     parser.add_argument('-x', '--clear_runs', action='store_true', default=False, dest='clear_runs',
@@ -219,8 +221,8 @@ def submit():
 
     uploader = Uploader(project_path, src_path.name)
 
-    random.shuffle(config.Submit.online_worker_names)
-    online_workers = cycle(config.Submit.online_worker_names)
+    random.shuffle(config.Remote.online_worker_names)
+    online_workers = cycle(config.Remote.online_worker_names)
 
     # ---------------------------------------------------
 
@@ -234,14 +236,19 @@ def submit():
                                             user_params.param2default)
     # iterate over unique jobs
     num_new = 0
+    workers_with_jobs = set()
     for param2val in param2val_list:
 
         # assign the same worker to each rep of the same job
         worker = namespace.worker or next(online_workers)
+        workers_with_jobs.add(worker)
 
-        job = Job(param2val, project_path, num_new)
+        job = Job(param2val)
+        job.update_param_name(runs_path, num_new)
         for rep_id in range(job.calc_num_needed(
-                namespace.reps, disable=False if not namespace.minimal else True)):
+                runs_path,
+                namespace.reps,
+                disable=False if not namespace.minimal else True)):
             job.update_job_name(rep_id)
             if namespace.local or namespace.isolated:
                 save_path = param2val['save_path']
@@ -254,10 +261,21 @@ def submit():
                 save_job_files(job.param2val, series_list, runs_path)
             else:
                 job.param2val['project_path'] = str(config.WorkerDirs.research_data / project_name)
-                uploader.upload(job, worker, namespace.no_upload)
+                uploader.to_disk(job, worker)
 
         print('job is new=', job.is_new)
         num_new += int(job.is_new)
 
         if namespace.first_only:
-            raise SystemExit('Exited after first job because --first_only=True.')
+            print('Exiting loop after first job because --first_only=True.')
+            break
+
+    # trigger watcher on all workers (even if not all workers are assigned jobs
+    if namespace.no_upload:
+        print_ludwig('Flag --upload set to False. Not uploading run.py.')
+        return
+    elif namespace.local and not namespace.minimal:
+        return
+    else:
+        for worker in workers_with_jobs:
+            uploader.upload(worker)

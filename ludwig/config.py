@@ -9,7 +9,7 @@ class WorkerDirs:
     watched = Path('/') / 'var' / 'sftp' / 'ludwig_jobs'
 
 
-class Submit:
+class Remote:
     watched_pattern = 'run*.py'  # this is required for watcher to know which file to run
     path_to_ssh_config = Path.home() / '.ssh' / 'ludwig_config'
     online_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'hawkins', 'bengio']
@@ -20,7 +20,7 @@ class Submit:
 
 class Time:
     delete_delta = 24  # hours
-    format = '%Y-%m-%d-%H-%M-%S'
+    format = '%Y-%m-%d-%H:%M:%S'
 
 
 class CLI:

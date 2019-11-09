@@ -26,12 +26,16 @@ class Uploader:
         self.runs_path = self.project_path / 'runs'
         self.worker2ip = self.make_worker2ip()
 
+        # remove existing parameter configurations saved to disk
+        for pkl_path in self.project_path.glob('*.pkl'):
+            pkl_path.unlink()
+
     @staticmethod
     def make_worker2ip():
         """load hostname aliases from .ssh/ludwig_config"""
         res = {}
         h = None
-        p = config.Submit.path_to_ssh_config
+        p = config.Remote.path_to_ssh_config
         if not p.exists():
             raise FileNotFoundError('Please specify hostname-to-IP mappings in {}'.format(p))
         with p.open('r') as f:
@@ -52,16 +56,38 @@ class Uploader:
             percent_used = usage_stats[3]
             if verbose:
                 print_ludwig('Percent Disk Space used at {}: {}'.format(p, percent_used))
-            if percent_used > config.Submit.disk_max_percent:
-                raise RuntimeError('Disk space usage > {}.'.format(config.Submit.disk_max_percent))
+            if percent_used > config.Remote.disk_max_percent:
+                raise RuntimeError('Disk space usage > {}.'.format(config.Remote.disk_max_percent))
         else:
             print_ludwig('WARNING: Cannot determine disk space on non-Linux platform.')
 
-    def upload(self,
-               job: Job,
-               worker: Optional[str] = None,
-               no_upload: bool = True,
-               ) -> None:
+    def to_disk(self,
+                job: Job,
+                worker: Optional[str] = None,
+                ) -> None:
+        """
+        saves parameter configuration for a single job to project_path.
+        This allows Ludwig workers to find jobs
+        """
+        if not job.is_ready():
+            raise SystemExit('Cannot save job. Job is not ready. Update job.param2val')
+
+        # save parameter configuration to shared drive
+        unique_id = f'{job.param2val["param_name"]}_{job.param2val["job_name"]}'
+        p = self.project_path / f'{worker}_{unique_id}.pkl'
+        with p.open('wb') as f:
+            pickle.dump(job.param2val, f)
+
+        # console
+        print_ludwig(f'Parameter configuration for {worker} saved to disk')
+        print(job)
+
+    def upload(self, worker):
+        """
+        source code is uploaded.
+        run.py is uploaded.
+        modification of run.py on worker triggers watcher.py, adding run.py to queue
+        """
 
         # -------------------------------------- checks
 
@@ -77,24 +103,10 @@ class Uploader:
         if not self.runs_path.exists():
             self.runs_path.mkdir(parents=True)
 
-        # --------------------------------------- upload to worker
-
-        # save parameter configuration to shared drive
-        p = self.project_path / f'{worker}_param2val.pkl'
-        with p.open('wb') as f:
-            pickle.dump(job.param2val, f)
-
-        # console
-        print_ludwig(f'Parameter configuration for {worker}')
-        print(job)
-
-        # prepare paths
         remote_path = f'{config.WorkerDirs.watched.name}/{self.src_name}'
         print_ludwig(f'Will upload {self.src_name} to {remote_path}')
 
-        if no_upload:
-            print_ludwig('Flag --upload set to False. Not uploading run.py.')
-            return
+        # ------------------------------------- sftp
 
         # connect via sftp
         research_data_path = self.project_path.parent
@@ -110,5 +122,5 @@ class Uploader:
         run_file_name = f'run_{self.project_name}.py'
         sftp.put(localpath=run.__file__,
                  remotepath=f'{config.WorkerDirs.watched.name}/{run_file_name}')
-        print_ludwig('Upload complete')
+        print_ludwig(f'Upload to {worker} complete')
         print()

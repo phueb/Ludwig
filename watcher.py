@@ -50,23 +50,17 @@ class Handler(FileSystemEventHandler):
                 pass
             else:
                 self.stop_active_jobs(event.src_path)
-                custom_print('Adding job to queue: {}'.format(event.src_path))
+                custom_print('Adding to queue: {}'.format(event.src_path))
                 self.q.put(event)
 
             self.time_stamps.append(ts)
 
     @staticmethod
-    def delete_params_dirs():
-        custom_print('Deleting job_dirs more than {} hours old...'.format(config.Time.delete_delta))
+    def housekeeping():
         delta = datetime.timedelta(hours=config.Time.delete_delta)
         time_of_init_cutoff = datetime.datetime.now() - delta
-        for job_p in config.WorkerDirs.watched.rglob('*num*'):
-            result = re.search('_(.*)_', job_p.name)
-            time_of_init = result.group(1)
-            dt = datetime.datetime.strptime(time_of_init, config.Time.format)
-            if dt < time_of_init_cutoff:
-                custom_print('{} is more than {} hours old. Removing'.format(job_p.name, config.Time.delete_delta))
-                shutil.rmtree(str(job_p))
+
+        # TODO what exactly needs to be deleted?
 
     @staticmethod
     def stop_active_jobs(event_src_path):
@@ -94,7 +88,7 @@ class Handler(FileSystemEventHandler):
         while True:
             custom_print('Checking queue')
             event = self.q.get()
-            self.delete_params_dirs()
+            self.housekeeping()
             self.start_jobs(event.src_path)
 
 
