@@ -181,10 +181,6 @@ def submit():
     if not src_path.exists():
         raise NotADirectoryError(f'Cannot find source code in {src_path}.')
 
-    if not namespace.isolated and not research_data_path.exists():
-        raise OSError(f'{research_data_path} does not exist. '
-                      'Please set the correct path to your custom mount point.')
-
     # check that requests are lists and that each list does not contain repeated values
     for k, v in user_params.param2requests.items():
         if not isinstance(v, list):
@@ -245,14 +241,22 @@ def submit():
         worker = namespace.worker or next(online_workers)
         workers_with_jobs.add(worker)
 
+        # make job
         job = Job(param2val)
         job.update_param_name(runs_path, num_new)
+
+        # multiply job
         for rep_id in range(job.calc_num_needed(
                 runs_path,
                 namespace.reps,
                 disable=False if not namespace.minimal else True)):
             job.update_job_name(rep_id)
+
+            # run locally
             if namespace.local or namespace.isolated:
+
+                # TODO remove old parents of save_paths
+
                 save_path = Path(param2val['save_path'])
                 if not save_path.exists():
                     save_path.mkdir(parents=True)
@@ -261,6 +265,7 @@ def submit():
                 job.param2val['job_name'] += config.Constants.not_ludwig
                 series_list = user_job.main(job.param2val)
                 save_job_files(job.param2val, series_list, runs_path)
+            # upload to Ludwig worker
             else:
                 job.param2val['project_path'] = str(config.WorkerDirs.research_data / project_name)
                 uploader.to_disk(job, worker)
