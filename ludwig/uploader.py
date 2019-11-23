@@ -87,6 +87,7 @@ class Uploader:
         # console
         print_ludwig(f'Parameter configuration for {worker} saved to disk')
         print(job)
+        print()
 
     def upload(self, worker):
         """

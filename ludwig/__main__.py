@@ -162,6 +162,10 @@ def submit():
 
     src_path = cwd / namespace.src
 
+    if namespace.local or namespace.isolated:
+        pass
+        # TODO remove old parents of save_paths
+
     # ------------------------------------------------ user code
 
     # import user params + job
@@ -237,10 +241,6 @@ def submit():
     workers_with_jobs = set()
     for param2val in param2val_list:
 
-        # assign the same worker to each rep of the same job
-        worker = namespace.worker or next(online_workers)
-        workers_with_jobs.add(worker)
-
         # make job
         job = Job(param2val)
         job.update_param_name(runs_path, num_new)
@@ -254,10 +254,6 @@ def submit():
 
             # run locally
             if namespace.local or namespace.isolated:
-
-                # TODO remove old parents of save_paths
-
-
                 job.param2val['project_path'] = str(project_path)
                 job.param2val['param_name'] += config.Constants.not_ludwig
                 job.param2val['job_name'] += config.Constants.not_ludwig
@@ -266,6 +262,8 @@ def submit():
             # upload to Ludwig worker
             else:
                 job.param2val['project_path'] = str(config.WorkerDirs.research_data / project_name)
+                worker = namespace.worker or next(online_workers)
+                workers_with_jobs.add(worker)
                 uploader.to_disk(job, worker)
 
         num_new += int(job.is_new)
