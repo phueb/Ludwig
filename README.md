@@ -133,6 +133,11 @@ def main(param2val):
     
     # get save_path - all files in this location will be moved to file-server
     save_path = Path(param2val['save_path'])
+    
+    # make sure to create the directory as Ludwig does not do so automatically
+    if not save_path.exists():
+        save_path.mkdir(parents=True)
+    
     # save a file
     with (save_path / 'test.txt').open('r') as f:
         f.write('test') 

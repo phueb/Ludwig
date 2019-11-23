@@ -257,9 +257,7 @@ def submit():
 
                 # TODO remove old parents of save_paths
 
-                save_path = Path(param2val['save_path'])
-                if not save_path.exists():
-                    save_path.mkdir(parents=True)
+
                 job.param2val['project_path'] = str(project_path)
                 job.param2val['param_name'] += config.Constants.not_ludwig
                 job.param2val['job_name'] += config.Constants.not_ludwig
