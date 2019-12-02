@@ -12,8 +12,9 @@ from ludwig.paths import default_mnt_point
 def gen_param_paths(project_name: str,
                     param2requests: Dict[str, list],
                     param2default: Dict[str, Any],
+                    runs_path: Optional[Path] = None,
                     research_data_path: Optional[Path] = None,
-                    label_params: List[str] = None,
+                    label_params:   Optional[List[str]] = None,
                     isolated: bool = False,
                     label_n: bool = True,
                     verbose: bool = True):
@@ -35,7 +36,8 @@ def gen_param_paths(project_name: str,
     else:
         project_path = research_data_path / project_name
 
-    runs_path = project_path / 'runs'
+    if not runs_path:
+        runs_path = project_path / 'runs'
 
     # check that research_data is mounted
     if not os.path.ismount(research_data_path):
@@ -72,7 +74,10 @@ def gen_param_paths(project_name: str,
         loaded_param2val = param2val.copy()
 
         for param_name in config.Constants.added_param_names:
-            del loaded_param2val[param_name]
+            try:
+                del loaded_param2val[param_name]
+            except KeyError:  # Ludwig < v2.0
+                pass
 
         # is match?
         if loaded_param2val in requested_param2vals:
