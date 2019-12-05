@@ -32,7 +32,7 @@ def save_job_files(param2val: Dict[str, Any],
 
     # save param2val
     param2val_path = runs_path / param2val['param_name'] / 'param2val.yaml'
-    print('Saving param2val to shared drive')
+    print(f'Saving param2val to {param2val_path}')
     if not param2val_path.exists():
         param2val_path.parent.mkdir(exist_ok=True)
         param2val['job_name'] = None
