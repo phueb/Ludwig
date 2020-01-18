@@ -90,11 +90,20 @@ ssh hebb
 
 Then, when prompted, enter `yes` and hit `Enter`.
 
-Check the status of a Ludwig worker (e.g. hebb):
+### Viewing output of jobs
+
+By default, the stdout of a submitted job will be redirected to a file located on the shared drive.
+After uploading your code, verify that your task is being processed by reading the log file.
+If you don't recognize the output in the file, it is likely that the node is currently processing another user's task.
+Retry when the node is no longer busy. 
+
+To check the status of a Ludwig worker (e.g. hebb):
 
 ```bash
 (venv) ludwig-status -w hebb
 ```
+
+## Advanced 
 
 ### Non-standard mount location
 
@@ -152,12 +161,6 @@ def main(param2val):
         f.write('test') 
     
 ```
-
-### Logging
-By default, the stdout of a submitted job will be redirected to a file located on the shared drive.
-After uploading your code, verify that your task is being processed by reading the log file.
-If you don't recognize the output in the file, it is likely that the node is currently processing another user's task.
-Retry when the node is no longer busy. 
 
 ## Run jobs locally
 
