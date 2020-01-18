@@ -27,7 +27,7 @@ All machines are configured to use:
 * allennlp==0.9.0
 
 
-## Requirements
+## Requirements & Installation
 
 ### Linux or MacOS
 Windows is currently not supported due to uncertainty about how mounting is performed.
@@ -35,20 +35,36 @@ Windows is currently not supported due to uncertainty about how mounting is perf
 ### Python
 Tasks submitted to Ludwig must be programmed in Python 3 (the Python3.7 interpreter is used on each worker).
 
-### Project Organization
-
-```ludwig``` requires that the user create two special modules:
-* ```src.params```: contains information about which parameters to use for each job
-* ```src.config```: contains basic information like the name of the user's project
-
-See the `Example` folder for a simple project that is compatible with `Ludwig`. 
-
 ### Access to the shared drive
 See the administrator to provide access to the lab's shared drive. Mount the drive at ```/media/research_data```.
 The share is hosted by the lab's file server using ```samba```, and is shared with each node. 
 Because we do not allow direct shell access to nodes, all data and logs must be saved to the shared drive.
 
-### Worker IP addresses
+### Installation
+
+In a terminal, type:
+
+```bash
+(venv) pip3 install git+https://github.com/phueb/Ludwig.git
+```
+
+### Project Organization
+
+```ludwig``` requires all Python code be located in a folder inside the root directory of your project. 
+Additionally, inside this folder, create two Python files:
+* ```params.py```: contains information about which parameters to use for each job
+* ```config.py```: contains basic information like the name of the user's project
+
+See the `Example` folder for an example of what to put into these files.
+
+## Submitting a Job
+
+Once you have installed `ludwig` and set up your project appropriately, use the command-line tool to submit your job.
+To submit jobs, go to your project root folder, and invoke the command-line tool that has been installed:
+
+```bash
+(venv) ludwig
+``` 
 
 Upon trying to submit jobs, first-time users will notice the following error message:
 
@@ -63,23 +79,16 @@ To remedy, type:
 ludwig-add-ssh-config
 ```
 
-## Submitting a Job
-
-### 1) Install ludwig
-
-In a terminal, type:
+You may also get an error message saying that hostkeys cannot be found.
+To add the worker's hostkeys to your machine, use `ssh` to connect to each worker, 
+to trigger a prompt asking to copy the worker's hostkey. 
+For example,
 
 ```bash
-(venv) pip3 install git+https://github.com/phueb/Ludwig.git
+ssh hebb
 ```
 
-### 2) The command-line tool
-
-To submit jobs, go to your project root folder, and invoke the command-line tool that has been installed:
-
-```bash
-(venv) ludwig
-``` 
+Then, when prompted, enter `yes` and hit `Enter`.
 
 Check the status of a Ludwig worker (e.g. hebb):
 
