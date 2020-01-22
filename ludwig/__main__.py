@@ -180,7 +180,7 @@ def submit():
 
     # ---------------------------------------------
 
-    # delete existing runs
+    # delete existing runs?
     if namespace.clear_runs:
         for param_path in runs_path.glob('*param*'):
             print_ludwig('Removing\n{}'.format(param_path))
@@ -196,7 +196,7 @@ def submit():
         else:
             extra_paths.append(p)
 
-    # copy extra folders to file server.
+    # copy extra folders to file server?
     # these can be Python packages, which will be importable, or contain data.
     # extra_paths is only allowed to be non-empty if not --local
     for extra_path in extra_paths:
@@ -235,7 +235,7 @@ def submit():
         for rep_id in range(job.calc_num_needed(
                 runs_path,
                 namespace.reps,
-                disable=False if not namespace.minimal else True)):
+                disable=False if not (namespace.minimal or namespace.local) else True)):
             job.update_job_name(rep_id)
 
             # run locally
