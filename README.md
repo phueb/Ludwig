@@ -127,8 +127,10 @@ For example, loading a corpus from the shared drive might look like the followin
 
 ```python
 def main(param2val):
-
-    project_path = param2val['project_path']
+    
+    from pathlib import Path
+    
+    project_path = Path(param2val['project_path'])
     corpus_path = project_path / 'data' / f'{param2val["corpus_name"]}.txt'
     train_docs, test_docs = load_docs(corpus_path)
 ```

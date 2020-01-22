@@ -32,23 +32,6 @@ def add_ssh_config():
     shutil.copy(src, dst)
 
 
-def stats():
-
-    ps = []
-    for proc in psutil.process_iter():
-        try:
-            pinfo = proc.as_dict(attrs=['pid', 'name', 'username'])
-            pinfo['vms'] = proc.memory_info().vms / (1024 * 1024)
-            ps.append(pinfo)
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            pass
-
-    # Sort by 'vms' (virtual memory usage)
-    ps = sorted(ps, key=lambda p: p['vms'], reverse=True)
-
-    return ps[:config.CLI.num_top_processes]
-
-
 def status():
     """
     return filtered stdout (to which workers are printing) to get a sense of what workers are doing

@@ -25,7 +25,6 @@ setup(
     entry_points={
         'console_scripts': [
             'ludwig=ludwig.__main__:submit',
-            'ludwig-stats=ludwig.__main__:stats',
             'ludwig-status=ludwig.__main__:status',
             'ludwig-add-ssh-config=ludwig.__main__:add_ssh_config'
         ]

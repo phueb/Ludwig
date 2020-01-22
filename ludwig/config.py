@@ -23,10 +23,6 @@ class Time:
     format = '%Y-%m-%d-%H:%M:%S'
 
 
-class CLI:
-    num_top_processes = 5
-
-
 class Constants:
     param2val = 'param2val'
     not_ludwig = '_not-ludwig'

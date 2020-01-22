@@ -10,7 +10,7 @@ from queue import Queue
 import sys
 import re
 import datetime
-import shutil
+import psutil
 import socket
 
 from ludwig import config
@@ -61,6 +61,23 @@ class Handler(FileSystemEventHandler):
         time_of_init_cutoff = datetime.datetime.now() - delta
 
         # TODO what exactly needs to be deleted?
+
+    @staticmethod
+    def stats():
+        ps = []
+        for proc in psutil.process_iter():
+            try:
+                pinfo = proc.as_dict(attrs=['pid', 'name', 'username'])
+                pinfo['vms'] = proc.memory_info().vms / (1024 * 1024)
+                ps.append(pinfo)
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
+
+        # Sort by 'vms' (virtual memory usage)
+        ps = sorted(ps, key=lambda p: p['vms'], reverse=True)  # a list of processes, including their 'vms'
+
+        # TODO use this function to calculate overall memory usage,
+        #  to determine if jobs should be allowed to run simultaneously
 
     @staticmethod
     def stop_active_jobs(event_src_path):
