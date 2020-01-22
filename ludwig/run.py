@@ -88,14 +88,16 @@ if __name__ == '__main__':
     # find jobs
     hostname = socket.gethostname()
     pattern = f'{hostname.lower()}_*.pkl'
-    param2val_paths = list(remote_root_path.glob(pattern))
-    print(f'Found {len(param2val_paths)} jobs:')
-    for p in param2val_paths:
-        print(p)
-    print()
+    pickled_param2val_paths = list(remote_root_path.glob(pattern))
+    if not pickled_param2val_paths:
+        print('No jobs found.')  # that's okay. run.py was triggered which triggered killing of active jobs on worker
+    else:
+        print(f'Found {len(pickled_param2val_paths)} jobs:')
+        for p in pickled_param2val_paths:
+            print(p)
 
     # run all jobs
-    for param2val_path in param2val_paths:
+    for param2val_path in pickled_param2val_paths:
         with param2val_path.open('rb') as f:
             param2val = pickle.load(f)
         run_job_on_ludwig_worker(param2val)

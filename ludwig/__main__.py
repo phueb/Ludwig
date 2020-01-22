@@ -210,7 +210,7 @@ def submit():
         uploader.remove_existing_jobs()
 
     random.shuffle(config.Remote.online_worker_names)
-    online_workers = cycle(config.Remote.online_worker_names)
+    online_workers_cycle = cycle(config.Remote.online_worker_names)
 
     # ---------------------------------------------------
 
@@ -248,7 +248,7 @@ def submit():
             # upload to Ludwig worker
             else:
                 job.param2val['project_path'] = str(config.WorkerDirs.research_data / project_name)
-                worker = namespace.worker or next(online_workers)
+                worker = namespace.worker or next(online_workers_cycle)
                 workers_with_jobs.add(worker)
                 uploader.to_disk(job, worker)
 
@@ -258,12 +258,19 @@ def submit():
             print('Exiting loop after first job because --first_only=True.')
             break
 
-    # trigger watcher on all workers (even if not all workers are assigned jobs
+    # upload?
     if namespace.no_upload:
         print_ludwig('Flag --upload set to False. Not uploading run.py.')
         return
     elif namespace.local and not namespace.minimal:
         return
     else:
-        for worker in workers_with_jobs:
+        # loop over all workers because all jobs on all workers must be killed
+        for worker in config.Remote.online_worker_names:
             uploader.upload(worker)
+
+        print('Submitted jobs to:')
+        for w in workers_with_jobs:
+            print(w)
+
+

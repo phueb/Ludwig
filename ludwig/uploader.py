@@ -7,7 +7,7 @@ import pysftp
 import platform
 import psutil
 import pickle
-from typing import List, Dict, Optional, Any, Tuple
+from typing import Union, Optional
 
 from ludwig import config
 from ludwig import print_ludwig
@@ -89,11 +89,14 @@ class Uploader:
         print(job)
         print()
 
-    def upload(self, worker):
+    def upload(self,
+               worker: str,
+               ) -> None:
         """
         source code is uploaded.
-        run.py is uploaded.
-        modification of run.py on worker triggers watcher.py, adding run.py to queue
+        run.py is uploaded to worker, which triggers killing of existing jobs,
+         and executes run.py.
+        if no param2val for worker is saved to server, then run.py will exit.
         """
 
         # -------------------------------------- checks
@@ -111,7 +114,6 @@ class Uploader:
             self.runs_path.mkdir(parents=True)
 
         remote_path = f'{config.WorkerDirs.watched.name}/{self.src_name}'
-        print_ludwig(f'Will upload {self.src_name} to {remote_path}')
 
         # ------------------------------------- sftp
 
@@ -122,6 +124,8 @@ class Uploader:
                                  host=self.worker2ip[worker],
                                  private_key=str(private_key_path))
 
+        # upload code files
+        print_ludwig(f'Will upload {self.src_name} to {remote_path}')
         sftp.makedirs(remote_path)
         sftp.put_r(localpath=self.src_name, remotepath=remote_path)
 
@@ -129,5 +133,6 @@ class Uploader:
         run_file_name = f'run_{self.project_name}.py'
         sftp.put(localpath=run.__file__,
                  remotepath=f'{config.WorkerDirs.watched.name}/{run_file_name}')
+
         print_ludwig(f'Upload to {worker} complete')
         print()

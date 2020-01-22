@@ -30,7 +30,7 @@ class Handler(FileSystemEventHandler):
     def __init__(self):
         self.thread = None
         self.q = Queue()
-        self.watched_pattern = re.compile('(run)')
+        self.run_pattern = re.compile('(run)')
         self.time_stamps = [datetime.datetime.now()]
 
     def start(self):
@@ -39,9 +39,7 @@ class Handler(FileSystemEventHandler):
         self.thread.start()
 
     def on_any_event(self, event):
-        is_trigger_event = self.watched_pattern.match(Path(event.src_path).name)
-        if is_trigger_event:
-
+        if self.run_pattern.match(Path(event.src_path).name):  # True if detected event concerns run_*.py
             # sftp produces 2 events within 1 sec - ignore 2nd event
             ts = datetime.datetime.now()
             time_delta = ts - self.time_stamps.pop()
@@ -49,10 +47,10 @@ class Handler(FileSystemEventHandler):
                 # Ignoring trigger event because it happened less than 1 sec after previous
                 pass
             else:
+                custom_print('Killing "{}"'.format(event.src_path))  # TODO test
                 self.stop_active_jobs(event.src_path)
                 custom_print('Adding to queue: {}'.format(event.src_path))
                 self.q.put(event)
-
             self.time_stamps.append(ts)
 
     @staticmethod
@@ -81,7 +79,6 @@ class Handler(FileSystemEventHandler):
 
     @staticmethod
     def stop_active_jobs(event_src_path):
-        custom_print('Killing "{}"'.format(event_src_path))
         command = 'pkill -f -c {}'.format(event_src_path)
         num_killed = subprocess.getoutput(command)
         custom_print('Killed {} process(es)'.format(num_killed))
