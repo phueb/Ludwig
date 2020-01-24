@@ -135,4 +135,3 @@ class Uploader:
                  remotepath=f'{config.WorkerDirs.watched.name}/{run_file_name}')
 
         print_ludwig(f'Upload to {worker} complete')
-        print()

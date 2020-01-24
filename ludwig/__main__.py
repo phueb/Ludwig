@@ -269,6 +269,10 @@ def submit():
         for worker in config.Remote.online_worker_names:
             uploader.upload(worker)
 
+        print('Killed jobs on:')
+        for w in set(config.Remote.online_worker_names).difference(workers_with_jobs):
+            print(w)
+
         print('Submitted jobs to:')
         for w in workers_with_jobs:
             print(w)
