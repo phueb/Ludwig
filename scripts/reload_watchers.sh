@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-for hostname in bengio hebb hinton hoff norman pitts lecun hawkins;
+for hostname in bengio hebb hinton hoff norman pitts hawkins lecun;
 do
     echo Uploading watcher to ${hostname}
 

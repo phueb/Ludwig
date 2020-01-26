@@ -26,7 +26,7 @@ class Uploader:
         self.runs_path = self.project_path / 'runs'
         self.worker2ip = self.make_worker2ip()
 
-    def remove_existing_jobs(self):
+    def remove_existing_job_instructions(self):
         """
         remove existing parameter configurations saved to disk.
         WARNING: Do not call this when running locally,
@@ -125,7 +125,7 @@ class Uploader:
                                  private_key=str(private_key_path))
 
         # upload code files
-        print_ludwig(f'Will upload {self.src_name} to {remote_path}')
+        print_ludwig(f'Will upload {self.src_name} to {remote_path} on {worker}')
         sftp.makedirs(remote_path)
         sftp.put_r(localpath=self.src_name, remotepath=remote_path)
 

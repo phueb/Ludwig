@@ -180,6 +180,16 @@ def submit():
 
     # ---------------------------------------------
 
+    # kill running jobs on workers BEFORE removing runs folders
+    uploader = Uploader(project_path, src_path.name)
+    if not namespace.local and not namespace.minimal and not namespace.no_upload:
+        # trigger worker without job instructions: kills existing job with matching project_name
+        for worker in config.Remote.online_worker_names:
+            uploader.upload(worker)
+        print_ludwig('Killed any previously submitted active jobs on all workers.')
+        # delete instructions
+        uploader.remove_existing_job_instructions()
+
     # delete existing runs?
     if namespace.clear_runs:
         for param_path in runs_path.glob('*param*'):
@@ -204,10 +214,6 @@ def submit():
         dst = str(project_path / extra_path.name)
         print_ludwig(f'Copying {src} to {dst}')
         copy_tree(src, dst)
-
-    uploader = Uploader(project_path, src_path.name)
-    if not namespace.local and not namespace.minimal and not namespace.no_upload:
-        uploader.remove_existing_jobs()
 
     random.shuffle(config.Remote.online_worker_names)
     online_workers_cycle = cycle(config.Remote.online_worker_names)
@@ -265,14 +271,6 @@ def submit():
     elif namespace.local and not namespace.minimal:
         return
     else:
-        # loop over all workers because all jobs on all workers must be killed
-        for worker in config.Remote.online_worker_names:
-            uploader.upload(worker)
-
-        print('Killed jobs on:')
-        for w in set(config.Remote.online_worker_names).difference(workers_with_jobs):
-            print(w)
-
         print('Submitted jobs to:')
         for w in workers_with_jobs:
             print(w)

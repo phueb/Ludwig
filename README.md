@@ -103,6 +103,11 @@ To check the status of a Ludwig worker (e.g. hebb):
 (venv) ludwig-status -w hebb
 ```
 
+## Re-submitting
+
+Any time new jobs are submitted, any previously submitted jobs associated with the same project and still running, 
+will be killed.
+
 ## Advanced 
 
 ### Non-standard mount location
@@ -183,9 +188,3 @@ In this case, results will be saved in `research_data/PROJECT_NAME/runs`.
 Note that if your mounting location is non-standard (e.g. not `/media/research_data`),
 you can specify the path to where `research_data` is mounted via the `--mnt` flag. 
  
-
-
-## Note
-
-Calling ```ludwig``` while previously submitted jobs are still being executed, 
-will stop all previously submitted jobs associated with the same project name.
