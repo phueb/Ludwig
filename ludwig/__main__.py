@@ -178,6 +178,11 @@ def submit():
         if len(v) != len(set(v)):  # otherwise each identical value will be assigned a unique param_name
             raise ValueError('Each requested parameter value must be unique')
 
+    # check that there are no lists (only tuples) in param2default
+    for k, v in user_params.param2default.items():
+        if isinstance(v, list):  # tuples can be members of a set (they are hashable) but not lists
+            raise TypeError('Type list is not allowed in param2default. Convert any lists to tuples.')
+
     # ---------------------------------------------
 
     # are additional source code files required? (do this before killing active jobs)
