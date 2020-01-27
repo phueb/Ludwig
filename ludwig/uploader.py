@@ -26,16 +26,6 @@ class Uploader:
         self.runs_path = self.project_path / 'runs'
         self.worker2ip = self.make_worker2ip()
 
-    def remove_existing_job_instructions(self):
-        """
-        remove existing parameter configurations saved to disk.
-        WARNING: Do not call this when running locally,
-        as this will remove jobs to be run on Ludwig workers
-
-        """
-        for pkl_path in self.project_path.glob('*.pkl'):
-            pkl_path.unlink()
-
     @staticmethod
     def make_worker2ip():
         """load hostname aliases from .ssh/ludwig_config"""
@@ -70,6 +60,7 @@ class Uploader:
     def to_disk(self,
                 job: Job,
                 worker: Optional[str] = None,
+                verbose: bool = False,
                 ) -> None:
         """
         saves parameter configuration for a single job to project_path.
@@ -86,12 +77,13 @@ class Uploader:
 
         # console
         print_ludwig(f'Parameter configuration for {worker} saved to disk')
-        print(job)
-        print()
+        if verbose:
+            print(job)
+            print()
 
-    def upload(self,
-               worker: str,
-               ) -> None:
+    def start_jobs(self,
+                   worker: str,
+                   ) -> None:
         """
         source code is uploaded.
         run.py is uploaded to worker, which triggers killing of existing jobs,
@@ -135,3 +127,49 @@ class Uploader:
                  remotepath=f'{config.WorkerDirs.watched.name}/{run_file_name}')
 
         print_ludwig(f'Upload to {worker} complete')
+
+    def kill_jobs(self,
+                  worker: str,
+                  ) -> None:
+        """
+        first kil all job descriptions for worker (pickle files saved on server).
+        then, run.py is uploaded to worker, which triggers killing of existing jobs,
+         and executes run.py.
+        because no job descriptions for worker exist on server, run.py will exit.
+        """
+
+        # -------------------------------------- checks
+
+        assert self.project_name.lower() == self.src_name  # TODO what about when src name must be different?
+        # this must be true because in run.py project_name is converted to src_name
+
+        self.check_disk_space()
+
+        # -------------------------------------- prepare paths
+
+        if not self.project_path.exists():
+            self.project_path.mkdir()
+        if not self.runs_path.exists():
+            self.runs_path.mkdir(parents=True)
+
+        # -------------------------------------
+
+        # delete job instructions for worker saved on server
+        for pkl_path in self.project_path.glob(f'{worker}*.pkl'):
+            pkl_path.unlink()
+
+        # ------------------------------------- sftp
+
+        # connect via sftp
+        research_data_path = self.project_path.parent
+        private_key_path = research_data_path / '.ludwig' / 'id_rsa'
+        sftp = pysftp.Connection(username='ludwig',
+                                 host=self.worker2ip[worker],
+                                 private_key=str(private_key_path))
+
+        # upload run.py - this triggers watcher which kills active jobs associated with project
+        run_file_name = f'run_{self.project_name}.py'
+        sftp.put(localpath=run.__file__,
+                 remotepath=f'{config.WorkerDirs.watched.name}/{run_file_name}')
+
+        print_ludwig(f'Killed any active jobs with src_name={self.src_name} on {worker}')

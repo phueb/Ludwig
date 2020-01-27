@@ -45,7 +45,7 @@ Because we do not allow direct shell access to nodes, all data and logs must be 
 In a terminal, type:
 
 ```bash
-(venv) pip3 install git+https://github.com/phueb/Ludwig.git
+pip3 install git+https://github.com/phueb/Ludwig.git
 ```
 
 ### Project Organization
@@ -63,7 +63,7 @@ Once you have installed `ludwig` and set up your project appropriately, use the 
 To submit jobs, go to your project root folder, and invoke the command-line tool that has been installed:
 
 ```bash
-(venv) ludwig
+ludwig
 ``` 
 
 Upon trying to submit jobs, first-time users will notice the following error message:
@@ -100,7 +100,7 @@ Retry when the node is no longer busy.
 To check the status of a Ludwig worker (e.g. hebb):
 
 ```bash
-(venv) ludwig-status -w hebb
+ludwig-status -w hebb
 ```
 
 ## Re-submitting
@@ -119,7 +119,7 @@ To upload data or third-party source code to the shared drive, ```ludwig``` must
 For example, if `research_data` is mounted at `/Volumes/research_data`:
 
 ```
-(venv) ludwig -mnt /Volumes/research_data
+ludwig -mnt /Volumes/research_data
 ```
 The ```-mnt``` flag is used to specify where the shared drive is mounted on the user's machine.
 
@@ -174,17 +174,12 @@ def main(param2val):
 To run jobs locally, go to the root directory of your project and:
 
 ```bash
-(venv) ludwig-local
+ludwig --local
 ```
 
-Results will be saved locally in `runs`. 
-
-If the job requires retrieving data from the lab's server, add the followign flag:
+Results will still be saved to the server. 
+To run jobs without access to the server, use the `--isolated` flag:
 
 ```bash
-(venv) ludwig-local --server
+ludwig --isolated
 ```
-In this case, results will be saved in `research_data/PROJECT_NAME/runs`.
-Note that if your mounting location is non-standard (e.g. not `/media/research_data`),
-you can specify the path to where `research_data` is mounted via the `--mnt` flag. 
- 
