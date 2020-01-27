@@ -152,12 +152,6 @@ class Uploader:
         if not self.runs_path.exists():
             self.runs_path.mkdir(parents=True)
 
-        # -------------------------------------
-
-        # delete job instructions for worker saved on server
-        for pkl_path in self.project_path.glob(f'{worker}*.pkl'):
-            pkl_path.unlink()
-
         # ------------------------------------- sftp
 
         # connect via sftp

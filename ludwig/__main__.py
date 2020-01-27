@@ -194,6 +194,10 @@ def submit():
 
     uploader = Uploader(project_path, src_path.name)
 
+    # delete job instructions for worker saved on server (do this before uploader.to_disk() )
+    for pkl_path in project_path.glob(f'*.pkl'):
+        pkl_path.unlink()
+
     random.shuffle(config.Remote.online_worker_names)
     online_workers_cycle = cycle(config.Remote.online_worker_names)
 
