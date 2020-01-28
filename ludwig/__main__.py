@@ -229,7 +229,7 @@ def submit():
         for rep_id in range(job.calc_num_needed(
                 runs_path,
                 namespace.reps,
-                disable=True if (namespace.minimal or namespace.local or namespace.clear_runs) else True)):
+                disable=True if (namespace.minimal or namespace.local or namespace.clear_runs) else False)):
             job.update_job_name(rep_id)
 
             # run locally
