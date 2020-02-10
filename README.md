@@ -10,16 +10,16 @@ The resource consists of a file server and 8 Ubuntu 16.04 machines with GPU acce
 
 ## Worker Specs
 
-| hostname  |GPU                    |CPU                         |Model               |Storage                  |
-|-----------|-----------------------|----------------------------|--------------------|-------------------------|
-| hoff      |1 Geforce GTX 1080     |Intel i7-7700 CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD (OS) |
-| norman    |1 Geforce GTX 1080     |Intel i7-7700 CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD (OS) |
-| hebb      |1 Geforce GTX 1080     |Intel i7-7700 CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD (OS) |
-| hinton    |1 Geforce GTX 1080     |Intel i7-7700 CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD (OS) |
-| pitts     |1 Geforce GTX 1080     |Intel i7-7700 CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD (OS) |
-| hawkins   |1 Geforce GTX 1080 Ti  |Intel i7-7700 CPU @ 3.60GHz |Alienware Aurora R7 |256GB SSD (OS)           |
-| lecun     |1 Geforce GTX 1080 Ti  |Intel i7-7700 CPU @ 3.60GHz |Alienware Aurora R7 |256GB SSD (OS)           |
-| bengio    |1 Geforce GTX 1080 Ti  |Intel i7-7700 CPU @ 3.60GHz |Alienware Aurora R7 |256GB SSD (OS)           |
+| hostname  |GPU                    |CPU                          |Model               |Storage                  |
+|-----------|-----------------------|-----------------------------|--------------------|-------------------------|
+| hoff      |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD (OS) |
+| norman    |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD (OS) |
+| hebb      |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD (OS) |
+| hinton    |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD (OS) |
+| pitts     |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD (OS) |
+| hawkins   |1 Geforce GTX 1080 Ti  |Intel i7-8700K CPU @ 3.70GHz |Alienware Aurora R7 |256GB SSD (OS)           |
+| lecun     |1 Geforce GTX 1080 Ti  |Intel i7-8700K CPU @ 3.70GHz |Alienware Aurora R7 |256GB SSD (OS)           |
+| bengio    |1 Geforce GTX 1080 Ti  |Intel i7-8700K CPU @ 3.70GHz |Alienware Aurora R7 |256GB SSD (OS)           |
 
 All machines are configured to use:
 * CUDA 10.0
