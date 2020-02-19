@@ -26,7 +26,7 @@ All machines are configured to use:
 * cudnn 7
 * python3.7
 * tensorflow-gpu==2.0.0rc1
-* pytorch
+* pytorch==1.4.0
 * allennlp==0.9.0
 
 
