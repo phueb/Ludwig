@@ -47,7 +47,7 @@ class Job:
         else:
             new_param_num = max(param_nums) + 1 + num_new
             param_nums.append(new_param_num)
-            param_name = 'param_{}'.format(new_param_num)
+            param_name = 'param_{:0>3}'.format(new_param_num)
             self.is_new = True
 
         self.param2val['param_name'] = param_name

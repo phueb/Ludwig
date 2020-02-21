@@ -12,9 +12,8 @@ class WorkerDirs:
 class Remote:
     watched_pattern = 'run*.py'  # this is required for watcher to know which file to run
     path_to_ssh_config = Path.home() / '.ssh' / 'ludwig_config'
-    online_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins']
+    online_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio', 'lecun']
     all_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio', 'lecun']
-    # note: lecun is down
     disk_max_percent = 90
 
 
