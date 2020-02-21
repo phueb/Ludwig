@@ -26,7 +26,7 @@ All machines are configured to use:
 * cudnn 7
 * python3.7
 * tensorflow-gpu==2.0.0rc1
-* pytorch
+* pytorch==1.4.0
 * allennlp==0.9.0
 
 
@@ -106,7 +106,7 @@ To check the status of a Ludwig worker (e.g. hebb):
 ludwig-status -w hebb
 ```
 
-## Re-submitting
+### Re-submitting
 
 Any time new jobs are submitted, any previously submitted jobs associated with the same project and still running, 
 will be killed.
@@ -186,3 +186,6 @@ To run jobs without access to the server, use the `--isolated` flag:
 ```bash
 ludwig --isolated
 ```
+## Documentation
+
+More information about how the system was setup can be found at [https://docs.philhuebner.com/ludwig](https://docs.philhuebner.com/ludwig).
