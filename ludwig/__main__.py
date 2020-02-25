@@ -5,7 +5,6 @@ from pathlib import Path
 import sys
 import subprocess
 from distutils.dir_util import copy_tree
-import psutil
 import shutil
 import random
 from itertools import cycle
@@ -24,9 +23,7 @@ def add_ssh_config():
     """
     append contents of /media/research_data/.ludwig/config to ~/.ssh/ludwig_config
     """
-    from ludwig import config as ludwig_config
-
-    src = ludwig_config.WorkerDirs.research_data / '.ludwig' / 'config'
+    src = config.WorkerDirs.research_data / '.ludwig' / 'config'
     dst = Path().home() / '.ssh' / 'ludwig_config'  # do not overwrite existing config
     print_ludwig('Copying {} to {}'.format(src, dst))
     shutil.copy(src, dst)
@@ -73,7 +70,7 @@ def status():
     if show_lines:
         res = '\n'.join(show_lines)
     else:  # the string 'Ludwig' is not found in the last section of stdout, so assume user project is printing output
-        res = 'Busy working on jobs'
+        res = 'All workers are busy'
     return res
 
 
@@ -111,6 +108,10 @@ def submit():
                         choices=config.Remote.online_worker_names,
                         required=False,
                         help='Specify a single worker name if submitting to single worker only')
+    parser.add_argument('-g', '--group', default=None, action='store', dest='group',
+                        choices=config.Remote.group2workers.keys(),
+                        required=False,
+                        help='Specify a worker group')
     parser.add_argument('-x', '--clear_runs', action='store_true', default=False, dest='clear_runs',
                         required=False,
                         help='Delete all saved runs associated with current project on shared drive')
@@ -163,8 +164,6 @@ def submit():
         if not os.path.ismount(str(research_data_path)):
             raise OSError(f'{research_data_path} is not mounted')
 
-    assert not (namespace.extra_paths and namespace.local), 'Do not use  both --extra_paths and --local'
-
     if not src_path.exists():
         raise NotADirectoryError(f'Cannot find source code in {src_path}.')
 
@@ -203,8 +202,12 @@ def submit():
     for pkl_path in project_path.glob(f'*.pkl'):
         pkl_path.unlink()
 
-    random.shuffle(config.Remote.online_worker_names)
-    online_workers_cycle = cycle(config.Remote.online_worker_names)
+    if namespace.group is None:
+        random.shuffle(config.Remote.online_worker_names)
+        workers_cycle = cycle(config.Remote.online_worker_names)
+    else:
+        workers_cycle = cycle(config.Remote.group2workers[namespace.group])
+        print(f'Using workers in group={namespace.group}')
 
     # ---------------------------------------------------
 
@@ -242,7 +245,7 @@ def submit():
             # upload to Ludwig worker
             else:
                 job.param2val['project_path'] = str(config.WorkerDirs.research_data / project_name)
-                worker = namespace.worker or next(online_workers_cycle)
+                worker = namespace.worker or next(workers_cycle)
                 workers_with_jobs.add(worker)
                 uploader.to_disk(job, worker)
 
