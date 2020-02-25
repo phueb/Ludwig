@@ -51,27 +51,33 @@ def status():
     stdout_path = research_data_path / config.WorkerDirs.stdout.name
 
     if namespace.worker is None:
-        match_string = ' '.join([str(stdout_path / (w + '.out'))
-                                 for w in config.Remote.online_worker_names])
-        tail_length = 1
-        show_num_lines = len(config.Remote.online_worker_names)
+        workers = config.Remote.online_worker_names
     else:
-        match_string = str(stdout_path / (namespace.worker + ".out"))
+        workers = [namespace.worker]
+
+    res = ''
+    for w in workers:
+
+        match_string = str(stdout_path / (w + ".out"))
         tail_length = 10
-        show_num_lines = 10
 
-    command = f'tail -n {tail_length} {match_string}'
-    status_, output = subprocess.getstatusoutput(command)
+        command = f'tail -n {tail_length} {match_string}'
+        status_, output = subprocess.getstatusoutput(command)
 
-    if status_ != 0:
-        return 'Something went wrong. Check your access to the shared drive. Try using --mnt flag.'
-    lines = str(output).split('\n')
-    show_lines = [line for line in lines if 'Ludwig' in line][-show_num_lines:]
-    if show_lines:
-        res = '\n'.join(show_lines)
-    else:  # the string 'Ludwig' is not found in the last section of stdout, so assume user project is printing output
-        res = 'All workers are busy'
-    return res
+        if status_ != 0:
+            return 'Something went wrong. Check your access to the shared drive. Try using --mnt flag.'
+
+        lines = str(output).split('\n')
+        lines_with_ludwig_status = [line for line in lines if 'Ludwig' in line]
+
+        # collect strings
+        try:
+            res += lines_with_ludwig_status[-2]  # second to last shows status
+        except IndexError:  # assume worker is busy
+            res += f'{" ":>27} ({w.capitalize():<8}): Working on job'
+        res += '\n'
+
+    return res.strip('\n')
 
 
 def submit():

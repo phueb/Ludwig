@@ -93,6 +93,8 @@ class Handler(FileSystemEventHandler):
             subprocess.check_call([command], shell=True)  # stdout is already redirected, cannot do it here
         except CalledProcessError as e:  # this is required to continue to the next item in queue if current item fails
             custom_print(str(e))
+            custom_print('Failed to execute: {}'.format(command))
+            print()
         else:
             custom_print('Successfully executed: {}'.format(command))
             print()
