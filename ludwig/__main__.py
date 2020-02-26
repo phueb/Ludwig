@@ -72,7 +72,7 @@ def status():
 
         # collect strings
         try:
-            res += lines_with_ludwig_status[-2]  # second to last shows status
+            res += lines_with_ludwig_status[-1]  # second to last shows status
         except IndexError:  # assume worker is busy
             res += f'{" ":>27} ({w.capitalize():<8}): Working on job'
         res += '\n'

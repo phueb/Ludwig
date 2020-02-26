@@ -102,7 +102,6 @@ class Handler(FileSystemEventHandler):
     def _process_q(self):
 
         while True:
-            custom_print('Checking queue')
             event = self.q.get()
             self.housekeeping()
             self.start_jobs(event.src_path)
