@@ -14,8 +14,8 @@ class Remote:
     path_to_ssh_config = Path.home() / '.ssh' / 'ludwig_config'
     online_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio', 'lecun']
     all_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio', 'lecun']
-    group2workers = {'half1': ['hinton', 'pitts', 'hawkins', 'lecun'],
-                     'half2': ['hoff', 'norman', 'hebb', 'bengio']}
+    group2workers = {'half1': ['hoff', 'norman', 'hebb', 'hinton'],
+                     'half2': ['pitts', 'hawkins', 'bengio', 'lecun']}
     disk_max_percent = 90
 
 
