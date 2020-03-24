@@ -258,8 +258,7 @@ def submit():
         num_new += int(job.is_new)
 
         if namespace.first_only:
-            print('Exiting loop after first job because --first_only=True.')
-            break
+            raise SystemExit('Exiting loop after first job because --first_only=True.')
 
     # upload?
     if namespace.no_upload:
