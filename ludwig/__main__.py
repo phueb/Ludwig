@@ -16,14 +16,14 @@ from ludwig.job import Job
 from ludwig.paths import default_mnt_point
 from ludwig.run import save_job_files
 from ludwig.uploader import Uploader
-from ludwig import config
+from ludwig import configs
 
 
 def add_ssh_config():
     """
     append contents of /media/research_data/.ludwig/config to ~/.ssh/ludwig_config
     """
-    src = config.WorkerDirs.research_data / '.ludwig' / 'config'
+    src = configs.WorkerDirs.research_data / '.ludwig' / 'config'
     dst = Path().home() / '.ssh' / 'ludwig_config'  # do not overwrite existing config
     print_ludwig('Copying {} to {}'.format(src, dst))
     shutil.copy(src, dst)
@@ -36,7 +36,7 @@ def status():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',
-                        choices=config.Remote.online_worker_names, required=False,
+                        choices=configs.Remote.online_worker_names, required=False,
                         help='The name of the worker the status of which is requested.')
     parser.add_argument('-mnt', '--research_data', default=None, action='store', dest='research_data_path',
                         required=False,
@@ -46,12 +46,12 @@ def status():
     if namespace.research_data_path:
         research_data_path = Path(namespace.research_data_path)
     else:
-        research_data_path = Path(default_mnt_point) / config.WorkerDirs.research_data.name
+        research_data_path = Path(default_mnt_point) / configs.WorkerDirs.research_data.name
 
-    stdout_path = research_data_path / config.WorkerDirs.stdout.name
+    stdout_path = research_data_path / configs.WorkerDirs.stdout.name
 
     if namespace.worker is None:
-        workers = config.Remote.online_worker_names
+        workers = configs.Remote.online_worker_names
     else:
         workers = [namespace.worker]
 
@@ -59,7 +59,7 @@ def status():
     for w in workers:
 
         match_string = str(stdout_path / (w + ".out"))
-        tail_length = 10
+        tail_length = 10_000
 
         command = f'tail -n {tail_length} {match_string}'
         status_, output = subprocess.getstatusoutput(command)
@@ -111,11 +111,11 @@ def submit():
                         required=False,
                         help='Do not connect to server. Use this only when all daa is available')
     parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',
-                        choices=config.Remote.online_worker_names,
+                        choices=configs.Remote.online_worker_names,
                         required=False,
                         help='Specify a single worker name if submitting to single worker only')
     parser.add_argument('-g', '--group', default=None, action='store', dest='group',
-                        choices=config.Remote.group2workers.keys(),
+                        choices=configs.Remote.group2workers.keys(),
                         required=False,
                         help='Specify a worker group')
     parser.add_argument('-x', '--clear_runs', action='store_true', default=False, dest='clear_runs',
@@ -141,7 +141,7 @@ def submit():
     if namespace.research_data_path:
         research_data_path = Path(namespace.research_data_path)
     else:
-        research_data_path = Path(default_mnt_point) / config.WorkerDirs.research_data.name
+        research_data_path = Path(default_mnt_point) / configs.WorkerDirs.research_data.name
 
     if namespace.isolated:
         project_path = cwd
@@ -162,7 +162,8 @@ def submit():
     print_ludwig('Trying to import source code from:\n{}'.format(src_path))
     sys.path.append(str(cwd))
     user_params = importlib.import_module(src_path.name + '.params')
-    user_job = importlib.import_module(src_path.name + '.job')
+    if namespace.local or namespace.isolated:  # no need to import job when not executed locally
+        user_job = importlib.import_module(src_path.name + '.job')
 
     # ------------------------------------------------ checks
 
@@ -176,7 +177,7 @@ def submit():
     # check that requests are lists and that each list does not contain repeated values
     for k, v in user_params.param2requests.items():
         if not isinstance(v, list):
-            raise TypeError('Values of param2requests must be lists')
+            raise TypeError('Value of param2requests["{}"] must be a list'.format(k))
         for vi in v:
             if isinstance(vi, list):  # tuples can be members of a set (they are hashable) but not lists
                 raise TypeError('Inner collections in param2requests must be of type tuple, not list')
@@ -209,10 +210,10 @@ def submit():
         pkl_path.unlink()
 
     if namespace.group is None:
-        random.shuffle(config.Remote.online_worker_names)
-        workers_cycle = cycle(config.Remote.online_worker_names)
+        random.shuffle(configs.Remote.online_worker_names)
+        workers_cycle = cycle(configs.Remote.online_worker_names)
     else:
-        workers_cycle = cycle(config.Remote.group2workers[namespace.group])
+        workers_cycle = cycle(configs.Remote.group2workers[namespace.group])
         print(f'Using workers in group={namespace.group}')
 
     # ---------------------------------------------------
@@ -244,13 +245,13 @@ def submit():
             # run locally
             if namespace.local or namespace.isolated:
                 job.param2val['project_path'] = str(project_path)
-                job.param2val['param_name'] += config.Constants.not_ludwig
-                job.param2val['job_name'] += config.Constants.not_ludwig
+                job.param2val['param_name'] += configs.Constants.not_ludwig
+                job.param2val['job_name'] += configs.Constants.not_ludwig
                 series_list = user_job.main(job.param2val)
                 save_job_files(job.param2val, series_list, runs_path)
             # upload to Ludwig worker
             else:
-                job.param2val['project_path'] = str(config.WorkerDirs.research_data / project_name)
+                job.param2val['project_path'] = str(configs.WorkerDirs.research_data / project_name)
                 worker = namespace.worker or next(workers_cycle)
                 workers_with_jobs.add(worker)
                 uploader.to_disk(job, worker)
@@ -269,7 +270,7 @@ def submit():
 
     # kill running jobs on workers? (do this before removing runs folders)
     # trigger worker without job instructions: kills existing job with matching project_name
-    for worker in set(config.Remote.online_worker_names).difference(workers_with_jobs):
+    for worker in set(configs.Remote.online_worker_names).difference(workers_with_jobs):
         uploader.kill_jobs(worker)
 
     # delete existing runs?

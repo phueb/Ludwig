@@ -9,7 +9,7 @@ import psutil
 import pickle
 from typing import Union, Optional
 
-from ludwig import config
+from ludwig import configs
 from ludwig import print_ludwig
 from ludwig import run
 from ludwig.job import Job
@@ -31,7 +31,7 @@ class Uploader:
         """load hostname aliases from .ssh/ludwig_config"""
         res = {}
         h = None
-        p = config.Remote.path_to_ssh_config
+        p = configs.Remote.path_to_ssh_config
         if not p.exists():
             raise FileNotFoundError('Please specify hostname-to-IP mappings in {}'.format(p))
         with p.open('r') as f:
@@ -52,8 +52,8 @@ class Uploader:
             percent_used = usage_stats[3]
             if verbose:
                 print_ludwig('Percent Disk Space used at {}: {}'.format(p, percent_used))
-            if percent_used > config.Remote.disk_max_percent:
-                raise RuntimeError('Disk space usage > {}.'.format(config.Remote.disk_max_percent))
+            if percent_used > configs.Remote.disk_max_percent:
+                raise RuntimeError('Disk space usage > {}.'.format(configs.Remote.disk_max_percent))
         else:
             print_ludwig('WARNING: Cannot determine disk space on non-Linux platform.')
 
@@ -105,7 +105,7 @@ class Uploader:
         if not self.runs_path.exists():
             self.runs_path.mkdir(parents=True)
 
-        remote_path = f'{config.WorkerDirs.watched.name}/{self.src_name}'
+        remote_path = f'{configs.WorkerDirs.watched.name}/{self.src_name}'
 
         # ------------------------------------- sftp
 
@@ -124,7 +124,7 @@ class Uploader:
         # upload run.py
         run_file_name = f'run_{self.project_name}.py'
         sftp.put(localpath=run.__file__,
-                 remotepath=f'{config.WorkerDirs.watched.name}/{run_file_name}')
+                 remotepath=f'{configs.WorkerDirs.watched.name}/{run_file_name}')
 
         print_ludwig(f'Upload to {worker} complete')
 
@@ -164,6 +164,6 @@ class Uploader:
         # upload run.py - this triggers watcher which kills active jobs associated with project
         run_file_name = f'run_{self.project_name}.py'
         sftp.put(localpath=run.__file__,
-                 remotepath=f'{config.WorkerDirs.watched.name}/{run_file_name}')
+                 remotepath=f'{configs.WorkerDirs.watched.name}/{run_file_name}')
 
         print_ludwig(f'Killed any active jobs with src_name={self.src_name} on {worker}')

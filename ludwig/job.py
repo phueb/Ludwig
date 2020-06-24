@@ -3,7 +3,7 @@ import datetime
 import yaml
 from typing import List, Dict, Optional, Any, Tuple
 
-from ludwig import config
+from ludwig import configs
 from ludwig import print_ludwig
 
 
@@ -20,8 +20,8 @@ class Job:
 
     @staticmethod
     def is_same(param2val1, param2val2):
-        d1 = {k: v for k, v in param2val1.items() if k not in config.Constants.added_param_names}
-        d2 = {k: v for k, v in param2val2.items() if k not in config.Constants.added_param_names}
+        d1 = {k: v for k, v in param2val1.items() if k not in configs.Constants.added_param_names}
+        d2 = {k: v for k, v in param2val2.items() if k not in configs.Constants.added_param_names}
         return d1 == d2
 
     def update_param_name(self,
@@ -34,7 +34,7 @@ class Job:
         """
         param_nums = [int(p.name.split('_')[-1])
                       for p in runs_path.glob('param*')
-                      if config.Constants.not_ludwig not in p.name] or [0]
+                      if configs.Constants.not_ludwig not in p.name] or [0]
 
         for param_p in runs_path.glob('param_*'):
             with (param_p / 'param2val.yaml').open('r') as f:
@@ -72,16 +72,16 @@ class Job:
                         ) -> None:
 
         # add job_name
-        time_of_init = datetime.datetime.now().strftime(config.Time.format)
+        time_of_init = datetime.datetime.now().strftime(configs.Time.format)
         job_name = '{}_num{}'.format(time_of_init, rep_id)
         self.param2val['job_name'] = job_name
 
-        # add save_path - must not be on shared drive because contents are copied to shred drive at end of job
-        save_path = Path(self.param2val['param_name']) / job_name / config.Constants.saves
+        # add save_path - must not be on shared drive because contents are copied to shared drive at end of job
+        save_path = Path(self.param2val['param_name']) / job_name / configs.Constants.saves
         self.param2val['save_path'] = str(save_path)
 
     def is_ready(self) -> bool:
-        for name in config.Constants.added_param_names:
+        for name in configs.Constants.added_param_names:
             if name not in self.param2val:
                 return False
         else:

@@ -13,14 +13,14 @@ import datetime
 import psutil
 import socket
 
-from ludwig import config
+from ludwig import configs
 
 hostname = socket.gethostname()
 
 
 def custom_print(string):
     sys.stdout.flush()
-    print('{:<20} Ludwig ({:<8}): {}'.format(datetime.datetime.now().strftime(config.Time.format),
+    print('{:<20} Ludwig ({:<8}): {}'.format(datetime.datetime.now().strftime(configs.Time.format),
                                              hostname,
                                              string))
     sys.stdout.flush()
@@ -55,7 +55,7 @@ class Handler(FileSystemEventHandler):
 
     @staticmethod
     def housekeeping():
-        delta = datetime.timedelta(hours=config.Time.delete_delta)
+        delta = datetime.timedelta(hours=configs.Time.delete_delta)
         time_of_init_cutoff = datetime.datetime.now() - delta
 
         # TODO what exactly needs to be deleted?
@@ -114,7 +114,7 @@ def main():
     handler = Handler()
     handler.start()
 
-    observer.schedule(handler, str(config.WorkerDirs.watched), recursive=False)
+    observer.schedule(handler, str(configs.WorkerDirs.watched), recursive=False)
     observer.start()
 
     try:
@@ -127,7 +127,7 @@ def main():
 
 
 if __name__ == '__main__':
-    p = Path(config.WorkerDirs.stdout)
+    p = Path(configs.WorkerDirs.stdout)
     if not p.exists():
         p.mkdir(parents=True)
     main()

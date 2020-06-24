@@ -4,7 +4,7 @@ import os
 from typing import List, Dict, Optional, Any
 
 from ludwig import print_ludwig
-from ludwig import config
+from ludwig import configs
 from ludwig.requests import gen_all_param2vals
 from ludwig.paths import default_mnt_point
 
@@ -29,7 +29,7 @@ def gen_param_paths(project_name: str,
     if research_data_path:
         research_data_path = Path(research_data_path)
     else:
-        research_data_path = Path(default_mnt_point) / config.WorkerDirs.research_data.name
+        research_data_path = Path(default_mnt_point) / configs.WorkerDirs.research_data.name
 
     if isolated:
         project_path = Path.cwd()
@@ -73,7 +73,7 @@ def gen_param_paths(project_name: str,
             param2val = yaml.load(f, Loader=yaml.FullLoader)
         loaded_param2val = param2val.copy()
 
-        for param_name in config.Constants.added_param_names:
+        for param_name in configs.Constants.added_param_names:
             try:
                 del loaded_param2val[param_name]
             except KeyError:  # Ludwig < v2.0
