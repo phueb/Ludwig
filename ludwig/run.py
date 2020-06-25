@@ -46,6 +46,7 @@ def save_job_files(param2val: Dict[str, Any],
     if save_path.exists():  # user may not create a directory at save path
         print(f'Moving {src} to shared drive')
         shutil.move(src, dst)  # src is no longer available afterwards
+        print('Done moving')
 
 
 def run_job_on_ludwig_worker(param2val):

@@ -98,9 +98,9 @@ def submit():
                         required=False,
                         help='Specify path to your source code.')
     parser.add_argument('-r', '--reps', default=1, action='store', dest='reps', type=int,
-                        choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50],
+                        choices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50],
                         required=False,
-                        help='Number of times each job will be executed')
+                        help='Number of times each job will be executed. To kill all jobs, use 0.')  # TODO test r 0 - it should kill all running jobs
     parser.add_argument('-m', '--minimal', action='store_true', default=False, dest='minimal',
                         required=False,
                         help='Run minimal parameter configuration for debugging.')
@@ -265,7 +265,7 @@ def submit():
     if namespace.no_upload:
         print_ludwig('Flag --upload set to False. Not uploading run.py.')
         return
-    elif namespace.local and not namespace.minimal:
+    elif namespace.local or namespace.isolated:
         return
 
     # kill running jobs on workers? (do this before removing runs folders)
