@@ -140,7 +140,7 @@ def main(param2val):
     
     project_path = Path(param2val['project_path'])
     corpus_path = project_path / 'data' / f'{param2val["corpus_name"]}.txt'
-    train_docs, test_docs = load_docs(corpus_path)
+    train_docs, test_docs = load_corpus(corpus_path)
 ```
 
 ### Saving Job Results
@@ -162,7 +162,7 @@ def main(param2val):
     # get save_path - all files in this location will be moved to file-server
     save_path = Path(param2val['save_path'])
     
-    # make sure to create the directory as Ludwig does not do so automatically
+    # make sure to create the directory if running job on local machine (Ludwig creates this directory automatically on worker, however)
     if not save_path.exists():
         save_path.mkdir(parents=True)
     
