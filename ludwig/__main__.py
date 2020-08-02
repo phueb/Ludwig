@@ -109,7 +109,7 @@ def submit():
                         help='Run on host')
     parser.add_argument('-i', '--isolated', action='store_true', default=False, dest='isolated',
                         required=False,
-                        help='Do not connect to server. Use this only when all daa is available')
+                        help='Do not connect to server. Only works when all data is available on client.')
     parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',
                         choices=configs.Remote.online_worker_names,
                         required=False,
@@ -136,25 +136,26 @@ def submit():
                         help='Whether to upload jobs to Ludwig. Set false for testing')
     namespace = parser.parse_args()
 
-    # ---------------------------------------------- paths
+    # ---------------------------------------------- checks
+
+    assert not (namespace.local and namespace.isolated)
+    assert not (namespace.extra_paths and namespace.isolated)
+
+    # ---------------------------------------------- paths (relative to client, except when stated otherwise)
 
     if namespace.research_data_path:
         research_data_path = Path(namespace.research_data_path)
     else:
         research_data_path = Path(default_mnt_point) / configs.WorkerDirs.research_data.name
 
-    if namespace.isolated:
-        project_path = cwd
-    else:
-        project_path = research_data_path / project_name
+    remote_project_path = research_data_path / project_name
 
-    runs_path = project_path / 'runs'
+    if namespace.isolated:
+        runs_path = cwd / 'runs'
+    else:
+        runs_path = remote_project_path / 'runs'
 
     src_path = cwd / namespace.src
-
-    if namespace.local or namespace.isolated:
-        pass
-        # TODO remove old parents of save_paths
 
     # ------------------------------------------------ user code
 
@@ -199,14 +200,14 @@ def submit():
         if not p.is_dir():
             raise NotADirectoryError('{} is not a directory'.format(p))
         src = str(extra_path)
-        dst = str(project_path / p.name)
+        dst = str(remote_project_path / p.name)
         print_ludwig(f'Copying {src} to {dst}')
         copy_tree(src, dst)
 
-    uploader = Uploader(project_path, src_path.name)
+    uploader = Uploader(remote_project_path, src_path.name)
 
     # delete job instructions for worker saved on server (do this before uploader.to_disk() )
-    for pkl_path in project_path.glob(f'*.pkl'):
+    for pkl_path in remote_project_path.glob(f'*.pkl'):
         pkl_path.unlink()
 
     if namespace.group is None:
@@ -233,25 +234,42 @@ def submit():
 
         # make job
         job = Job(param2val)
+
+        # TODO should be called AFTER clearing runs - otherwise param number never resets to zero
         job.update_param_name(runs_path, num_new)
 
-        # multiply job
-        for rep_id in range(job.calc_num_needed(
-                runs_path,
-                namespace.reps,
-                disable=True if (namespace.minimal or namespace.local or namespace.clear_runs) else False)):
+        # add project_path
+        if namespace.local:
+            job.param2val['project_path'] = str(remote_project_path)
+        elif namespace.isolated:
+            job.param2val['project_path'] = str(cwd)
+        else:
+            job.param2val['project_path'] = str(configs.WorkerDirs.research_data / project_name)
+
+        # exit if requested parameter configuration already exists requested number of times?
+        if namespace.minimal or namespace.local or namespace.isolated or namespace.clear_runs:
+            disable_count = True
+        else:
+            disable_count = False
+
+        # replicate each job
+        for rep_id in range(job.calc_num_needed(runs_path, namespace.reps, disable=disable_count)):
+
+            # add job_name and save_path
             job.update_job_name(rep_id)
 
-            # run locally
+            # if running locally, execute job now + cleanup
             if namespace.local or namespace.isolated:
-                job.param2val['project_path'] = str(project_path)
-                job.param2val['param_name'] += configs.Constants.not_ludwig
-                job.param2val['job_name'] += configs.Constants.not_ludwig
                 series_list = user_job.main(job.param2val)
                 save_job_files(job.param2val, series_list, runs_path)
-            # upload to Ludwig worker
+                # remove old parents of save_paths - these should always be empty
+                for p in cwd.glob('param*'):
+                    print(f'Removing {p}')
+                    shutil.rmtree(p)
+
+            # if running on Ludwig, save worker instructions to shared drive
             else:
-                job.param2val['project_path'] = str(configs.WorkerDirs.research_data / project_name)
+
                 worker = namespace.worker or next(workers_cycle)
                 workers_with_jobs.add(worker)
                 uploader.to_disk(job, worker)
@@ -261,19 +279,19 @@ def submit():
         if namespace.first_only:
             raise SystemExit('Exiting loop after first job because --first_only=True.')
 
-    # upload?
+    # exit ?
     if namespace.no_upload:
         print_ludwig('Flag --upload set to False. Not uploading run.py.')
         return
     elif namespace.local or namespace.isolated:
         return
 
-    # kill running jobs on workers? (do this before removing runs folders)
+    # kill running jobs on workers? (do this before removing runs folders).
     # trigger worker without job instructions: kills existing job with matching project_name
     for worker in set(configs.Remote.online_worker_names).difference(workers_with_jobs):
         uploader.kill_jobs(worker)
 
-    # delete existing runs?
+    # delete existing runs on shared drive?
     if namespace.clear_runs:
         for param_path in runs_path.glob('*param*'):
             print_ludwig('Removing\n{}'.format(param_path))
@@ -287,5 +305,3 @@ def submit():
     print('Submitted jobs to:')
     for w in workers_with_jobs:
         print(w)
-
-

@@ -30,7 +30,7 @@ class Job:
                           ) -> None:
         """
         check if param2val exists in runs.
-        only if it doesn't exist, create a new one (otherwise problems with queued runs might occur)
+        only if it doesn't exist, create a new one
         """
         param_nums = [int(p.name.split('_')[-1])
                       for p in runs_path.glob('param*')
@@ -61,6 +61,11 @@ class Job:
         param_name = self.param2val['param_name']
         num_times_logged = len(list((runs_path / param_name).glob('*num*')))
         num_times_logged = num_times_logged if not disable else 0
+
+        # TODO test
+        print(num_times_logged)
+        print(disable)
+
         res = reps - num_times_logged
         res = max(0, res)
         print_ludwig('{:<10} logged {:>3} times. Will execute job {:>3} times'.format(

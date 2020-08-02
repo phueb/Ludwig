@@ -47,7 +47,7 @@ class Handler(FileSystemEventHandler):
                 # Ignoring trigger event because it happened less than 1 sec after previous
                 pass
             else:
-                custom_print('Killing "{}"'.format(event.src_path))  # TODO test
+                custom_print('Killing "{}"'.format(event.src_path))
                 self.stop_active_jobs(event.src_path)
                 custom_print('Adding to queue: {}'.format(event.src_path))
                 self.q.put(event)

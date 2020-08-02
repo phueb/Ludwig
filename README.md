@@ -172,16 +172,18 @@ def main(param2val):
     
 ```
 
-## Run jobs locally
+## Development & Debugging
 
-To run jobs locally, go to the root directory of your project and:
+Sometimes you may wish to use your local machine instead of a Ludwig worker to execute your job.
+To do so, navigate to the root directory of your project and use the `--local` flag as shown below.
 
 ```bash
 ludwig --local
 ```
 
 Results will still be saved to the server. 
-To run jobs without access to the server, use the `--isolated` flag:
+To run jobs without access to the server, use the `--isolated` flag, as shown below. 
+This is useful for developing and debugging your code without having to submit it to a Ludwig worker for execution.
 
 ```bash
 ludwig --isolated
