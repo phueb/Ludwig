@@ -247,7 +247,7 @@ def submit():
             job.param2val['project_path'] = str(configs.WorkerDirs.research_data / project_name)
 
         # exit if requested parameter configuration already exists requested number of times?
-        if namespace.minimal or namespace.local or namespace.isolated or namespace.clear_runs:
+        if namespace.minimal or namespace.isolated or namespace.clear_runs:
             disable_count = True
         else:
             disable_count = False
