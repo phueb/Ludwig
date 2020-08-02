@@ -246,8 +246,9 @@ def submit():
         else:
             job.param2val['project_path'] = str(configs.WorkerDirs.research_data / project_name)
 
-        # exit if requested parameter configuration already exists requested number of times?
-        if namespace.minimal or namespace.local or namespace.isolated or namespace.clear_runs:
+        # allow exit if requested parameter configuration already exists requested number of times?
+        # do counting with --local, because behavior when --local should be identical to behavior of Ludwig worker
+        if namespace.minimal or namespace.isolated or namespace.clear_runs:
             disable_count = True
         else:
             disable_count = False
