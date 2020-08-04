@@ -235,7 +235,10 @@ def submit():
         # make job
         job = Job(param2val)
 
-        # TODO should be called AFTER clearing runs - otherwise param number never resets to zero
+        # get param_name - always try to use an existing param_name even if clear_runs == True,
+        # because this provides constancy in that parameter configurations always receive the same param_name,
+        # which allows for hard-coding param_names in user code.
+        # but hard-coding is not recommended, because constancy is broken when runs are manually cleared.
         job.update_param_name(runs_path, num_new)
 
         # add project_path
@@ -249,12 +252,12 @@ def submit():
         # allow exit if requested parameter configuration already exists requested number of times?
         # do counting with --local, because behavior when --local should be identical to behavior of Ludwig worker
         if namespace.minimal or namespace.isolated or namespace.clear_runs:
-            disable_count = True
+            num_needed = namespace.reps
         else:
-            disable_count = False
+            num_needed = job.calc_num_needed(runs_path, namespace.reps)
 
         # replicate each job
-        for rep_id in range(job.calc_num_needed(runs_path, namespace.reps, disable=disable_count)):
+        for rep_id in range(num_needed):
 
             # add job_name and save_path
             job.update_job_name(rep_id)

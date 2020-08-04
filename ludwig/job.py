@@ -56,15 +56,9 @@ class Job:
     def calc_num_needed(self,
                         runs_path: Path,
                         reps: int,
-                        disable: bool = False,  # for unit-testing or debugging
                         ):
         param_name = self.param2val['param_name']
         num_times_logged = len(list((runs_path / param_name).glob('*num*')))
-        num_times_logged = num_times_logged if not disable else 0
-
-        # TODO test
-        print(num_times_logged)
-        print(disable)
 
         res = reps - num_times_logged
         res = max(0, res)
