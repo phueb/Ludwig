@@ -3,9 +3,8 @@ import os
 from pathlib import Path
 
 from ludwig import configs
-from ludwig.uploader import Uploader  # import client after modifying config.is_unit_test
+from ludwig.uploader import Uploader
 from ludwig.job import Job
-
 from Example.example import params
 
 

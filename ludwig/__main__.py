@@ -141,19 +141,22 @@ def submit():
     assert not (namespace.local and namespace.isolated)
     assert not (namespace.extra_paths and namespace.isolated)
 
-    # ---------------------------------------------- paths (relative to client, except when stated otherwise)
+    # ---------------------------------------------- paths
 
     if namespace.research_data_path:
         research_data_path = Path(namespace.research_data_path)
     else:
         research_data_path = Path(default_mnt_point) / configs.WorkerDirs.research_data.name
 
-    remote_project_path = research_data_path / project_name
-
+    # project path points to wherever user decides a job should be executed:
+    # locally: project_path is local project_path
+    # remotely: project_path is on shared_drive
     if namespace.isolated:
-        runs_path = cwd / 'runs'
+        project_path = cwd
     else:
-        runs_path = remote_project_path / 'runs'
+        project_path = research_data_path / project_name
+
+    runs_path = project_path / 'runs'
 
     src_path = cwd / namespace.src
 
@@ -200,14 +203,14 @@ def submit():
         if not p.is_dir():
             raise NotADirectoryError('{} is not a directory'.format(p))
         src = str(extra_path)
-        dst = str(remote_project_path / p.name)
+        dst = str(project_path / p.name)
         print_ludwig(f'Copying {src} to {dst}')
         copy_tree(src, dst)
 
-    uploader = Uploader(remote_project_path, src_path.name)
+    uploader = Uploader(project_path, src_path.name)
 
     # delete job instructions for worker saved on server (do this before uploader.to_disk() )
-    for pkl_path in remote_project_path.glob(f'*.pkl'):
+    for pkl_path in project_path.glob(f'*.pkl'):
         pkl_path.unlink()
 
     if namespace.group is None:
@@ -243,7 +246,7 @@ def submit():
 
         # add project_path
         if namespace.local:
-            job.param2val['project_path'] = str(remote_project_path)
+            job.param2val['project_path'] = str(project_path)
         elif namespace.isolated:
             job.param2val['project_path'] = str(cwd)
         else:
