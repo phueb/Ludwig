@@ -69,6 +69,10 @@ class Uploader:
         if not job.is_ready():
             raise SystemExit('Cannot save job. Job is not ready. Update job.param2val')
 
+        # if new project, create project path on shared drive
+        if not self.project_path.is_dir():
+            self.project_path.mkdir()
+
         # save parameter configuration to shared drive
         unique_id = f'{job.param2val["param_name"]}_{job.param2val["job_name"]}'
         p = self.project_path / f'{worker}_{unique_id}.pkl'
