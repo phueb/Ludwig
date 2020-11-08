@@ -21,13 +21,12 @@ The resource consists of a file server and 8 Ubuntu 16.04 machines with GPU acce
 | lecun     |1 Geforce GTX 1080 Ti  |Intel i7-8700K CPU @ 3.70GHz |Alienware Aurora R7 |256GB SSD + 1TB HDD |
 | bengio    |1 Geforce GTX 1080 Ti  |Intel i7-8700K CPU @ 3.70GHz |Alienware Aurora R7 |256GB SSD + 1TB HDD |
 
-All machines are configured to use:
-* CUDA 10.0
-* cudnn 7
-* python3.7
-* tensorflow-gpu==2.0.0rc1
-* pytorch==1.4.0
-* allennlp==0.9.0
+Installations:
+* Ubuntu 16.04.7 LTS
+* python3.7.9
+* nvidia-430
+* pytorch==1.6.0
+* transformers==3.0.2
 
 
 ## Requirements & Installation

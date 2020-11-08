@@ -263,7 +263,7 @@ def submit():
         for rep_id in range(num_needed):
 
             # add job_name and save_path
-            job.update_job_name(rep_id)
+            job.update_job_name_and_save_path(rep_id, namespace.src)
 
             # if running locally, execute job now + cleanup
             if namespace.local or namespace.isolated:

@@ -66,9 +66,10 @@ class Job:
             param_name, num_times_logged, res))
         return res
 
-    def update_job_name(self,
-                        rep_id: int,
-                        ) -> None:
+    def update_job_name_and_save_path(self,
+                                      rep_id: int,
+                                      src_name: str,
+                                      ) -> None:
 
         # add job_name
         time_of_init = datetime.datetime.now().strftime(configs.Time.format)
@@ -76,7 +77,8 @@ class Job:
         self.param2val['job_name'] = job_name
 
         # add save_path - must not be on shared drive because contents are copied to shared drive at end of job
-        save_path = Path(self.param2val['param_name']) / job_name / configs.Constants.saves
+        # TODO test Path(src_name)
+        save_path = Path(f'{src_name}_runs') / self.param2val["param_name"] / job_name / configs.Constants.saves
         self.param2val['save_path'] = str(save_path)
 
     def is_ready(self) -> bool:
