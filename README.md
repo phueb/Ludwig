@@ -38,7 +38,7 @@ Windows is currently not supported due to uncertainty about how mounting is perf
 Tasks submitted to Ludwig must be programmed in Python 3 (the Python3.7 interpreter is used on each worker).
 
 ### Access to the shared drive
-See the administrator to provide access to the lab's shared drive. Mount the drive at ```/media/research_data```.
+See the administrator to provide access to the lab's shared drive. Mount the drive at ```/media/ludwig_data```.
 The share is hosted by the lab's file server using ```samba```, and is shared with each node. 
 Because we do not allow direct shell access to nodes, all data and logs must be saved to the shared drive.
 
@@ -118,10 +118,10 @@ Across different operating systems, the default mount location is different.
 That means that the path to the shared drive will be different.
 To upload data or third-party source code to the shared drive, ```ludwig``` must be explicitly told where to find the shared drive:
 
-For example, if `research_data` is mounted at `/Volumes/research_data`:
+For example, if `ludwig_data` is mounted at `/Volumes/ludwig_data`:
 
 ```
-ludwig -mnt /Volumes/research_data
+ludwig -mnt /Volumes/ludwig_data
 ```
 The ```-mnt``` flag is used to specify where the shared drive is mounted on the user's machine.
 

@@ -21,9 +21,9 @@ from ludwig import configs
 
 def add_ssh_config():
     """
-    append contents of /media/research_data/.ludwig/config to ~/.ssh/ludwig_config
+    append contents of /media/ludwig_data/.ludwig/config to ~/.ssh/ludwig_config
     """
-    src = configs.WorkerDirs.research_data / '.ludwig' / 'config'
+    src = configs.WorkerDirs.ludwig_data / '.ludwig' / 'config'
     dst = Path().home() / '.ssh' / 'ludwig_config'  # do not overwrite existing config
     print_ludwig('Copying {} to {}'.format(src, dst))
     shutil.copy(src, dst)
@@ -38,17 +38,17 @@ def status():
     parser.add_argument('-w', '--worker', default=None, action='store', dest='worker',
                         choices=configs.Remote.online_worker_names, required=False,
                         help='The name of the worker the status of which is requested.')
-    parser.add_argument('-mnt', '--research_data', default=None, action='store', dest='research_data_path',
+    parser.add_argument('-mnt', '--ludwig_data', default=None, action='store', dest='ludwig_data_path',
                         required=False,
-                        help='Specify where the shared drive is mounted on your system (if not /media/research_data).')
+                        help='Specify where the shared drive is mounted on your system (if not /media/ludwig_data).')
     namespace = parser.parse_args()
 
-    if namespace.research_data_path:
-        research_data_path = Path(namespace.research_data_path)
+    if namespace.ludwig_data_path:
+        ludwig_data_path = Path(namespace.ludwig_data_path)
     else:
-        research_data_path = Path(default_mnt_point) / configs.WorkerDirs.research_data.name
+        ludwig_data_path = Path(default_mnt_point) / configs.WorkerDirs.ludwig_data.name
 
-    stdout_path = research_data_path / configs.WorkerDirs.stdout.name
+    stdout_path = ludwig_data_path / configs.WorkerDirs.stdout.name
 
     if namespace.worker is None:
         workers = configs.Remote.online_worker_names
@@ -125,9 +125,9 @@ def submit():
                         required=False,
                         help='Run first job and exit.')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
-    parser.add_argument('-mnt', '--research_data', default=None, action='store', dest='research_data_path',
+    parser.add_argument('-mnt', '--ludwig_data', default=None, action='store', dest='ludwig_data_path',
                         required=False,
-                        help='Specify where the shared drive is mounted on your system (if not /media/research_data).')
+                        help='Specify where the shared drive is mounted on your system (if not /media/ludwig_data).')
     parser.add_argument('-e', '--extra_paths', nargs='*', default=[], action='store', dest='extra_paths',
                         required=False,
                         help='Paths to additional Python packages or data. ')
@@ -143,10 +143,10 @@ def submit():
 
     # ---------------------------------------------- paths
 
-    if namespace.research_data_path:
-        research_data_path = Path(namespace.research_data_path)
+    if namespace.ludwig_data_path:
+        ludwig_data_path = Path(namespace.ludwig_data_path)
     else:
-        research_data_path = Path(default_mnt_point) / configs.WorkerDirs.research_data.name
+        ludwig_data_path = Path(default_mnt_point) / configs.WorkerDirs.ludwig_data.name
 
     # project path points to wherever user decides a job should be executed:
     # locally: project_path is local project_path
@@ -154,7 +154,7 @@ def submit():
     if namespace.isolated:
         project_path = cwd
     else:
-        project_path = research_data_path / project_name
+        project_path = ludwig_data_path / project_name
 
     runs_path = project_path / 'runs'
 
@@ -172,8 +172,8 @@ def submit():
     # ------------------------------------------------ checks
 
     if not namespace.isolated:
-        if not os.path.ismount(str(research_data_path)):
-            raise OSError(f'{research_data_path} is not mounted')
+        if not os.path.ismount(str(ludwig_data_path)):
+            raise OSError(f'{ludwig_data_path} is not mounted')
 
     if not src_path.exists():
         raise NotADirectoryError(f'Cannot find source code in {src_path}.')
@@ -250,7 +250,7 @@ def submit():
         elif namespace.isolated:
             job.param2val['project_path'] = str(cwd)
         else:
-            job.param2val['project_path'] = str(configs.WorkerDirs.research_data / project_name)
+            job.param2val['project_path'] = str(configs.WorkerDirs.ludwig_data / project_name)
 
         # allow exit if requested parameter configuration already exists requested number of times?
         # do counting with --local, because behavior when --local should be identical to behavior of Ludwig worker

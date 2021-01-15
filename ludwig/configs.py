@@ -4,8 +4,8 @@ import socket
 
 class WorkerDirs:
     root = Path(__file__).parent.parent
-    research_data = Path('/') / 'media' / 'research_data'
-    stdout = research_data / 'stdout'
+    ludwig_data = Path('/') / 'media' / 'ludwig_data'
+    stdout = ludwig_data / 'stdout'
     watched = Path('/') / 'var' / 'sftp' / 'ludwig_jobs'
 
 
@@ -28,7 +28,6 @@ class Time:
 
 class Constants:
     param2val = 'param2val'
-    not_ludwig = '_not-ludwig'
     saves = 'saves'
     runs = 'runs'
     added_param_names = ['job_name', 'param_name', 'project_path', 'save_path']

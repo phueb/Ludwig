@@ -16,9 +16,9 @@ do
     ssh ${hostname} 'pkill --full --echo "python3 watcher.py"'
 
     echo "Removing stdout file if it exists"
-    test -e /media/research_data/stdout/${hostname}.out && rm /media/research_data/stdout/${hostname}.out || echo "file not found"
+    test -e /media/ludwig_data/stdout/${hostname}.out && rm /media/ludwig_data/stdout/${hostname}.out || echo "file not found"
 
     echo "Starting new watcher"
-    ssh ${hostname} "cd /var/sftp/Ludwig; nohup python3.7 watcher.py > /media/research_data/stdout/${hostname}.out 2>&1 &"
+    ssh ${hostname} "cd /var/sftp/Ludwig; nohup python3.7 watcher.py > /media/ludwig_data/stdout/${hostname}.out 2>&1 &"
 echo
 done

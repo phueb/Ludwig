@@ -114,8 +114,8 @@ class Uploader:
         # ------------------------------------- sftp
 
         # connect via sftp
-        research_data_path = self.project_path.parent
-        private_key_path = research_data_path / '.ludwig' / 'id_rsa'
+        ludwig_data_path = self.project_path.parent
+        private_key_path = ludwig_data_path / '.ludwig' / 'id_rsa'
         sftp = pysftp.Connection(username='ludwig',
                                  host=self.worker2ip[worker],
                                  private_key=str(private_key_path))
@@ -159,8 +159,8 @@ class Uploader:
         # ------------------------------------- sftp
 
         # connect via sftp
-        research_data_path = self.project_path.parent
-        private_key_path = research_data_path / '.ludwig' / 'id_rsa'
+        ludwig_data_path = self.project_path.parent
+        private_key_path = ludwig_data_path / '.ludwig' / 'id_rsa'
         sftp = pysftp.Connection(username='ludwig',
                                  host=self.worker2ip[worker],
                                  private_key=str(private_key_path))

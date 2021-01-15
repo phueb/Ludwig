@@ -33,8 +33,7 @@ class Job:
         only if it doesn't exist, create a new one
         """
         param_nums = [int(p.name.split('_')[-1])
-                      for p in runs_path.glob('param*')
-                      if configs.Constants.not_ludwig not in p.name] or [0]
+                      for p in runs_path.glob('param*')] or [0]
 
         for param_p in runs_path.glob('param_*'):
             with (param_p / 'param2val.yaml').open('r') as f:

@@ -13,7 +13,7 @@ def gen_param_paths(project_name: str,
                     param2requests: Dict[str, list],
                     param2default: Dict[str, Any],
                     runs_path: Optional[Path] = None,
-                    research_data_path: Optional[Path] = None,
+                    ludwig_data_path: Optional[Path] = None,
                     label_params:   Optional[List[str]] = None,
                     isolated: bool = False,
                     label_n: bool = True,
@@ -26,26 +26,26 @@ def gen_param_paths(project_name: str,
 
     # --------------------------------------------------------  paths
 
-    if research_data_path:
-        research_data_path = Path(research_data_path)
+    if ludwig_data_path:
+        ludwig_data_path = Path(ludwig_data_path)
     else:
-        research_data_path = Path(default_mnt_point) / configs.WorkerDirs.research_data.name
+        ludwig_data_path = Path(default_mnt_point) / configs.WorkerDirs.ludwig_data.name
 
     if isolated:
         project_path = Path.cwd()
     else:
-        project_path = research_data_path / project_name
+        project_path = ludwig_data_path / project_name
 
     if not runs_path:
         runs_path = project_path / 'runs'
 
-    # check that research_data is mounted
-    if not os.path.ismount(research_data_path):
-        raise OSError(f'{research_data_path} is not mounted')
+    # check that ludwig_data is mounted
+    if not os.path.ismount(ludwig_data_path):
+        raise OSError(f'{ludwig_data_path} is not mounted')
 
     # get + check path to runs
     if runs_path is None:
-        runs_path = research_data_path / project_name / 'runs'
+        runs_path = ludwig_data_path / project_name / 'runs'
     if not runs_path.exists():
         raise FileNotFoundError(f'{runs_path} does not exist.')
 

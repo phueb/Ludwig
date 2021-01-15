@@ -77,8 +77,8 @@ if __name__ == '__main__':
     src_name = project_name.lower()
 
     # define paths - do not use any paths defined in user project (they may be invalid)
-    research_data = Path('/') / 'media' / 'research_data'
-    remote_root_path = research_data / project_name
+    ludwig_data = Path('/') / 'media' / 'ludwig_data'
+    remote_root_path = ludwig_data / project_name
 
     # allow import of modules located in remote root path
     sys.path.append(str(remote_root_path))

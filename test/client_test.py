@@ -28,7 +28,7 @@ class MyTest(unittest.TestCase):
         job = Job(params.param2default)
         job.update_param_name(runs_path, num_new=0)
         job.update_job_name_and_save_path(0, src_name)
-        job.param2val['project_path'] = configs.WorkerDirs.research_data / project_name
+        job.param2val['project_path'] = configs.WorkerDirs.ludwig_data / project_name
         
         uploader.to_disk(job, worker)
 
