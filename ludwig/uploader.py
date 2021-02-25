@@ -161,6 +161,11 @@ class Uploader:
         # connect via sftp
         ludwig_data_path = self.project_path.parent
         private_key_path = ludwig_data_path / '.ludwig' / 'id_rsa'
+
+        print(private_key_path)
+        if not private_key_path.exists():
+            raise OSError(f'Did not find {private_key_path}')
+
         sftp = pysftp.Connection(username='ludwig',
                                  host=self.worker2ip[worker],
                                  private_key=str(private_key_path))

@@ -1,7 +1,6 @@
 import pandas as pd
 
 
-
 def main(param2val):
 
     # e.g. train a neural network
