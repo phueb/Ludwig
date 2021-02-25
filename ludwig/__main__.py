@@ -19,18 +19,6 @@ from ludwig.uploader import Uploader
 from ludwig import configs
 
 
-def add_ssh_config():
-    """
-    copy content of <ludwig_data_path>/.ludwig/config to ~/.ssh/ludwig_config.
-
-    note: this file contains the hostnames of Ludwig workers and their corresponding IP addresses.
-    """
-    src = configs.WorkerDirs.ludwig_data / '.ludwig' / 'config'
-    dst = Path().home() / '.ssh' / 'ludwig_config'  # do not overwrite existing config
-    print_ludwig('Copying {} to {}'.format(src, dst))
-    shutil.copy(src, dst)
-
-
 def status():
     """
     return filtered stdout (to which workers are printing) to get a sense of what workers are doing

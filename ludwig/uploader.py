@@ -24,7 +24,6 @@ class Uploader:
         self.project_name = project_path.name
         self.src_name = src_name
         self.runs_path = self.project_path / 'runs'
-        self.worker2ip = self.make_worker2ip()
 
     @staticmethod
     def make_worker2ip():
@@ -127,7 +126,7 @@ class Uploader:
         if not private_key_path.exists():
             raise OSError(f'Did not find {private_key_path}')
         sftp = pysftp.Connection(username='ludwig',
-                                 host=self.worker2ip[worker],
+                                 host=configs.Constants.worker2ip[worker],
                                  private_key=str(private_key_path),
                                  cnopts=cnopts)
 

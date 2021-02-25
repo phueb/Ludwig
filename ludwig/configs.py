@@ -32,5 +32,16 @@ class Constants:
     runs = 'runs'
     added_param_names = ['job_name', 'param_name', 'project_path', 'save_path']
 
+    worker2ip = {
+        'bengio': '130.126.181.116',
+        'hinton': '130.126.181.117',
+        'hoff': '130.126.181.118',
+        'norman': '130.126.181.119',
+        'hawkins': '130.126.181.120',
+        'hebb': '130.126.181.121',
+        'pitts': '130.126.181.122',
+        'lecun': '130.126.181.123',
+    }
+
 
 hostname = socket.gethostname()
