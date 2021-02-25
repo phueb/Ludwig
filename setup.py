@@ -14,7 +14,7 @@ setup(
     install_requires=['psutil',
                       'pysftp',
                       'watchdog',
-                      'paramiko'
+                      'paramiko==2.6.0',
                       'numpy',
                       'pandas',
                       'cached_property', 'PyYAML'],
