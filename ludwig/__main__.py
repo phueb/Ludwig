@@ -134,6 +134,9 @@ def submit():
     parser.add_argument('-n', '--no-upload', action='store_true', dest='no_upload',
                         required=False,
                         help='Whether to upload jobs to Ludwig. Set false for testing')
+    parser.add_argument('-s', '--skip-hostkey', action='store_true', dest='skip_hostkey',
+                        required=False,
+                        help='Whether to skip hostkey checking. Unsafe, but may prevent SSH connection error.')
     namespace = parser.parse_args()
 
     # ---------------------------------------------- checks
@@ -307,7 +310,7 @@ def submit():
 
     # upload = start jobs
     for worker in workers_with_jobs:
-        uploader.start_jobs(worker)
+        uploader.start_jobs(worker, namespace.skip_hostkey)
 
     print('Submitted jobs to:')
     for w in workers_with_jobs:

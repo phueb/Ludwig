@@ -1,6 +1,6 @@
 
 
-__version__ = '3.0.1'
+__version__ = '3.1.0'
 
 
 def print_ludwig(s):

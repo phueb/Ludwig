@@ -55,7 +55,7 @@ class Uploader:
             if percent_used > configs.Remote.disk_max_percent:
                 raise RuntimeError('Disk space usage > {}.'.format(configs.Remote.disk_max_percent))
         else:
-            print_ludwig('WARNING: Cannot determine disk space on non-Linux platform.')
+            pass
 
     def to_disk(self,
                 job: Job,
@@ -87,6 +87,7 @@ class Uploader:
 
     def start_jobs(self,
                    worker: str,
+                   skip_hostkey: bool,  # True if skipping hostkey check (not safe)
                    ) -> None:
         """
         source code is uploaded.
@@ -113,12 +114,22 @@ class Uploader:
 
         # ------------------------------------- sftp
 
+        # (unsafe) skip hostkey check (this may prevent SSH connection errors for new users)
+        cnopts = pysftp.CnOpts()
+        if skip_hostkey:
+            print('WARNING: Skipping hostkey check. Known hosts will not be consulted')
+            cnopts.hostkey = None
+
         # connect via sftp
         ludwig_data_path = self.project_path.parent
         private_key_path = ludwig_data_path / '.ludwig' / 'id_rsa'
+        print(f'Looking for private key path in {private_key_path}')
+        if not private_key_path.exists():
+            raise OSError(f'Did not find {private_key_path}')
         sftp = pysftp.Connection(username='ludwig',
                                  host=self.worker2ip[worker],
-                                 private_key=str(private_key_path))
+                                 private_key=str(private_key_path),
+                                 cnopts=cnopts)
 
         # upload code files
         print_ludwig(f'Will upload {self.src_name} to {remote_path} on {worker}')
@@ -161,14 +172,15 @@ class Uploader:
         # connect via sftp
         ludwig_data_path = self.project_path.parent
         private_key_path = ludwig_data_path / '.ludwig' / 'id_rsa'
-
-        print(private_key_path)
+        print(f'Looking for private key in {str(private_key_path)}')
         if not private_key_path.exists():
-            raise OSError(f'Did not find {private_key_path}')
-
+            raise OSError(f'Did not find private key in {private_key_path}')
+        cnopts = pysftp.CnOpts()
+        cnopts.hostkeys = None  # prevent: paramiko.ssh_exception.SSHException: No hostkey found
         sftp = pysftp.Connection(username='ludwig',
                                  host=self.worker2ip[worker],
-                                 private_key=str(private_key_path))
+                                 private_key=str(private_key_path),
+                                 cnopts=cnopts)
 
         # upload run.py - this triggers watcher which kills active jobs associated with project
         run_file_name = f'run_{self.project_name}.py'
