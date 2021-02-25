@@ -87,7 +87,7 @@ class Uploader:
 
     def start_jobs(self,
                    worker: str,
-                   skip_hostkey: bool,  # True if skipping hostkey check (not safe)
+                   skip_hostkey: bool = False,  # True if skipping hostkey check (not safe)
                    ) -> None:
         """
         source code is uploaded.
@@ -118,12 +118,12 @@ class Uploader:
         cnopts = pysftp.CnOpts()
         if skip_hostkey:
             print('WARNING: Skipping hostkey check. Known hosts will not be consulted')
-            cnopts.hostkey = None
+            cnopts.hostkeys = None
 
         # connect via sftp
         ludwig_data_path = self.project_path.parent
         private_key_path = ludwig_data_path / '.ludwig' / 'id_rsa'
-        print(f'Looking for private key path in {private_key_path}')
+        print(f'Looking for private key in {private_key_path}')
         if not private_key_path.exists():
             raise OSError(f'Did not find {private_key_path}')
         sftp = pysftp.Connection(username='ludwig',

@@ -21,7 +21,9 @@ from ludwig import configs
 
 def add_ssh_config():
     """
-    append contents of /media/ludwig_data/.ludwig/config to ~/.ssh/ludwig_config
+    copy content of <ludwig_data_path>/.ludwig/config to ~/.ssh/ludwig_config.
+
+    note: this file contains the hostnames of Ludwig workers and their corresponding IP addresses.
     """
     src = configs.WorkerDirs.ludwig_data / '.ludwig' / 'config'
     dst = Path().home() / '.ssh' / 'ludwig_config'  # do not overwrite existing config
@@ -135,7 +137,7 @@ def submit():
                         required=False,
                         help='Whether to upload jobs to Ludwig. Set false for testing')
     parser.add_argument('-s', '--skip-hostkey', action='store_true', dest='skip_hostkey',
-                        required=False,
+                        required=False, default=False,
                         help='Whether to skip hostkey checking. Unsafe, but may prevent SSH connection error.')
     namespace = parser.parse_args()
 
