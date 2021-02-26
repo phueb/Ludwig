@@ -25,25 +25,6 @@ class Uploader:
         self.src_name = src_name
         self.runs_path = self.project_path / 'runs'
 
-    @staticmethod
-    def make_worker2ip():
-        """load hostname aliases from .ssh/ludwig_config"""
-        res = {}
-        h = None
-        p = configs.Remote.path_to_ssh_config
-        if not p.exists():
-            raise FileNotFoundError('Please specify hostname-to-IP mappings in {}'.format(p))
-        with p.open('r') as f:
-            for line in f.readlines():
-                words = line.split()
-                if 'Host' in words:
-                    h = line.split()[1]
-                    res[h] = None
-                elif 'HostName' in words:
-                    ip = line.split()[1]
-                    res[h] = ip
-        return res
-
     def check_disk_space(self, verbose=False):
         if platform.system() in {'Linux'}:
             p = self.project_path.parent
@@ -177,7 +158,7 @@ class Uploader:
         cnopts = pysftp.CnOpts()
         cnopts.hostkeys = None  # prevent: paramiko.ssh_exception.SSHException: No hostkey found
         sftp = pysftp.Connection(username='ludwig',
-                                 host=self.worker2ip[worker],
+                                 host=configs.Constants.worker2ip[worker],
                                  private_key=str(private_key_path),
                                  cnopts=cnopts)
 
