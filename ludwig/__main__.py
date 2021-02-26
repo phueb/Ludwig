@@ -200,7 +200,7 @@ def submit():
         print_ludwig(f'Copying {src} to {dst}')
         copy_tree(src, dst)
 
-    uploader = Uploader(project_path, src_path.name)
+    uploader = Uploader(project_path, src_path.name, namespace.skip_hostkey)
 
     # delete job instructions for worker saved on server (do this before uploader.to_disk() )
     for pkl_path in project_path.glob(f'*.pkl'):
@@ -287,8 +287,12 @@ def submit():
         return
 
     # kill running jobs on workers? (do this before removing runs folders).
-    # trigger worker without job instructions: kills existing job with matching project_name
-    for worker in set(configs.Remote.online_worker_names).difference(workers_with_jobs):
+    # triggering worker without job instructions kills existing job with matching project_name
+    if namespace.worker is None:
+        workers_for_killing = set(configs.Remote.online_worker_names).difference(workers_with_jobs)
+    else:  # if connecting to single worker, only kill jobs on single worker to prevent needing tp access others
+        workers_for_killing = [namespace.worker]
+    for worker in workers_for_killing:
         uploader.kill_jobs(worker)
 
     # delete existing runs on shared drive?
@@ -300,7 +304,7 @@ def submit():
 
     # upload = start jobs
     for worker in workers_with_jobs:
-        uploader.start_jobs(worker, namespace.skip_hostkey)
+        uploader.start_jobs(worker)
 
     print('Submitted jobs to:')
     for w in workers_with_jobs:

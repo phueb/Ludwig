@@ -19,11 +19,21 @@ class Uploader:
     def __init__(self,
                  project_path: Path,
                  src_name: str,
+                 skip_hostkey: bool = False
                  ):
         self.project_path = project_path
         self.project_name = project_path.name
         self.src_name = src_name
         self.runs_path = self.project_path / 'runs'
+
+        known_hosts_path = project_path.parent / '.ludwig' / 'known_ludwig_workers'
+        self.cnopts = pysftp.CnOpts(knownhosts=str(known_hosts_path))
+
+        # (unsafe) skip hostkey check
+        # for new users, this prevents "paramiko.ssh_exception.SSHException: No hostkey found"
+        if skip_hostkey:
+            print('WARNING: Skipping hostkey checking.')
+            self.cnopts.hostkeys = None
 
     def check_disk_space(self, verbose=False):
         if platform.system() in {'Linux'}:
@@ -67,7 +77,6 @@ class Uploader:
 
     def start_jobs(self,
                    worker: str,
-                   skip_hostkey: bool = False,  # True if skipping hostkey check (not safe)
                    ) -> None:
         """
         source code is uploaded.
@@ -94,12 +103,6 @@ class Uploader:
 
         # ------------------------------------- sftp
 
-        # (unsafe) skip hostkey check (this may prevent SSH connection errors for new users)
-        cnopts = pysftp.CnOpts()
-        if skip_hostkey:
-            print('WARNING: Skipping hostkey check. Known hosts will not be consulted')
-            cnopts.hostkeys = None
-
         # connect via sftp
         ludwig_data_path = self.project_path.parent
         private_key_path = ludwig_data_path / '.ludwig' / 'id_rsa'
@@ -109,7 +112,7 @@ class Uploader:
         sftp = pysftp.Connection(username='ludwig',
                                  host=configs.Constants.worker2ip[worker],
                                  private_key=str(private_key_path),
-                                 cnopts=cnopts)
+                                 cnopts=self.cnopts)
 
         # upload code files
         print_ludwig(f'Will upload {self.src_name} to {remote_path} on {worker}')
@@ -149,18 +152,18 @@ class Uploader:
 
         # ------------------------------------- sftp
 
+        print_ludwig(f'Killing jobs on {worker} with address={configs.Constants.worker2ip[worker]}')
+
         # connect via sftp
         ludwig_data_path = self.project_path.parent
         private_key_path = ludwig_data_path / '.ludwig' / 'id_rsa'
-        print(f'Looking for private key in {str(private_key_path)}')
+        print_ludwig(f'Looking for private key in {str(private_key_path)}')
         if not private_key_path.exists():
             raise OSError(f'Did not find private key in {private_key_path}')
-        cnopts = pysftp.CnOpts()
-        cnopts.hostkeys = None  # prevent: paramiko.ssh_exception.SSHException: No hostkey found
         sftp = pysftp.Connection(username='ludwig',
                                  host=configs.Constants.worker2ip[worker],
                                  private_key=str(private_key_path),
-                                 cnopts=cnopts)
+                                 cnopts=self.cnopts)
 
         # upload run.py - this triggers watcher which kills active jobs associated with project
         run_file_name = f'run_{self.project_name}.py'
