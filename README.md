@@ -57,7 +57,8 @@ Additionally, inside this folder, create two Python files:
 * ```params.py```: contains information about which parameters to use for each job
 * ```config.py```: contains basic information like the name of the user's project
 
-See the `Example` folder for an example of what to put into these files.
+See the `Example` folder for an example of what to put into these files,
+ or use the template repository [Ludwig-Template](https://github.com/UIUCLearningLanguageLab/Ludwig-Template).
 
 ## Submitting a Job
 
@@ -68,22 +69,7 @@ To submit jobs, go to your project root folder, and invoke the command-line tool
 ludwig
 ``` 
 
-You may get an error message saying that hostkeys cannot be found.
-To add the worker's hostkeys to your machine, use `sftp` to connect to each worker, 
-to trigger a prompt asking to copy the worker's hostkey. 
-For example,
-
-```bash
-sftp ludwig@hebb
-```
-
-When asked to save the hostkey, enter `yes` and hit `Enter`.
-
-Alternatively, skip hostkey checking with the `-s` flag:
-
-```bash
-ludwig -s
-```
+See the section Troubleshooting if errors are encountered.
 
 ### Viewing output of jobs
 
@@ -103,7 +89,26 @@ ludwig-status -w hebb
 Any time new jobs are submitted, any previously submitted jobs associated with the same project and still running, 
 will be killed.
 
-## Advanced 
+## Troubleshooting 
+
+### Error hostkey not found
+
+You may get an error message saying that hostkeys cannot be found.
+To add the worker's hostkeys to your machine, use `sftp` to connect to each worker, 
+to trigger a prompt asking to copy the worker's hostkey. 
+For example,
+
+```bash
+sftp ludwig@hebb
+```
+
+When asked to save the hostkey, enter `yes` and hit `Enter`.
+
+Alternatively, skip hostkey checking with the `-s` flag:
+
+```bash
+ludwig -s
+```
 
 ### Non-standard mount location
 
@@ -117,6 +122,8 @@ For example, if `ludwig_data` is mounted at `/Volumes/ludwig_data`:
 ludwig -mnt /Volumes/ludwig_data
 ```
 The ```-mnt``` flag is used to specify where the shared drive is mounted on the user's machine.
+
+## Advanced Usage
 
 ### Reading from File Server during remote job execution
 
