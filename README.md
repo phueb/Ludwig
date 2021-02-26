@@ -3,7 +3,7 @@
 </div>
 
 
-## Info
+## About
 
 The UIUC Learning & language Lab provides compute resources for lab members and collaborators wishing to train large neural network models. 
 The resource consists of a file server and 8 Ubuntu 16.04 machines with GPU acceleration for deep learning tasks.
@@ -32,7 +32,7 @@ Installations:
 ## Requirements & Installation
 
 ### Linux or MacOS
-Windows is currently not supported due to uncertainty about how mounting is performed.
+Windows is currently not supported due to incompatibility with file names used by Ludwig.
 
 ### Python
 Tasks submitted to Ludwig must be programmed in Python 3 (the Python3.7 interpreter is used on each worker).
@@ -68,29 +68,22 @@ To submit jobs, go to your project root folder, and invoke the command-line tool
 ludwig
 ``` 
 
-Upon trying to submit jobs, first-time users will notice the following error message:
-
-```
-FileNotFoundError: Please specify hostname-to-IP mappings in /home/ph/.ssh/ludwig_config
-```
-
-This means that `Ludwig` does not know the IP address of the workers to submit jobs to.
-To remedy, type:
-
-```bash
-ludwig-add-ssh-config
-```
-
-You may also get an error message saying that hostkeys cannot be found.
-To add the worker's hostkeys to your machine, use `ssh` to connect to each worker, 
+You may get an error message saying that hostkeys cannot be found.
+To add the worker's hostkeys to your machine, use `sftp` to connect to each worker, 
 to trigger a prompt asking to copy the worker's hostkey. 
 For example,
 
 ```bash
-ssh hebb
+sftp ludwig@hebb
 ```
 
-Then, when prompted, enter `yes` and hit `Enter`.
+When asked to save the hostkey, enter `yes` and hit `Enter`.
+
+Alternatively, skip hostkey checking with the `-s` flag:
+
+```bash
+ludwig -s
+```
 
 ### Viewing output of jobs
 
