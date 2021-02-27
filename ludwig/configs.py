@@ -4,7 +4,7 @@ import socket
 
 class WorkerDirs:
     root = Path(__file__).parent.parent
-    ludwig_data = Path('/') / 'media' / 'ludwig_data'
+    ludwig_data = Path('/') / 'media' / 'ludwig_data'  # relative to worker
     stdout = ludwig_data / 'stdout'
     watched = Path('/') / 'var' / 'sftp' / 'ludwig_jobs'
 

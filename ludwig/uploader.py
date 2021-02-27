@@ -27,6 +27,8 @@ class Uploader:
         self.runs_path = self.project_path / 'runs'
 
         known_hosts_path = project_path.parent / '.ludwig' / 'known_ludwig_workers'
+        if not known_hosts_path.exists():
+            raise OSError(f'Did not find {known_hosts_path}')
         self.cnopts = pysftp.CnOpts(knownhosts=str(known_hosts_path))
 
         # (unsafe) skip hostkey check

@@ -18,12 +18,15 @@ class MyTest(unittest.TestCase):
         """
         project_name = 'Example'
         src_name = 'example'
-        example_project_path = Path(__file__).parent.parent / project_name
+        # project path is always on shared drive when not running locally
+        project_path = Path('/') / 'media' / 'ludwig_data' / project_name
+        if not project_path.exists():
+            project_path.mkdir()
         worker = configs.Remote.online_worker_names[0]
-        runs_path = example_project_path / configs.Constants.runs
+        runs_path = project_path / configs.Constants.runs
 
-        os.chdir(str(example_project_path))
-        uploader = Uploader(example_project_path, src_name)
+        os.chdir(str(project_path))
+        uploader = Uploader(project_path, src_name)
         
         job = Job(params.param2default)
         job.update_param_name(runs_path, num_new=0)

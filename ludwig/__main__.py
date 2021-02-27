@@ -200,8 +200,6 @@ def submit():
         print_ludwig(f'Copying {src} to {dst}')
         copy_tree(src, dst)
 
-    uploader = Uploader(project_path, src_path.name, namespace.skip_hostkey)
-
     # delete job instructions for worker saved on server (do this before uploader.to_disk() )
     for pkl_path in project_path.glob(f'*.pkl'):
         pkl_path.unlink()
@@ -272,6 +270,8 @@ def submit():
 
                 worker = namespace.worker or next(workers_cycle)
                 workers_with_jobs.add(worker)
+
+                uploader = Uploader(project_path, src_path.name, namespace.skip_hostkey)
                 uploader.to_disk(job, worker)
 
         num_new += int(job.is_new)
