@@ -25,9 +25,10 @@ Installations:
 * Ubuntu 16.04.7 LTS
 * python3.7.9
 * nvidia-430
-* pytorch==1.6.0
-* transformers~=4.3.3
-* tokenizers~=0.10.1
+* pytorch==1.6.0+cu101
+* transformers==4.3.3
+* tokenizers==0.10.1
+* numpy==1.17.5
 
 
 ## Requirements & Installation
