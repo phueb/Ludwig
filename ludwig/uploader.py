@@ -4,8 +4,6 @@ An sftp-client library is used to upload code files to each machine.
 """
 from pathlib import Path
 import pysftp
-import platform
-import psutil
 import pickle
 from typing import Union, Optional
 
@@ -36,18 +34,6 @@ class Uploader:
         if skip_hostkey:
             print('WARNING: Skipping hostkey checking.')
             self.cnopts.hostkeys = None
-
-    def check_disk_space(self, verbose=False):
-        if platform.system() in {'Linux'}:
-            p = self.project_path.parent
-            usage_stats = psutil.disk_usage(str(p))
-            percent_used = usage_stats[3]
-            if verbose:
-                print_ludwig('Percent Disk Space used at {}: {}'.format(p, percent_used))
-            if percent_used > configs.Remote.disk_max_percent:
-                raise RuntimeError('Disk space usage > {}.'.format(configs.Remote.disk_max_percent))
-        else:
-            pass
 
     def to_disk(self,
                 job: Job,
@@ -91,8 +77,6 @@ class Uploader:
 
         assert self.project_name.lower() == self.src_name  # TODO what about when src name must be different?
         # this must be true because in run.py project_name is converted to src_name
-
-        self.check_disk_space()
 
         # -------------------------------------- prepare paths
 
@@ -142,8 +126,6 @@ class Uploader:
 
         assert self.project_name.lower() == self.src_name  # TODO what about when src name must be different?
         # this must be true because in run.py project_name is converted to src_name
-
-        self.check_disk_space()
 
         # -------------------------------------- prepare paths
 

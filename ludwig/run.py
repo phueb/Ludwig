@@ -19,34 +19,37 @@ def save_job_files(param2val: Dict[str, Any],
     if not series_list:
         print('WARNING: Job did not return any results')
 
-    # save series_list
+    # job_path refers to local directory if --isolated but not --local
     job_path = runs_path / param2val['param_name'] / param2val['job_name']
     if not job_path.exists():
         job_path.mkdir(parents=True)
+
+    # save series_list
     for series in series_list:
         if not isinstance(series, pd.Series):
-            print('WARNING: Object returned by job must be a pandas.Series.')
-            continue
+            raise TypeError('Object returned by job must be a pandas.Series.')
+        if series.name is None:
+            raise AttributeError('Each pandas.Series returned by job must have attribute name refer to unique string.')
         with (job_path / '{}.csv'.format(series.name)).open('w') as f:
             series.to_csv(f, index=True, header=[series.name])  # cannot name the index with "header" arg
+    print(f'Saved results   to {job_path}')
 
     # save param2val
     param2val_path = runs_path / param2val['param_name'] / 'param2val.yaml'
-    print(f'Saving param2val to {param2val_path}')
     if not param2val_path.exists():
         param2val_path.parent.mkdir(exist_ok=True)
         param2val['job_name'] = None
         with param2val_path.open('w', encoding='utf8') as f:
             yaml.dump(param2val, f, default_flow_style=False, allow_unicode=True)
+    print(f'Saved param2val to {param2val_path}')
 
-    # move contents of save_path to shared drive
+    # move contents of save_path to job_path (can be local or remote)
     save_path = Path(param2val['save_path'])
     src = str(save_path)
     dst = str(job_path)
     if save_path.exists():  # user may not create a directory at save path
-        print(f'Moving {src} to shared drive')
         shutil.move(src, dst)  # src is no longer available afterwards
-        print('Done moving')
+        print(f'Moved contents of save_path to {job_path}')
 
 
 def run_job_on_ludwig_worker(param2val):

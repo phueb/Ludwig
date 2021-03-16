@@ -260,10 +260,11 @@ def submit():
             if namespace.local or namespace.isolated:
                 series_list = user_job.main(job.param2val)
                 save_job_files(job.param2val, series_list, runs_path)
-                # remove old parents of save_paths - these should always be empty
-                for p in cwd.glob('param*'):
-                    print(f'Removing {p}')
-                    shutil.rmtree(p)
+
+                # temporary runs folder auto-created with name = {project_name}_runs must be removed
+                path_tmp = cwd / f'{src_path.name}_runs'
+                shutil.rmtree(path_tmp)
+                print(f'Removed temporary directory {path_tmp}')
 
             # if running on Ludwig, save worker instructions to shared drive
             else:
