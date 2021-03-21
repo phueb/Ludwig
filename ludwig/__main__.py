@@ -263,8 +263,9 @@ def submit():
 
                 # temporary runs folder auto-created with name = {project_name}_runs must be removed
                 path_tmp = cwd / f'{src_path.name}_runs'
-                shutil.rmtree(path_tmp)
-                print(f'Removed temporary directory {path_tmp}')
+                if path_tmp.exists():
+                    shutil.rmtree(path_tmp)
+                    print(f'Removed temporary directory {path_tmp}')
 
             # if running on Ludwig, save worker instructions to shared drive
             else:
