@@ -41,7 +41,7 @@ def gen_all_param2vals(param2requests: Dict[str, list],
                        ) -> List[Dict[str, Any]]:
     """
     return multiple param2val objects,
-     each defining the parameter configuration for a singel job
+     each defining the parameter configuration for a single job
     """
 
     # check that requests are lists and not empty
