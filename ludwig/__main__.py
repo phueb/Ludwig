@@ -287,6 +287,8 @@ def submit():
         return
     elif namespace.local or namespace.isolated:
         return
+    elif not  workers_with_jobs:  # all requested jobs have previously been completed
+        return
 
     # kill running jobs on workers? (do this before removing runs folders).
     # triggering worker without job instructions kills existing job with matching project_name
