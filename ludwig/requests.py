@@ -44,10 +44,12 @@ def gen_all_param2vals(param2requests: Dict[str, list],
      each defining the parameter configuration for a singel job
     """
 
-    # check that requests are lists
+    # check that requests are lists and not empty
     for k, v in param2requests.items():
         if not isinstance(v, list):
             raise ValueError('Ludwig: Values in param2requests must be of type list.')
+        if len(v) == 0:
+            raise ValueError('Ludwig: Found empty list in param2requests.')
 
     # complete partial request made by user
     full_request = {k: [v] if k not in param2requests else param2requests[k]
