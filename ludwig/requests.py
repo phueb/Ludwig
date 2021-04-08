@@ -62,6 +62,7 @@ def gen_all_param2vals(param2requests: Dict[str, list],
     for ids in param_ids:
         # map param names to integers corresponding to which param value to use
         param2val = {k: v[i] for (k, v), i in zip(param2opts, ids)}
-        assert param2val not in seen
+        if param2val in seen:
+            raise ValueError('Found duplicate value in param2requests')
         seen.append(param2val)
         yield param2val
