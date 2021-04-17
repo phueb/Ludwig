@@ -26,9 +26,7 @@ def gen_param_paths(project_name: str,
 
     # --------------------------------------------------------  paths
 
-    if ludwig_data_path:
-        ludwig_data_path = Path(ludwig_data_path)
-    else:
+    if ludwig_data_path is None:
         ludwig_data_path = Path(default_mnt_point) / configs.WorkerDirs.ludwig_data.name
 
     if isolated:
@@ -36,12 +34,12 @@ def gen_param_paths(project_name: str,
     else:
         project_path = ludwig_data_path / project_name
 
+        # check that ludwig_data is mounted
+        if not os.path.ismount(ludwig_data_path):
+            raise OSError(f'{ludwig_data_path} is not mounted')
+
     if not runs_path:
         runs_path = project_path / 'runs'
-
-    # check that ludwig_data is mounted
-    if not os.path.ismount(ludwig_data_path):
-        raise OSError(f'{ludwig_data_path} is not mounted')
 
     # get + check path to runs
     if runs_path is None:
