@@ -55,7 +55,8 @@ def status():
         status_, output = subprocess.getstatusoutput(command)
 
         if status_ != 0:
-            return 'Something went wrong. Check your access to the shared drive. Try using --mnt flag.'
+            print(output)
+            return 'Something went wrong. Check your access to the shared drive. Try using -mnt PATH_TO_DRIVE.'
 
         lines = str(output).split('\n')
         lines_with_ludwig_status = [line for line in lines if 'Ludwig' in line]

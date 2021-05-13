@@ -12,9 +12,7 @@ class WorkerDirs:
 class Remote:
     watched_pattern = 'run*.py'  # this is required for watcher to know which file to run
     path_to_ssh_config = Path.home() / '.ssh' / 'ludwig_config'
-    online_worker_names = ['norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'lecun']
-    # TODO bengio is down - march 24 2020
-    # todo hoff - no NVIDIA driver found by torch.
+    online_worker_names = ['norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'lecun', 'hoff', 'bengio']
     all_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio', 'lecun']
     group2workers = {'half1': ['hoff', 'norman', 'hebb', 'hinton'],
                      'half2': ['pitts', 'hawkins', 'bengio', 'lecun']}
