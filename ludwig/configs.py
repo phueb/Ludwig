@@ -12,7 +12,8 @@ class WorkerDirs:
 class Remote:
     watched_pattern = 'run*.py'  # this is required for watcher to know which file to run
     path_to_ssh_config = Path.home() / '.ssh' / 'ludwig_config'
-    online_worker_names = ['norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'lecun', 'hoff', 'bengio']
+    online_worker_names = ['norman', 'hinton', 'pitts', 'hawkins', 'lecun', 'hoff', 'bengio']
+    # TODO may 19: os error when connecting to hebb
     all_worker_names = ['hoff', 'norman', 'hebb', 'hinton', 'pitts', 'hawkins', 'bengio', 'lecun']
     group2workers = {'half1': ['hoff', 'norman', 'hebb', 'hinton'],
                      'half2': ['pitts', 'hawkins', 'bengio', 'lecun']}
