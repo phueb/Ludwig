@@ -92,9 +92,9 @@ class Uploader:
         # connect via sftp
         ludwig_data_path = self.project_path.parent
         private_key_path = ludwig_data_path / '.ludwig' / 'id_rsa'
-        print(f'Looking for private key in {private_key_path}')
         if not private_key_path.exists():
-            raise OSError(f'Did not find {private_key_path}')
+            raise OSError(f'Did not find private key in {private_key_path}')
+        print_ludwig(f'Connecting to {worker}')
         sftp = pysftp.Connection(username='ludwig',
                                  host=configs.Constants.worker2ip[worker],
                                  private_key=str(private_key_path),
@@ -141,7 +141,6 @@ class Uploader:
         # connect via sftp
         ludwig_data_path = self.project_path.parent
         private_key_path = ludwig_data_path / '.ludwig' / 'id_rsa'
-        print_ludwig(f'Looking for private key in {str(private_key_path)}')
         if not private_key_path.exists():
             raise OSError(f'Did not find private key in {private_key_path}')
         sftp = pysftp.Connection(username='ludwig',
