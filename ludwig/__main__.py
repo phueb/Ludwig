@@ -175,12 +175,14 @@ def submit():
     # check that requests are lists and that each list does not contain repeated values
     for k, v in user_params.param2requests.items():
         if not isinstance(v, list):
-            raise TypeError('Value of param2requests["{}"] must be a list'.format(k))
+            raise TypeError('Value of param2requests["{}"] must be a list.'.format(k))
         for vi in v:
             if isinstance(vi, list):  # tuples can be members of a set (they are hashable) but not lists
-                raise TypeError('Inner collections in param2requests must be of type tuple, not list')
+                raise TypeError('Inner collections in param2requests must be of type tuple, not list.')
         if len(v) != len(set(v)):  # otherwise each identical value will be assigned a unique param_name
             raise ValueError('Each requested parameter value must be unique')
+        if k not in user_params.param2default:
+            raise KeyError('{} is not a key in param2default. Check spelling.'.format(k))
 
     # check that there are no lists (only tuples) in param2default
     for k, v in user_params.param2default.items():

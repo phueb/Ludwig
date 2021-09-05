@@ -76,7 +76,6 @@ class Job:
         self.param2val['job_name'] = job_name
 
         # add save_path - must not be on shared drive because contents are copied to shared drive at end of job
-        # TODO test Path(src_name)
         save_path = Path(f'{src_name}_runs') / self.param2val["param_name"] / job_name / configs.Constants.saves
         self.param2val['save_path'] = str(save_path)
 
