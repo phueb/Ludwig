@@ -17,7 +17,10 @@ def gen_param_paths(project_name: str,
                     label_params:   Optional[List[str]] = None,
                     isolated: bool = False,
                     label_n: bool = True,
-                    verbose: bool = True):
+                    verbose: bool = True,
+                    verbose_plus: bool = False,
+                    require_all_found: bool = True,
+                    ):
     """
     Return path objects that point to folders with job results.
      Folders located in those paths are each generated with the same parameter configuration.
@@ -91,8 +94,13 @@ def gen_param_paths(project_name: str,
         else:
             if verbose:
                 print_ludwig('Params do not match')
+                if verbose_plus:
+                    for k in param2requests:
+                        for v in param2requests[k]:
+                            if loaded_param2val[k] != v:
+                                print(f'For key "{k}", {v} does not match {loaded_param2val[k]}')
 
-    if num_requested != num_found:
+    if num_requested != num_found and require_all_found:
         raise SystemExit(f'Found {num_found} but requested {num_requested}')
 
 
