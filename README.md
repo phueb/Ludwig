@@ -30,6 +30,9 @@ Installations:
 * tokenizers==0.10.1
 * numpy==1.17.5
 
+## Documentation
+
+Information about how the system was setup and works behind-the-scenes can be found at [https://docs.philhuebner.com/ludwig](https://docs.philhuebner.com/ludwig).
 
 ## Requirements & Installation
 
@@ -189,6 +192,3 @@ This is useful for developing and debugging your code without having to submit i
 ```bash
 ludwig --isolated
 ```
-## Documentation
-
-More information about how the system was setup can be found at [https://docs.philhuebner.com/ludwig](https://docs.philhuebner.com/ludwig).
