@@ -172,6 +172,11 @@ def submit():
     if not src_path.exists():
         raise NotADirectoryError(f'Cannot find source code in {src_path}.')
 
+    # check for mis-spelled param names
+    for k in user_params.param2requests:
+        if k not in user_params.param2requests:
+            raise KeyError(f'Param "{k}" in param2requests is not in param2default. Check spelling')
+
     # check that requests are lists and that each list does not contain repeated values
     for k, v in user_params.param2requests.items():
         if not isinstance(v, list):
