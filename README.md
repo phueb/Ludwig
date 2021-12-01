@@ -26,9 +26,11 @@ Installations:
 * python3.7.9
 * nvidia-430
 * pytorch==1.6.0+cu101
-* transformers==4.3.3
+* transformers==4.12.5
 * tokenizers==0.10.1
+* datasets==1.16.1
 * numpy==1.17.5
+* gensim==4.1.2
 
 ## Documentation
 
