@@ -198,28 +198,30 @@ def submit():
 
     # ---------------------------------------------
 
-    # are additional source code files required? (do this before killing active jobs)
-    # these can be Python packages, which will be importable, or contain data.
-    # extra_paths is only allowed to be non-empty if not --local
-    for extra_path in namespace.extra_paths:
-        p = Path(extra_path)
-        if not p.is_dir():
-            raise NotADirectoryError('{} is not a directory'.format(p))
-        src = str(extra_path)
-        dst = str(project_path / p.name)
-        print_ludwig(f'Copying {src} to {dst}')
-        copy_tree(src, dst)
+    if not namespace.isolated and not namespace.local:
 
-    # delete job instructions for worker saved on server (do this before uploader.to_disk() )
-    for pkl_path in project_path.glob(f'*.pkl'):
-        pkl_path.unlink()
+        # are additional source code files required? (do this before killing active jobs)
+        # these can be Python packages, which will be importable, or contain data.
+        # extra_paths is only allowed to be non-empty if not --local
+        for extra_path in namespace.extra_paths:
+            p = Path(extra_path)
+            if not p.is_dir():
+                raise NotADirectoryError('{} is not a directory'.format(p))
+            src = str(extra_path)
+            dst = str(project_path / p.name)
+            print_ludwig(f'Copying {src} to {dst}')
+            copy_tree(src, dst)
 
-    if namespace.group is None:
-        random.shuffle(configs.Remote.online_worker_names)
-        workers_cycle = cycle(configs.Remote.online_worker_names)
-    else:
-        workers_cycle = cycle(configs.Remote.group2workers[namespace.group])
-        print(f'Using workers in group={namespace.group}')
+        # delete job instructions for worker saved on server (do this before uploader.to_disk() )
+        for pkl_path in project_path.glob(f'*.pkl'):
+            pkl_path.unlink()
+
+        if namespace.group is None:
+            random.shuffle(configs.Remote.online_worker_names)
+            workers_cycle = cycle(configs.Remote.online_worker_names)
+        else:
+            workers_cycle = cycle(configs.Remote.group2workers[namespace.group])
+            print(f'Using workers in group={namespace.group}')
 
     # ---------------------------------------------------
 
