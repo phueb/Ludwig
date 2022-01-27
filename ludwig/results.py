@@ -65,7 +65,7 @@ def gen_param_paths(project_name: str,
 
     # look for param_paths
     num_found = 0
-    for param_path in runs_path.glob('param_*'):
+    for param_path in sorted(runs_path.glob('param_*')):
         if verbose:
             print_ludwig(f'Checking {param_path}...')
 

@@ -157,7 +157,7 @@ def submit():
     # ------------------------------------------------ user code
 
     # import user params + job
-    print_ludwig('Trying to import source code from:\n{}'.format(src_path))
+    print_ludwig(f'Importing source code from {src_path}')
     sys.path.append(str(cwd))
     user_params = importlib.import_module(src_path.name + '.params')
     if namespace.local or namespace.isolated:  # no need to import job when not executed locally
