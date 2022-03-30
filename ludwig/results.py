@@ -98,9 +98,9 @@ def gen_param_paths(project_name: str,
                     for k in param2requests:
                         for v in param2requests[k]:
                             if loaded_param2val[k] != v:
-                                print(f'For key "{k}", {v} does not match {loaded_param2val[k]}')
+                                print_ludwig(f'For key "{k}", {v} does not match {loaded_param2val[k]}')
 
     if num_requested != num_found and require_all_found:
-        raise SystemExit(f'Found {num_found} but requested {num_requested}')
+        raise SystemExit(f'Ludwig: Found {num_found} but requested {num_requested}')
 
 

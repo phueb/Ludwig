@@ -14,7 +14,7 @@ The resource consists of a file server and 8 Ubuntu 16.04 machines with GPU acce
 |-----------|-----------------------|-----------------------------|--------------------|--------------------|
 | hoff      |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD |
 | norman    |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD |
-| hebb      |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD |
+| hawkins      |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD |
 | hinton    |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD |
 | pitts     |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD |
 | hawkins   |1 Geforce GTX 1080 Ti  |Intel i7-8700K CPU @ 3.70GHz |Alienware Aurora R7 |256GB SSD + 1TB HDD |
@@ -45,9 +45,16 @@ Windows is currently not supported due to incompatibility with file names used b
 Tasks submitted to Ludwig must be programmed in Python 3 (the Python3.7 interpreter is used on each worker).
 
 ### Access to the shared drive
-See the administrator to provide access to the lab's shared drive. Mount the drive at ```/media/ludwig_data```.
-The share is hosted by the lab's file server using ```samba```, and is shared with each node. 
-Because we do not allow direct shell access to nodes, all data and logs must be saved to the shared drive.
+See the administrator to get access to the lab's shared drive. 
+Mount the drive at ```/media/ludwig_data```. On Linux based systems, type:
+
+```bash
+mount /media/ludwig_data
+```
+
+The shared drive is hosted by the lab's file server using the ```samba``` protocol. 
+Like the client (i.e. user), each worker has access to the shared drive. 
+The shared drive is the place where all job related data and results are stored, and accessed. 
 
 ### Installation
 
@@ -76,20 +83,53 @@ To submit jobs, go to your project root folder, and invoke the command-line tool
 ludwig
 ``` 
 
-See the section Troubleshooting if errors are encountered.
+If it is your first time submitting jobs, consider moving any data related to your job to the shared drive. 
+For instance, to move data files in the folder `data` to the shared drive, where it can be accessed by workers, do:
+
+```bash
+ludwig -e data/
+``` 
+
+To run each job multiple times, use the `-r` flag. For instance, to run each job 6 times, do:
+
+```bash
+ludwig -r 6
+``` 
+
+See the section Troubleshooting if errors are encountered. 
+Consider consulting information about command line arguments, by executing:
+
+```bash
+ludwig -h
+``` 
+
+### Check status of workers
+
+To get fast feedback about potential problems with your submitted jobs, try:
+
+```bash
+ludwig-status
+```
+
+To check the status of a specific Ludwig worker (e.g. hawkins):
+
+```bash
+ludwig-status -w hawkins
+```
+
 
 ### Viewing output of jobs
 
 By default, the stdout of a submitted job will be redirected to a file located on the shared drive.
 After uploading your code, verify that your task is being processed by reading the log file.
-If you don't recognize the output in the file, it is likely that the node is currently processing another user's task.
-Retry when the node is no longer busy. 
-
-To check the status of a Ludwig worker (e.g. hebb):
+The log files are available at `/media/ludwig_data/stdout`.
+To quickly access a log file, execute:
 
 ```bash
-ludwig-status -w hebb
+tail -f /media/ludwig_data/stdout/hawkins.out
 ```
+
+If you don't recognize the output in the file, it is likely that the worker is currently processing another user's job.
 
 ### Re-submitting
 
@@ -106,7 +146,7 @@ to trigger a prompt asking to copy the worker's hostkey.
 For example,
 
 ```bash
-sftp ludwig@hebb
+sftp ludwig@hawkins
 ```
 
 When asked to save the hostkey, enter `yes` and hit `Enter`.
@@ -136,22 +176,22 @@ The ```-mnt``` flag is used to specify where the shared drive is mounted on the 
 
 A user might want to load a dataset from the shared drive.
 To do so, the path to the shared drive from the Ludwig worker must be known.
-The path is auto-magically added by `Ludwig` and can be accessed via `param2val['project_path`].
+The path is auto-magically added by `Ludwig` and can be accessed via `param2val['project_path']`.
 For example, loading a corpus from the shared drive might look like the following:
 
 ```python
+from pathlib import Path
+
 def main(param2val):
-    
-    from pathlib import Path
     
     project_path = Path(param2val['project_path'])
     corpus_path = project_path / 'data' / f'{param2val["corpus_name"]}.txt'
-    train_docs, test_docs = load_corpus(corpus_path)
+    corpus = load_corpus(corpus_path)
 ```
 
 ### Saving Job Results
 Job results, such as learning curves, or other 1-dimensional performance measures related to neural networks for example,
- should be returned by job.main() as a list of pandas DataFrame objects.
+ should be returned by job.main() as a list of pandas Series objects.
 These will be automatically saved to the shared drive after a job has completed.
 
 Alternatively, if the data is too big to be held in memory, it is recommended to write the data to disk,
