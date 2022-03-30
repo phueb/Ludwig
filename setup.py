@@ -16,7 +16,7 @@ setup(
                       'PyNaCl==1.4.0',
                       'cryptography==3.4.6',
                       'watchdog==2.0.1',
-                      'paramiko==2.6.0',
+                      'paramiko==2.10.1',
                       'numpy',
                       'pandas',
                       'cached_property',
