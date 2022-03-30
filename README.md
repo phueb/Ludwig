@@ -14,7 +14,7 @@ The resource consists of a file server and 8 Ubuntu 16.04 machines with GPU acce
 |-----------|-----------------------|-----------------------------|--------------------|--------------------|
 | hoff      |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD |
 | norman    |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD |
-| hawkins      |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD |
+| hebb      |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD |
 | hinton    |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD |
 | pitts     |1 Geforce GTX 1080     |Intel i7-7700  CPU @ 3.60GHz |Alienware Aurora R6 |256GB SSD + 1TB HDD |
 | hawkins   |1 Geforce GTX 1080 Ti  |Intel i7-8700K CPU @ 3.70GHz |Alienware Aurora R7 |256GB SSD + 1TB HDD |
@@ -35,6 +35,11 @@ Installations:
 ## Documentation
 
 Information about how the system was setup and works behind-the-scenes can be found at [https://docs.philhuebner.com/ludwig](https://docs.philhuebner.com/ludwig).
+
+<div align="center">
+ <img src="images/ludwig_flowchart.jpg"> 
+</div>
+
 
 ## Requirements & Installation
 
