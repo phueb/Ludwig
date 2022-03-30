@@ -32,13 +32,28 @@ Installations:
 * numpy==1.17.5
 * gensim==4.1.2
 
-## Documentation
 
-Information about how the system was setup and works behind-the-scenes can be found at [https://docs.philhuebner.com/ludwig](https://docs.philhuebner.com/ludwig).
 
+## Overview
+
+`ludwig` implements both server-side and client-side logic. 
+That means that `ludwig` is both used:
+ 1. by the user to submit jobs to workers, and
+ 2. by each worker to watch for job submissions, manage the job queue, and run jobs.
+ 
+Client-side, a user invokes the `ludwig` command to submit jobs. 
+On each worker, file-watchers that are part of the `ludwig` package watch for uploaded job instructions, and save instructions to a job queue.
+
+For an illustration, consider the flowchart below.
+Notice that each worker has its own (independent) file-watcher and job queue.
+ 
 <div align="center">
  <img src="images/ludwig_flowchart.jpg"> 
 </div>
+
+## Documentation
+
+Information about how the system was setup and works behind-the-scenes can be found at [https://docs.philhuebner.com/ludwig](https://docs.philhuebner.com/ludwig).
 
 
 ## Requirements & Installation
