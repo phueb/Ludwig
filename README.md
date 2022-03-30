@@ -55,8 +55,7 @@ Notice that each worker has its own (independent) file-watcher and job queue.
 
 Information about how the system was setup and works behind-the-scenes can be found at [https://docs.philhuebner.com/ludwig](https://docs.philhuebner.com/ludwig).
 
-
-## Requirements & Installation
+## Getting Started
 
 ### Linux or MacOS
 Windows is currently not supported due to incompatibility with file names used by Ludwig.
@@ -76,28 +75,33 @@ The shared drive is hosted by the lab's file server using the ```samba``` protoc
 Like the client (i.e. user), each worker has access to the shared drive. 
 The shared drive is the place where all job related data and results are stored, and accessed. 
 
-### Installation
-
-In a terminal, type:
-
-```bash
-pip3 install git+https://github.com/phueb/Ludwig.git
-```
-
-### Project Organization
+### Start a new Project using Ludwig-Template
 
 ```ludwig``` requires all Python code be located in a folder inside the root directory of your project. 
 Additionally, inside this folder, create two Python files:
 * ```params.py```: contains information about which parameters to use for each job
 * ```config.py```: contains basic information like the name of the user's project
+ 
+The easiest way to recreate the required organization is to login to Github,
+ navigate to [Ludwig-Template](https://github.com/UIUCLearningLanguageLab/Ludwig-Template), and then click "Use this template" (green button).
+ 
+Rename the folder `Ludwig-Template` to something like `MyProject`, and rename the source code folder `src` to `myproject`. 
+It is recommended to install a virtual Python interpreter in your project. 
+Use Python 3.7 if you can, or, at the very least, write code that is compatible with Python 3.7.
 
-See the `Example` folder for an example of what to put into these files,
- or use the template repository [Ludwig-Template](https://github.com/UIUCLearningLanguageLab/Ludwig-Template).
+
+### Installation
+
+Next, inside your Python virtual environment, install `ludwig` from Github:
+
+```bash
+pip3 install git+https://github.com/phueb/Ludwig.git
+```
 
 ## Submitting a Job
 
 Once you have installed `ludwig` and set up your project appropriately, use the command-line tool to submit your job.
-To submit jobs, go to your project root folder, and invoke the command-line tool that has been installed:
+To submit jobs, go to your project root folder, and invoke the command-line tool that is part of `ludwig`:
 
 ```bash
 ludwig
@@ -117,7 +121,7 @@ ludwig -r 6
 ``` 
 
 See the section Troubleshooting if errors are encountered. 
-Consider consulting information about command line arguments, by executing:
+Consider consulting information about available command line arguments:
 
 ```bash
 ludwig -h
