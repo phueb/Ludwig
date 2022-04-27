@@ -77,10 +77,11 @@ The shared drive is the place where all job related data and results are stored,
 
 ### Start a new Project using Ludwig-Template
 
-```ludwig``` requires all Python code be located in a folder inside the root directory of your project. 
+```ludwig``` requires all Python code be located in a folder inside the root directory of your project.
+This folder houses your source code and should have the same name (lower-cased) as your project.
 Additionally, inside this folder, create two Python files:
 * ```params.py```: contains information about which parameters to use for each job
-* ```config.py```: contains basic information like the name of the user's project
+* ```job.py```: contains the function `main()` which should execute a single job
  
 The easiest way to recreate the required organization is to login to Github,
  navigate to [Ludwig-Template](https://github.com/UIUCLearningLanguageLab/Ludwig-Template), and then click "Use this template" (green button).
