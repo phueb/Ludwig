@@ -32,11 +32,30 @@ Installations:
 * numpy==1.17.5
 * gensim==4.1.2
 
+
+
+## Overview
+
+`ludwig` implements both server-side and client-side logic. 
+That means that `ludwig` is both used:
+ 1. by the user to submit jobs to workers, and
+ 2. by each worker to watch for job submissions, manage the job queue, and run jobs.
+ 
+Client-side, a user invokes the `ludwig` command to submit jobs. 
+On each worker, file-watchers that are part of the `ludwig` package watch for uploaded job instructions, and save instructions to a job queue.
+
+For an illustration, consider the flowchart below.
+Notice that each worker has its own (independent) file-watcher and job queue.
+ 
+<div align="center">
+ <img src="images/ludwig_flowchart.jpg"> 
+</div>
+
 ## Documentation
 
 Information about how the system was setup and works behind-the-scenes can be found at [https://docs.philhuebner.com/ludwig](https://docs.philhuebner.com/ludwig).
 
-## Requirements & Installation
+## Getting Started
 
 ### Linux or MacOS
 Windows is currently not supported due to incompatibility with file names used by Ludwig.
@@ -45,51 +64,97 @@ Windows is currently not supported due to incompatibility with file names used b
 Tasks submitted to Ludwig must be programmed in Python 3 (the Python3.7 interpreter is used on each worker).
 
 ### Access to the shared drive
-See the administrator to provide access to the lab's shared drive. Mount the drive at ```/media/ludwig_data```.
-The share is hosted by the lab's file server using ```samba```, and is shared with each node. 
-Because we do not allow direct shell access to nodes, all data and logs must be saved to the shared drive.
+See the administrator to get access to the lab's shared drive. 
+Mount the drive at ```/media/ludwig_data```. On Linux based systems, type:
+
+```bash
+mount /media/ludwig_data
+```
+
+The shared drive is hosted by the lab's file server using the ```samba``` protocol. 
+Like the client (i.e. user), each worker has access to the shared drive. 
+The shared drive is the place where all job related data and results are stored, and accessed. 
+
+### Start a new Project using Ludwig-Template
+
+```ludwig``` requires all Python code be located in a folder inside the root directory of your project.
+This folder houses your source code and should have the same name (lower-cased) as your project.
+Additionally, inside this folder, create two Python files:
+* ```params.py```: contains information about which parameters to use for each job
+* ```job.py```: contains the function `main()` which should execute a single job
+ 
+The easiest way to recreate the required organization is to login to Github,
+ navigate to [Ludwig-Template](https://github.com/UIUCLearningLanguageLab/Ludwig-Template), and then click "Use this template" (green button).
+ 
+Rename the folder `Ludwig-Template` to something like `MyProject`, and rename the source code folder `src` to `myproject`. 
+It is recommended to install a virtual Python interpreter in your project. 
+Use Python 3.7 if you can, or, at the very least, write code that is compatible with Python 3.7.
+
 
 ### Installation
 
-In a terminal, type:
+Next, inside your Python virtual environment, install `ludwig` from Github:
 
 ```bash
 pip3 install git+https://github.com/phueb/Ludwig.git
 ```
 
-### Project Organization
-
-```ludwig``` requires all Python code be located in a folder inside the root directory of your project. 
-Additionally, inside this folder, create two Python files:
-* ```params.py```: contains information about which parameters to use for each job
-* ```config.py```: contains basic information like the name of the user's project
-
-See the `Example` folder for an example of what to put into these files,
- or use the template repository [Ludwig-Template](https://github.com/UIUCLearningLanguageLab/Ludwig-Template).
-
 ## Submitting a Job
 
 Once you have installed `ludwig` and set up your project appropriately, use the command-line tool to submit your job.
-To submit jobs, go to your project root folder, and invoke the command-line tool that has been installed:
+To submit jobs, go to your project root folder, and invoke the command-line tool that is part of `ludwig`:
 
 ```bash
 ludwig
 ``` 
 
-See the section Troubleshooting if errors are encountered.
+If it is your first time submitting jobs, consider moving any data related to your job to the shared drive. 
+For instance, to move data files in the folder `data` to the shared drive, where it can be accessed by workers, do:
+
+```bash
+ludwig -e data/
+``` 
+
+To run each job multiple times, use the `-r` flag. For instance, to run each job 6 times, do:
+
+```bash
+ludwig -r 6
+``` 
+
+See the section Troubleshooting if errors are encountered. 
+Consider consulting information about available command line arguments:
+
+```bash
+ludwig -h
+``` 
+
+### Check status of workers
+
+To get fast feedback about potential problems with your submitted jobs, try:
+
+```bash
+ludwig-status
+```
+
+To check the status of a specific Ludwig worker (e.g. hawkins):
+
+```bash
+ludwig-status -w hawkins
+```
+
 
 ### Viewing output of jobs
 
 By default, the stdout of a submitted job will be redirected to a file located on the shared drive.
 After uploading your code, verify that your task is being processed by reading the log file.
-If you don't recognize the output in the file, it is likely that the node is currently processing another user's task.
-Retry when the node is no longer busy. 
-
-To check the status of a Ludwig worker (e.g. hebb):
+The log files are available at `/media/ludwig_data/stdout`.
+To quickly access a log file, execute:
 
 ```bash
-ludwig-status -w hebb
+tail -f /media/ludwig_data/stdout/hawkins.out
 ```
+
+If you don't recognize the output in the file, it is likely that the worker is currently processing another user's job.
 
 ### Re-submitting
 
@@ -106,7 +171,7 @@ to trigger a prompt asking to copy the worker's hostkey.
 For example,
 
 ```bash
-sftp ludwig@hebb
+sftp ludwig@hawkins
 ```
 
 When asked to save the hostkey, enter `yes` and hit `Enter`.
@@ -136,22 +201,22 @@ The ```-mnt``` flag is used to specify where the shared drive is mounted on the 
 
 A user might want to load a dataset from the shared drive.
 To do so, the path to the shared drive from the Ludwig worker must be known.
-The path is auto-magically added by `Ludwig` and can be accessed via `param2val['project_path`].
+The path is auto-magically added by `Ludwig` and can be accessed via `param2val['project_path']`.
 For example, loading a corpus from the shared drive might look like the following:
 
 ```python
+from pathlib import Path
+
 def main(param2val):
-    
-    from pathlib import Path
     
     project_path = Path(param2val['project_path'])
     corpus_path = project_path / 'data' / f'{param2val["corpus_name"]}.txt'
-    train_docs, test_docs = load_corpus(corpus_path)
+    corpus = load_corpus(corpus_path)
 ```
 
 ### Saving Job Results
 Job results, such as learning curves, or other 1-dimensional performance measures related to neural networks for example,
- should be returned by job.main() as a list of pandas DataFrame objects.
+ should be returned by job.main() as a list of pandas Series objects.
 These will be automatically saved to the shared drive after a job has completed.
 
 Alternatively, if the data is too big to be held in memory, it is recommended to write the data to disk,
