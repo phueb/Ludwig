@@ -14,7 +14,7 @@ setup(
     install_requires=['psutil==5.8.0',
                       'pysftp==0.2.9',
                       'PyNaCl==1.4.0',
-                      'cryptography==3.4.6',
+                      'cryptography==39.0.1',
                       'watchdog==2.0.1',
                       'paramiko==2.10.1',
                       'numpy',
