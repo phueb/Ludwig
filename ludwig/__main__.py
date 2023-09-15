@@ -251,13 +251,12 @@ def submit():
         if namespace.local:
             job.param2val['project_path'] = str(project_path)
         elif namespace.isolated:
-            job.param2val['project_path'] = str(cwd)
+            job.param2val['project_path'] = str(project_path)
         else:
             job.param2val['project_path'] = str(configs.WorkerDirs.ludwig_data / project_name)
 
         # allow exit if requested parameter configuration already exists requested number of times?
-        # do counting with --local, because behavior when --local should be identical to behavior of Ludwig worker
-        if namespace.minimal or namespace.isolated or namespace.clear_runs:
+        if namespace.clear_runs:
             num_needed = namespace.reps
         else:
             num_needed = job.calc_num_needed(runs_path, namespace.reps)
