@@ -4,6 +4,7 @@
 
 for hostname in bengio hawkins hinton hoff norman pitts;
 do
+
     echo ${hostname}:
 
     # this is supposed to forward the password to the sudo command
