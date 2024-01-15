@@ -22,7 +22,7 @@ The resource consists of a file server and 8 Ubuntu 16.04 machines with GPU acce
 | bengio    |1 Geforce GTX 1080 Ti  |Intel i7-8700K CPU @ 3.70GHz |Alienware Aurora R7 |256GB SSD + 1TB HDD |
 
 Each worker has the following systems installed:
-* Ubuntu 16.04.7 LTS
+* Ubuntu 18
 * python3.7.9
 * nvidia-430
 * torch==1.6.0+cu101
@@ -31,8 +31,6 @@ Each worker has the following systems installed:
 * datasets==1.16.1
 * numpy==1.17.5
 * gensim==4.1.2
-
-Note: Ubuntu 18 was installed on hebb and lecun.
 
 
 ## Overview
