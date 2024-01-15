@@ -23,7 +23,7 @@ The resource consists of a file server and 8 Ubuntu 16.04 machines with GPU acce
 
 Each worker has the following systems installed:
 * Ubuntu 18
-* python3.7.9
+* python3.7 and python3.8
 * nvidia-430
 * torch==1.6.0+cu101
 * transformers==4.12.5
